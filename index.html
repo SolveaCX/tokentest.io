@@ -3,150 +3,137 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TokenTest.io — Verify the model, route, usage & billing before you buy</title>
-<meta name="description" content="TokenTest is the verification console for AI middle-layer buyers. Prove a router's real model, route, token usage and billing — black-box, your key is never stored." />
+<title>TokenTest.io — Verify any model's authenticity before you buy</title>
+<meta name="description" content="TokenTest is the verification console for AI middle-layer buyers. Batch-test any router's real model, route, token usage and billing — black-box, your key is never stored." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#0a0a0a; --bg2:#0f0f10; --panel:#111113; --line:rgba(255,255,255,.10);
-    --line2:rgba(255,255,255,.06); --txt:#fafafa; --mut:rgba(255,255,255,.60);
-    --mut2:rgba(255,255,255,.40); --red:#fb2c36; --blue:#3080ff; --green:#00c758;
-    --amber:#f99c00; --purple:#a855f7;
+    --bg:#0a0a0a; --panel:#111113; --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.06);
+    --txt:#fafafa; --mut:rgba(255,255,255,.60); --mut2:rgba(255,255,255,.40);
+    --red:#fb2c36; --blue:#3080ff; --green:#00c758; --amber:#f99c00; --purple:#a855f7;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
     --sans:"Inter",system-ui,-apple-system,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
-    -webkit-font-smoothing:antialiased;line-height:1.5}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
   a{color:inherit;text-decoration:none}
   .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-  .mono{font-family:var(--mono)}
-  .muted{color:var(--mut)} .small{font-size:13px}
-
+  .mono{font-family:var(--mono)} .muted{color:var(--mut)} .small{font-size:13px}
   body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-    background:
-      radial-gradient(620px 380px at 18% -8%, rgba(251,44,54,.16), transparent 70%),
-      radial-gradient(560px 420px at 92% 4%, rgba(48,128,255,.14), transparent 70%);}
+    background:radial-gradient(620px 380px at 18% -8%,rgba(251,44,54,.16),transparent 70%),
+      radial-gradient(560px 420px at 92% 4%,rgba(48,128,255,.14),transparent 70%);}
 
-  nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);
-    background:rgba(10,10,10,.72);border-bottom:1px solid var(--line2)}
+  nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);background:rgba(10,10,10,.72);border-bottom:1px solid var(--line2)}
   .navIn{display:flex;align-items:center;justify-content:space-between;height:60px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
-  .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;
-    font-family:var(--mono);font-weight:600;font-size:13px;color:#fff;
-    background:linear-gradient(135deg,var(--red),#b3121b);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+  .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;font-family:var(--mono);font-weight:600;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--red),#b3121b);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
   .navLinks{display:flex;gap:26px;font-size:14px}
   .navLinks a{color:var(--mut)} .navLinks a:hover{color:var(--txt)}
   .navRight{display:flex;align-items:center;gap:14px}
-  .ghost{font-size:14px;color:var(--mut)}
+  .langBtn{font-size:13px;color:var(--mut);background:none;border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer;font-family:var(--mono)}
+  .langBtn:hover{color:var(--txt)}
   @media(max-width:760px){.navLinks{display:none}}
 
-  .hero{padding:72px 0 30px;text-align:center}
-  .avatars{display:flex;justify-content:center;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:0}
-  .avatars .av{width:34px;height:34px;border-radius:50%;border:2px solid var(--bg);
-    margin-left:-9px;background:#222;display:grid;place-items:center;font-size:12px;
-    font-family:var(--mono);color:#fff}
+  .hero{padding:70px 0 26px;text-align:center}
+  .avatars{display:flex;justify-content:center;align-items:center;margin-bottom:22px;flex-wrap:wrap}
+  .avatars .av{width:34px;height:34px;border-radius:50%;border:2px solid var(--bg);margin-left:-9px;background:#222;display:grid;place-items:center;font-size:12px;font-family:var(--mono);color:#fff}
   .avatars .av:first-child{margin-left:0}
-  .trustline{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--mut);
-    border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+  .trustline{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:6px 14px;margin-left:14px}
   .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.03em;margin:0 0 18px;font-weight:700}
+  h1{font-size:clamp(32px,5.2vw,56px);line-height:1.05;letter-spacing:-.03em;margin:0 0 18px;font-weight:700}
   h1 .accent{background:linear-gradient(90deg,var(--red),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{max-width:620px;margin:0 auto;font-size:18px;color:var(--mut)}
+  .sub{max-width:640px;margin:0 auto;font-size:18px;color:var(--mut)}
   .heroSafety{margin-top:18px;font-size:13px;color:var(--mut2);font-family:var(--mono)}
 
-  .console{margin:34px auto 0;max-width:920px}
-  .card{background:linear-gradient(180deg,var(--panel),#0c0c0d);border:1px solid var(--line);
-    border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -40px rgba(0,0,0,.9)}
+  .console{margin:34px auto 0;max-width:960px}
+  .card{background:linear-gradient(180deg,var(--panel),#0c0c0d);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -40px rgba(0,0,0,.9)}
   .cardHead{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line2)}
   .cardHead h2{font-size:15px;margin:0;font-weight:600;letter-spacing:-.01em}
   .cardHead .tag{font-family:var(--mono);font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
   .grid2{display:grid;grid-template-columns:1.1fr .9fr}
   @media(max-width:820px){.grid2{grid-template-columns:1fr}}
-  .pad{padding:22px}
-  .pad+.pad{border-left:1px solid var(--line2)}
+  .pad{padding:22px} .pad+.pad{border-left:1px solid var(--line2)}
   @media(max-width:820px){.pad+.pad{border-left:none;border-top:1px solid var(--line2)}}
 
   label{display:block;font-size:12px;color:var(--mut);margin:0 0 7px;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
   .field{margin-bottom:16px}
-  input,select{width:100%;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;
-    color:var(--txt);font-family:var(--mono);font-size:14px;padding:12px 13px;outline:none;transition:.15s}
-  input:focus,select:focus{border-color:rgba(251,44,54,.55);box-shadow:0 0 0 3px rgba(251,44,54,.12)}
-  input::placeholder{color:var(--mut2)}
+  input,select,textarea{width:100%;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;color:var(--txt);font-family:var(--mono);font-size:14px;padding:12px 13px;outline:none;transition:.15s}
+  input:focus,select:focus,textarea:focus{border-color:rgba(251,44,54,.55);box-shadow:0 0 0 3px rgba(251,44,54,.12)}
+  input::placeholder,textarea::placeholder{color:var(--mut2)}
+  textarea#models{min-height:64px;resize:vertical;line-height:1.7}
+  .modelHead{display:flex;justify-content:space-between;align-items:center}
+  .discover{background:none;border:0;color:var(--blue);font-size:12px;font-family:var(--mono);cursor:pointer;text-transform:none;letter-spacing:0;padding:0}
+  .discover:hover{text-decoration:underline}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{font-family:var(--mono);font-size:12px;color:var(--mut);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+  .chip:hover{color:var(--txt);border-color:var(--blue)}
   .modes{display:inline-flex;gap:2px;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:16px}
-  .modes button{background:transparent;border:0;color:var(--mut);font-family:var(--mono);font-size:13px;
-    padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s}
+  .modes button{background:transparent;border:0;color:var(--mut);font-family:var(--mono);font-size:13px;padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s}
   .modes button.active{background:rgba(255,255,255,.08);color:var(--txt)}
-  .run{width:100%;margin-top:4px;background:var(--red);color:#fff;border:0;border-radius:11px;
-    font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:.15s;
-    box-shadow:0 8px 28px -10px rgba(251,44,54,.7)}
+  .run{width:100%;margin-top:4px;background:var(--red);color:#fff;border:0;border-radius:11px;font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:.15s;box-shadow:0 8px 28px -10px rgba(251,44,54,.7)}
   .run:hover{filter:brightness(1.07)} .run:disabled{opacity:.6;cursor:default}
   .runNote{text-align:center;font-size:12px;color:var(--mut2);margin-top:10px;font-family:var(--mono)}
 
   .checks{list-style:none;margin:0;padding:0}
   .checks li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line2);align-items:flex-start}
   .checks li:last-child{border-bottom:0}
-  .ci{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;
-    font-size:12px;background:rgba(251,44,54,.14);color:var(--red);font-family:var(--mono)}
-  .checks b{font-size:13.5px;font-weight:600}
-  .checks .small{display:block;color:var(--mut2);margin-top:2px}
+  .ci{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:12px;background:rgba(251,44,54,.14);color:var(--red);font-family:var(--mono)}
+  .checks b{font-size:13.5px;font-weight:600} .checks .small{display:block;color:var(--mut2);margin-top:2px}
 
+  /* batch matrix */
   .results{margin-top:26px}
-  .resGrid{display:grid;grid-template-columns:200px 1fr;gap:0}
-  @media(max-width:720px){.resGrid{grid-template-columns:1fr}}
-  .dialWrap{padding:24px;border-right:1px solid var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
-  @media(max-width:720px){.dialWrap{border-right:0;border-bottom:1px solid var(--line2)}}
-  .dial{width:148px;height:148px;border-radius:50%;display:grid;place-items:center;
-    background:conic-gradient(var(--green) calc(var(--score,0)*1%),rgba(255,255,255,.07) 0);transition:.6s}
-  .dialIn{width:120px;height:120px;border-radius:50%;background:#0c0c0d;display:grid;place-items:center;text-align:center}
-  .dialV{font-family:var(--mono);font-size:38px;font-weight:600;line-height:1}
-  .verdict{font-size:14px;font-weight:600;text-align:center}
-  .resBody{padding:22px}
-  .resHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:12px}
-  .resHead h3{margin:0;font-size:16px}
-  .resSummary{color:var(--mut);font-size:14px;margin:0 0 16px}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;color:var(--mut2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:0 0 8px}
-  td{padding:9px 0;border-top:1px solid var(--line2);vertical-align:top}
-  td:first-child{font-weight:500;width:34%}
-  .pill{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:5px;white-space:nowrap}
-  .pass{background:rgba(0,199,88,.15);color:var(--green)}
-  .partial{background:rgba(249,156,0,.15);color:var(--amber)}
-  .fail{background:rgba(251,44,54,.15);color:var(--red)}
-  .skip{background:rgba(255,255,255,.08);color:var(--mut)}
-  .raw{margin-top:18px}
-  details summary{cursor:pointer;color:var(--mut);font-size:13px;font-family:var(--mono)}
-  pre{background:#0a0a0a;border:1px solid var(--line2);border-radius:10px;padding:14px;
-    overflow:auto;font-family:var(--mono);font-size:12px;color:var(--mut);max-height:340px;margin:10px 0 0}
-  .advanced{margin-top:14px}
-  .advanced summary{font-size:12px}
-  .twoBtn{display:flex;gap:8px;margin-top:10px}
-  .sbtn{flex:1;background:#0a0a0a;border:1px solid var(--line);color:var(--mut);border-radius:9px;
-    padding:9px;font-size:13px;font-family:var(--mono);cursor:pointer}
-  .sbtn:hover{color:var(--txt)}
-  textarea{width:100%;min-height:96px;background:#0a0a0a;border:1px solid var(--line2);border-radius:9px;
-    color:var(--mut);font-family:var(--mono);font-size:12px;padding:11px;margin-top:10px;resize:vertical}
+  .resHead{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line2);gap:12px;flex-wrap:wrap}
+  .resHead h3{margin:0;font-size:15px}
+  .resHead .sum{font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .matrix{width:100%;border-collapse:collapse;font-size:13.5px}
+  .matrix th{text-align:left;color:var(--mut2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:12px 22px;border-bottom:1px solid var(--line2)}
+  .matrix td{padding:13px 22px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  .matrix tr.row{cursor:pointer;transition:.12s} .matrix tr.row:hover{background:rgba(255,255,255,.025)}
+  .matrix tr:last-child td{border-bottom:0}
+  .mModel{font-family:var(--mono);font-weight:500}
+  .scoreCell{font-family:var(--mono);font-weight:600;font-size:15px}
+  .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden;width:70px}
+  .bar span{display:block;height:100%;border-radius:3px}
+  .pill{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;white-space:nowrap;display:inline-block}
+  .pill.genuine,.pill.pass{background:rgba(0,199,88,.15);color:var(--green)}
+  .pill.suspicious,.pill.partial{background:rgba(249,156,0,.15);color:var(--amber)}
+  .pill.likely_fake_or_degraded,.pill.fail,.pill.auth_failed{background:rgba(251,44,54,.15);color:var(--red)}
+  .pill.error,.pill.unreachable,.pill.skip,.pill.pending{background:rgba(255,255,255,.08);color:var(--mut)}
+  .expand{color:var(--mut2);font-family:var(--mono);font-size:12px}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--txt);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .detail{background:#0a0a0a}
+  .detail td{padding:0}
+  .detailIn{padding:6px 22px 18px}
+  .detSummary{color:var(--mut);font-size:13px;margin:10px 0 12px;font-family:var(--mono)}
+  .catTable{width:100%;border-collapse:collapse;font-size:12.5px}
+  .catTable td{padding:8px 0;border-top:1px solid var(--line2);vertical-align:top}
+  .catTable td:first-child{width:30%;font-weight:500}
+  .catTable td:nth-child(2){width:18%}
+  pre{background:#0c0c0d;border:1px solid var(--line2);border-radius:10px;padding:13px;overflow:auto;font-family:var(--mono);font-size:11.5px;color:var(--mut);max-height:280px;margin:10px 0 0}
+  details summary{cursor:pointer;color:var(--mut);font-size:12px;font-family:var(--mono)}
+  .emptyRow td{color:var(--mut);padding:26px 22px;text-align:center}
 
-  .mask{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.66);backdrop-filter:blur(4px);
-    display:none;align-items:center;justify-content:center;padding:20px}
+  .advanced{margin-top:14px} .advanced summary{font-size:12px}
+  .twoBtn{display:flex;gap:8px;margin-top:10px}
+  .sbtn{flex:1;background:#0a0a0a;border:1px solid var(--line);color:var(--mut);border-radius:9px;padding:9px;font-size:13px;font-family:var(--mono);cursor:pointer}
+  .sbtn:hover{color:var(--txt)}
+  textarea#responseJson{min-height:90px;font-size:12px;color:var(--mut);margin-top:10px}
+
+  .mask{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.66);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
   .mask.show{display:flex}
-  .cap{width:380px;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;
-    padding:18px;box-shadow:0 40px 100px -30px #000}
+  .cap{width:380px;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 40px 100px -30px #000}
   .capHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
   .capHead b{font-size:15px} .capHead span{font-size:13px;color:var(--mut);margin-left:auto}
   .capX{cursor:pointer;color:var(--mut2);font-size:20px;line-height:1;background:none;border:0}
-  .board{position:relative;width:340px;max-width:100%;height:180px;border-radius:10px;overflow:hidden;
-    border:1px solid var(--line2);margin:0 auto;user-select:none}
+  .board{position:relative;width:340px;max-width:100%;height:180px;border-radius:10px;overflow:hidden;border:1px solid var(--line2);margin:0 auto;user-select:none}
   .board img.bg{width:100%;height:100%;display:block}
   .board img.pc{position:absolute;top:0;left:0;width:52px;height:52px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));pointer-events:none}
-  .slider{position:relative;height:42px;margin:14px auto 4px;width:340px;max-width:100%;
-    background:#0a0a0a;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center}
+  .slider{position:relative;height:42px;margin:14px auto 4px;width:340px;max-width:100%;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center}
   .slider .hint{position:absolute;width:100%;text-align:center;font-size:12px;color:var(--mut2);font-family:var(--mono);pointer-events:none}
-  .handle{position:absolute;left:0;top:0;height:40px;width:48px;border-radius:9px;cursor:grab;
-    background:linear-gradient(180deg,#1b1b1d,#161618);border:1px solid var(--line);
-    display:grid;place-items:center;color:var(--txt);touch-action:none;font-size:18px}
+  .handle{position:absolute;left:0;top:0;height:40px;width:48px;border-radius:9px;cursor:grab;background:linear-gradient(180deg,#1b1b1d,#161618);border:1px solid var(--line);display:grid;place-items:center;color:var(--txt);touch-action:none;font-size:18px}
   .handle:active{cursor:grabbing}
   .handle.ok{background:linear-gradient(180deg,#00c758,#00a64a);border-color:#00c758}
   .handle.bad{background:linear-gradient(180deg,#fb2c36,#b3121b);border-color:#fb2c36}
@@ -154,19 +141,16 @@
   .capMsg.good{color:var(--green)} .capMsg.err{color:var(--red)}
   .capRefresh{background:none;border:0;color:var(--mut);font-size:12px;font-family:var(--mono);cursor:pointer;margin-top:2px}
 
-  .how{padding:64px 0 20px}
+  .how{padding:60px 0 20px}
   .how h2{font-size:26px;letter-spacing:-.02em;text-align:center;margin:0 0 30px}
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   @media(max-width:720px){.steps{grid-template-columns:1fr}}
   .step{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:20px}
   .step .n{font-family:var(--mono);color:var(--red);font-size:13px;margin-bottom:8px}
   .step h3{margin:0 0 6px;font-size:15px} .step p{margin:0;color:var(--mut);font-size:14px}
-  footer{border-top:1px solid var(--line2);margin-top:60px;padding:28px 0;color:var(--mut2);font-size:13px;
-    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  footer{border-top:1px solid var(--line2);margin-top:56px;padding:28px 0;color:var(--mut2);font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
-  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;
-    background:#161618;border:1px solid var(--line);border-radius:10px;padding:11px 18px;font-size:13px;
-    font-family:var(--mono);transition:.25s;z-index:120;pointer-events:none;max-width:90vw}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;background:#161618;border:1px solid var(--line);border-radius:10px;padding:11px 18px;font-size:13px;font-family:var(--mono);transition:.25s;z-index:120;pointer-events:none;max-width:90vw}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -174,57 +158,60 @@
 <nav><div class="wrap navIn">
   <a class="brand" href="/"><span class="mark">TT</span> TokenTest<span class="muted">.io</span></a>
   <div class="navLinks">
-    <a href="#how">How it works</a>
-    <a href="#verify">Verify</a>
+    <a href="#how" data-i18n="nav_how">How it works</a>
+    <a href="#verify" data-i18n="nav_verify">Verify</a>
     <a href="https://github.com/mguozhen/tokentest.io" target="_blank" rel="noopener">GitHub</a>
   </div>
   <div class="navRight">
-    <span class="ghost mono">EN</span>
-    <button class="run" id="runTop" style="width:auto;padding:8px 18px;font-size:14px;box-shadow:none">Run</button>
+    <button class="langBtn" id="langBtn">中文</button>
+    <button class="run" id="runTop" style="width:auto;padding:8px 18px;font-size:14px;box-shadow:none" data-i18n="run">Run</button>
   </div>
 </div></nav>
 
 <header class="hero wrap">
   <div class="avatars">
     <span class="av">A</span><span class="av">K</span><span class="av">M</span><span class="av">R</span>
-    <span class="trustline" style="margin-left:14px"><span class="dot"></span>Trusted by router operators &amp; procurement teams</span>
+    <span class="trustline"><span class="dot"></span><span data-i18n="trust">Trusted by router operators &amp; procurement teams</span></span>
   </div>
-  <h1>Prove the model is real<br><span class="accent">before you pay for it.</span></h1>
-  <p class="sub">TokenTest is the black-box verification console for AI middle-layer buyers. Check a router's
-    actual model, route, token usage and billing in one run — your API key is never stored.</p>
-  <div class="heroSafety">⛨ Black-box probing · for safety, prefer a test-only API key</div>
+  <h1 data-i18n-html="h1">Verify any model is real<br><span class="accent">before you pay for it.</span></h1>
+  <p class="sub" data-i18n="sub">TokenTest is the black-box verification console for AI middle-layer buyers. Batch-test a router's actual model, route, token usage and billing in one run — your API key is never stored.</p>
+  <div class="heroSafety" data-i18n="safety">⛨ Black-box probing · for safety, prefer a test-only API key</div>
 
   <section class="console" id="verify">
     <div class="card">
       <div class="cardHead">
-        <h2>Verification Run</h2>
-        <span class="tag">black-box · key not stored</span>
+        <h2 data-i18n="card_title">Verification Run</h2>
+        <span class="tag" data-i18n="card_tag">black-box · key not stored</span>
       </div>
       <div class="grid2">
         <div class="pad">
           <div class="modes" role="tablist">
-            <button class="active" data-mode="quick">Quick</button>
-            <button data-mode="truth">Truth</button>
-            <button data-mode="billing">Cost</button>
+            <button class="active" data-mode="quick" data-i18n="mode_quick">Quick</button>
+            <button data-mode="truth" data-i18n="mode_truth">Truth</button>
+            <button data-mode="billing" data-i18n="mode_cost">Cost</button>
           </div>
           <div class="field">
-            <label>API endpoint</label>
-            <input id="endpoint" placeholder="https://api.your-router.com" value="https://api.your-router.com" spellcheck="false" />
+            <label data-i18n="l_endpoint">API endpoint</label>
+            <input id="endpoint" placeholder="https://api.your-router.com/v1" value="https://api.your-router.com/v1" spellcheck="false" />
           </div>
           <div class="field">
-            <label>API key</label>
+            <label data-i18n="l_key">API key</label>
             <input id="apiKey" type="password" placeholder="sk-..." spellcheck="false" />
           </div>
           <div class="field" style="margin-bottom:18px">
-            <label>Target model</label>
-            <input id="model" value="claude-opus-4-8" spellcheck="false" />
+            <div class="modelHead">
+              <label data-i18n="l_models">Target model(s)</label>
+              <button class="discover" id="discoverBtn" data-i18n="discover">↻ discover models</button>
+            </div>
+            <textarea id="models" spellcheck="false" placeholder="claude-opus-4-8, gpt-4o, ...">claude-opus-4-8</textarea>
+            <div class="chips" id="chips"></div>
           </div>
-          <button class="run" id="runProbe">Start verification</button>
-          <div class="runNote">Sends ~9 probe requests · est. $0.01–$0.30</div>
+          <button class="run" id="runProbe" data-i18n="run_btn">Start verification</button>
+          <div class="runNote" data-i18n="run_note">Sends ~9 probes per model · est. $0.01–$0.30 each</div>
           <details class="advanced">
-            <summary>Advanced · protocol &amp; offline analyze</summary>
+            <summary data-i18n="adv">Advanced · protocol &amp; offline analyze</summary>
             <div class="field" style="margin-top:12px">
-              <label>Protocol</label>
+              <label data-i18n="l_protocol">Protocol</label>
               <select id="protocol">
                 <option>Anthropic /v1/messages</option>
                 <option>OpenAI /v1/chat/completions</option>
@@ -232,78 +219,65 @@
             </div>
             <textarea id="responseJson" placeholder="Paste a raw response JSON to analyze offline (no key needed)"></textarea>
             <div class="twoBtn">
-              <button class="sbtn" id="loadSample">Load sample</button>
-              <button class="sbtn" id="analyzeJson">Analyze JSON</button>
+              <button class="sbtn" id="loadSample" data-i18n="load_sample">Load sample</button>
+              <button class="sbtn" id="analyzeJson" data-i18n="analyze_json">Analyze JSON</button>
             </div>
           </details>
         </div>
         <div class="pad">
-          <label>What we verify</label>
+          <label data-i18n="what">What we verify</label>
           <ul class="checks">
-            <li><span class="ci">M</span><div><b>Model identity</b><span class="small">Actual model returned vs the model you requested</span></div></li>
-            <li><span class="ci">U</span><div><b>Usage integrity</b><span class="small">input / output / cache token evidence is present &amp; plausible</span></div></li>
-            <li><span class="ci">N</span><div><b>Nonce replay guard</b><span class="small">A unique nonce must echo back intact every run</span></div></li>
-            <li><span class="ci">C</span><div><b>Claude Code truth</b><span class="small">No false /compact, local-tool or permission-bypass claims</span></div></li>
-            <li><span class="ci">$</span><div><b>Billing boundary</b><span class="small">Separates request-side evidence from real backend ledger</span></div></li>
+            <li><span class="ci">M</span><div><b data-i18n="c_model">Model identity</b><span class="small" data-i18n="c_model_d">Actual model returned vs the model you requested</span></div></li>
+            <li><span class="ci">U</span><div><b data-i18n="c_usage">Usage integrity</b><span class="small" data-i18n="c_usage_d">input / output / cache token evidence is present &amp; plausible</span></div></li>
+            <li><span class="ci">N</span><div><b data-i18n="c_nonce">Nonce replay guard</b><span class="small" data-i18n="c_nonce_d">A unique nonce must echo back intact every run</span></div></li>
+            <li><span class="ci">C</span><div><b data-i18n="c_claims">Claude Code truth</b><span class="small" data-i18n="c_claims_d">No false /compact, local-tool or permission-bypass claims</span></div></li>
+            <li><span class="ci">$</span><div><b data-i18n="c_bill">Billing boundary</b><span class="small" data-i18n="c_bill_d">Separates request-side evidence from real backend ledger</span></div></li>
           </ul>
         </div>
       </div>
     </div>
 
     <div class="card results">
-      <div class="resGrid">
-        <div class="dialWrap">
-          <div class="dial" id="dial" style="--score:0"><div class="dialIn">
-            <div><div class="dialV" id="scoreValue">0</div><div class="small muted">trust score</div></div>
-          </div></div>
-          <div class="verdict" id="verdict">Ready to verify</div>
-        </div>
-        <div class="resBody">
-          <div class="resHead">
-            <h3 id="runLabel">No run yet</h3>
-            <span class="small muted mono" id="runMeta">run once to produce evidence</span>
-          </div>
-          <p class="resSummary" id="summary">Enter a router endpoint, key and model, then pass the human check to run a live evidence report.</p>
-          <table>
-            <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
-            <tbody id="checksBody"><tr><td colspan="3" class="muted">No evidence yet.</td></tr></tbody>
-          </table>
-          <div class="raw">
-            <details><summary>Raw evidence digest</summary><pre id="digest">pending</pre></details>
-          </div>
-        </div>
+      <div class="resHead">
+        <h3 data-i18n="res_title">Comparison matrix</h3>
+        <span class="sum" id="resSum" data-i18n="res_empty">no run yet</span>
       </div>
+      <table class="matrix">
+        <thead><tr>
+          <th data-i18n="th_model">Model</th><th data-i18n="th_verdict">Verdict</th>
+          <th data-i18n="th_score">Score</th><th data-i18n="th_resolved">Resolved</th>
+          <th data-i18n="th_latency">Latency</th><th></th>
+        </tr></thead>
+        <tbody id="matrixBody">
+          <tr class="emptyRow"><td colspan="6" data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare authenticity side by side.</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 </header>
 
 <section class="how wrap" id="how">
-  <h2>Three steps to a shareable evidence report</h2>
+  <h2 data-i18n="how_title">Three steps to a shareable evidence report</h2>
   <div class="steps">
-    <div class="step"><div class="n">01 · Configure</div><h3>Point at any router</h3><p>Anthropic or OpenAI-compatible base URL, a test key, and the model you were sold.</p></div>
-    <div class="step"><div class="n">02 · Probe</div><h3>Black-box battery</h3><p>Identity, long-output stability, nonce replay, usage integrity and Claude Code behavior — in one pass.</p></div>
-    <div class="step"><div class="n">03 · Decide</div><h3>Genuine or degraded</h3><p>A trust score plus a per-category verdict you can export and hand to procurement.</p></div>
+    <div class="step"><div class="n">01 · <span data-i18n="how1_t">Configure</span></div><h3 data-i18n="how1_h">Point at any router</h3><p data-i18n="how1_p">Anthropic or OpenAI-compatible base URL, a test key, and the models you were sold.</p></div>
+    <div class="step"><div class="n">02 · <span data-i18n="how2_t">Probe</span></div><h3 data-i18n="how2_h">Black-box battery</h3><p data-i18n="how2_p">Identity, long-output stability, nonce replay, usage integrity and Claude Code behavior — per model.</p></div>
+    <div class="step"><div class="n">03 · <span data-i18n="how3_t">Compare</span></div><h3 data-i18n="how3_h">Genuine or degraded</h3><p data-i18n="how3_p">A trust score and per-category verdict for every model, side by side.</p></div>
   </div>
 </section>
 
 <footer class="wrap">
-  <span>© TokenTest.io — verification console for AI middle-layer buyers</span>
-  <span class="mono">your key is never stored</span>
+  <span data-i18n="foot">© TokenTest.io — verification console for AI middle-layer buyers</span>
+  <span class="mono" data-i18n="foot2">your key is never stored</span>
 </footer>
 
 <div class="mask" id="mask">
   <div class="cap">
-    <div class="capHead"><b>Security check</b><span>slide to fit the piece</span>
+    <div class="capHead"><b data-i18n="cap_title">Security check</b><span data-i18n="cap_sub">slide to fit the piece</span>
       <button class="capX" id="capClose" aria-label="Close">×</button></div>
-    <div class="board" id="board">
-      <img class="bg" id="capBg" alt="" /><img class="pc" id="capPiece" alt="" />
-    </div>
-    <div class="slider" id="slider">
-      <span class="hint">Drag the slider to complete the puzzle →</span>
-      <div class="handle" id="handle">›</div>
-    </div>
+    <div class="board" id="board"><img class="bg" id="capBg" alt="" /><img class="pc" id="capPiece" alt="" /></div>
+    <div class="slider" id="slider"><span class="hint" data-i18n="cap_hint">Drag the slider to complete the puzzle →</span><div class="handle" id="handle">›</div></div>
     <div class="capMsg" id="capMsg"></div>
-    <div style="text-align:center"><button class="capRefresh" id="capRefresh">↻ refresh</button></div>
+    <div style="text-align:center"><button class="capRefresh" id="capRefresh" data-i18n="cap_refresh">↻ refresh</button></div>
   </div>
 </div>
 
@@ -311,172 +285,259 @@
 
 <script>
   const $ = (id) => document.getElementById(id);
-  const ENGINE = "https://mcp-quality.flatkey.ai";
-  const CAT_COLOR = { pass:"pass", partial:"partial", fail:"fail", skip:"skip" };
 
-  const sampleAnthropic = {
-    id:"msg_tokentest_sample", type:"message", role:"assistant", model:"claude-sonnet-4-6",
-    content:[{type:"text",text:"MODEL_TRUTH_OK 42f7a9c1"}],
-    usage:{input_tokens:118,output_tokens:12,cache_creation_input_tokens:0,cache_read_input_tokens:0}
-  };
-  const state = { mode:"quick", nonce:"42f7a9c1", lastReport:null };
-
-  function showToast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600);}
-  function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
-  function setScore(s){ s=Math.max(0,Math.min(100,Number(s)||0)); $("dial").style.setProperty("--score",s); $("scoreValue").textContent=s; }
-
-  function renderFromEngine(d){
-    state.lastReport=d;
-    const score=Number.isFinite(d.score)?d.score:0; setScore(score);
-    const vmap={genuine:"Genuine ✓",suspicious:"Suspicious",likely_fake_or_degraded:"Likely fake / degraded",
-      auth_failed:"Auth failed",unreachable:"Unreachable",error:"Error"};
-    $("verdict").textContent=(vmap[d.verdict]||d.verdict||"—");
-    $("runLabel").textContent=((d.provider||"").toUpperCase()+" · "+(d.resolved_model||d.requested_model||"—")).trim();
-    $("runMeta").textContent=`latency ${d.latency_ms??"?"}ms · ttft ${d.ttft_ms??"?"}ms`;
-    $("summary").textContent=d.summary||d.error||"";
-    const cats=d.categories||[];
-    $("checksBody").innerHTML = cats.length ? cats.map(c=>{
-      const cls=CAT_COLOR[c.status]||"skip";
-      const froms=(c.from||[]).map(f=>String(f).split("/")[0]);
-      const detail=(d.checks||[]).filter(x=>froms.includes(x.name)).map(x=>x.detail).join(" · ");
-      return `<tr><td>${escapeHtml(c.name)}</td><td><span class="pill ${cls}">${c.status} ${c.score}/${c.max}</span></td><td class="muted">${escapeHtml(detail).slice(0,300)}</td></tr>`;
-    }).join("") : `<tr><td colspan="3" class="muted">No categories returned.</td></tr>`;
-    $("digest").textContent=JSON.stringify(d,null,2);
+  // ---------------- i18n ----------------
+  const I18N = {
+    en:{ nav_how:"How it works",nav_verify:"Verify",run:"Run",trust:"Trusted by router operators & procurement teams",
+      h1:'Verify any model is real<br><span class="accent">before you pay for it.</span>',
+      sub:"TokenTest is the black-box verification console for AI middle-layer buyers. Batch-test a router's actual model, route, token usage and billing in one run — your API key is never stored.",
+      safety:"⛨ Black-box probing · for safety, prefer a test-only API key",
+      card_title:"Verification Run",card_tag:"black-box · key not stored",mode_quick:"Quick",mode_truth:"Truth",mode_cost:"Cost",
+      l_endpoint:"API endpoint",l_key:"API key",l_models:"Target model(s)",discover:"↻ discover models",
+      run_btn:"Start verification",run_note:"Sends ~9 probes per model · est. $0.01–$0.30 each",
+      adv:"Advanced · protocol & offline analyze",l_protocol:"Protocol",load_sample:"Load sample",analyze_json:"Analyze JSON",
+      what:"What we verify",c_model:"Model identity",c_model_d:"Actual model returned vs the model you requested",
+      c_usage:"Usage integrity",c_usage_d:"input / output / cache token evidence is present & plausible",
+      c_nonce:"Nonce replay guard",c_nonce_d:"A unique nonce must echo back intact every run",
+      c_claims:"Claude Code truth",c_claims_d:"No false /compact, local-tool or permission-bypass claims",
+      c_bill:"Billing boundary",c_bill_d:"Separates request-side evidence from real backend ledger",
+      res_title:"Comparison matrix",res_empty:"no run yet",th_model:"Model",th_verdict:"Verdict",th_score:"Score",th_resolved:"Resolved",th_latency:"Latency",
+      res_hint:"Enter a router, list one or more models, pass the human check, and compare authenticity side by side.",
+      how_title:"Three steps to a shareable evidence report",how1_t:"Configure",how1_h:"Point at any router",how1_p:"Anthropic or OpenAI-compatible base URL, a test key, and the models you were sold.",
+      how2_t:"Probe",how2_h:"Black-box battery",how2_p:"Identity, long-output stability, nonce replay, usage integrity and Claude Code behavior — per model.",
+      how3_t:"Compare",how3_h:"Genuine or degraded",how3_p:"A trust score and per-category verdict for every model, side by side.",
+      foot:"© TokenTest.io — verification console for AI middle-layer buyers",foot2:"your key is never stored",
+      cap_title:"Security check",cap_sub:"slide to fit the piece",cap_hint:"Drag the slider to complete the puzzle →",cap_refresh:"↻ refresh",
+      lang:"中文" },
+    zh:{ nav_how:"工作原理",nav_verify:"开始检测",run:"运行",trust:"受中转运营商与采购团队信赖",
+      h1:'验证任何模型的真伪<br><span class="accent">在你付费之前。</span>',
+      sub:"TokenTest 是面向 AI 中间层买家的黑盒验证控制台。一次批量检测中转的真实模型、路由、Token 用量与计费 —— 你的 API Key 绝不存储。",
+      safety:"⛨ 黑盒探测 · 为安全起见，建议使用测试专用 API Key",
+      card_title:"验证运行",card_tag:"黑盒 · 不存储 Key",mode_quick:"快速",mode_truth:"深度",mode_cost:"成本",
+      l_endpoint:"API 接口地址",l_key:"API Key",l_models:"目标模型（可多个）",discover:"↻ 自动发现模型",
+      run_btn:"开始检测",run_note:"每个模型约 9 次探测 · 单个约 $0.01–$0.30",
+      adv:"高级 · 协议与离线分析",l_protocol:"协议",load_sample:"载入示例",analyze_json:"分析 JSON",
+      what:"我们检测什么",c_model:"模型身份",c_model_d:"实际返回的模型 vs 你请求的模型",
+      c_usage:"用量完整性",c_usage_d:"input / output / cache token 证据存在且合理",
+      c_nonce:"Nonce 重放防护",c_nonce_d:"每次运行唯一 nonce 必须完整回显",
+      c_claims:"Claude Code 真伪",c_claims_d:"无虚假 /compact、本地工具或越权声明",
+      c_bill:"计费边界",c_bill_d:"区分请求侧证据与真实后端账本",
+      res_title:"对比矩阵",res_empty:"尚未运行",th_model:"模型",th_verdict:"判定",th_score:"评分",th_resolved:"实际解析",th_latency:"延迟",
+      res_hint:"填入中转地址、列出一个或多个模型、通过人机验证，即可横向对比真伪。",
+      how_title:"三步生成可分享的证据报告",how1_t:"配置",how1_h:"指向任意中转",how1_p:"Anthropic 或 OpenAI 兼容的 base URL、一个测试 Key，以及被卖给你的模型。",
+      how2_t:"探测",how2_h:"黑盒探测组",how2_p:"身份、长输出稳定性、nonce 重放、用量完整性与 Claude Code 行为 —— 逐模型。",
+      how3_t:"对比",how3_h:"真实或降智",how3_p:"为每个模型给出信任分与逐项判定，横向并列。",
+      foot:"© TokenTest.io —— AI 中间层买家的验证控制台",foot2:"你的 Key 绝不存储",
+      cap_title:"安全验证",cap_sub:"拖动拼好缺口",cap_hint:"拖动滑块完成拼图 →",cap_refresh:"↻ 刷新",
+      lang:"EN" } };
+  let LANG = localStorage.getItem("tt_lang") || "en";
+  const VERDICT = {
+    genuine:{en:"Genuine ✓",zh:"真实 ✓"},suspicious:{en:"Suspicious",zh:"可疑"},
+    likely_fake_or_degraded:{en:"Likely fake / degraded",zh:"疑似假 / 降智"},
+    auth_failed:{en:"Auth failed",zh:"鉴权失败"},unreachable:{en:"Unreachable",zh:"不可达"},error:{en:"Error",zh:"错误"} };
+  const CATLABEL = {
+    llm_fingerprint:{en:"LLM fingerprint"},token_audit:{en:"Token usage audit"},behavior:{en:"Behavior"},
+    signature:{en:"Signature"},multimodal:{en:"Multimodal"},structure:{en:"Structural integrity"},
+    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
+    "签名校验":{en:"Signature"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
+  const t = (k) => (I18N[LANG][k] ?? I18N.en[k] ?? k);
+  function verdictLabel(v){ const m=VERDICT[v]; return m?(m[LANG]||m.en):(v||"—"); }
+  function catLabel(cat){ const byKey=CATLABEL[cat.key]||CATLABEL[cat.name];
+    if(LANG==="zh") return cat.name||(byKey&&byKey.en)||cat.key||"—";
+    return (byKey&&byKey.en)||cat.name||cat.key||"—"; }
+  function applyLang(){
+    document.documentElement.lang = LANG==="zh"?"zh":"en";
+    document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=t(el.getAttribute("data-i18n")); });
+    document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
+    $("langBtn").textContent=t("lang");
+    if(BATCH.length) renderMatrix(); else { $("resSum").textContent=t("res_empty");
+      const er=document.querySelector(".emptyRow td"); if(er) er.textContent=t("res_hint"); }
   }
 
-  function responseText(p){ if(!p)return"";
-    if(Array.isArray(p.content))return p.content.map(i=>i.text||i.content||"").join("\n").trim();
-    const ch=p.choices&&p.choices[0];
-    if(ch&&ch.message){const c=ch.message.content;return Array.isArray(c)?c.map(i=>i.text||"").join("\n"):String(c||"");}
-    return ""; }
-  function usageOf(p){const u=p.usage||{};return{input:+(u.input_tokens||u.prompt_tokens||0),output:+(u.output_tokens||u.completion_tokens||0),cacheRead:+(u.cache_read_input_tokens||(u.prompt_tokens_details||{}).cached_tokens||0)};}
-  function analyzeLocal(p){
-    const req=$("model").value.trim(), act=p.model||p.response_model||req, text=responseText(p), u=usageOf(p);
-    const r={ model:act===req||act.includes(req)||req.includes(act), usage:u.input>0&&u.output>0,
-      nonce:text.includes(`MODEL_TRUTH_OK ${state.nonce}`),
-      claims:!(/can_actually_compact_local_session["'\s:]+true/i.test(text)||/can_bypass_permissions["'\s:]+true/i.test(text)),
-      billing:Boolean(p.backend_billing||p.billing_rows||p.balance_delta_usd) };
-    const score=(r.model?22:0)+(r.usage?22:0)+(r.nonce?22:0)+(r.claims?18:0)+(r.billing?16:0);
-    setScore(score);
-    $("verdict").textContent=score>=86?"Genuine ✓":score>=68?"Partially verified":"Not verified";
-    $("runLabel").textContent="Offline analyze";
-    $("runMeta").textContent=`${act} · ${p.id||"sample"}`;
-    $("summary").textContent=r.billing?"Request + backend billing evidence attached.":"Request-side evidence only — backend billing pending.";
-    const rows=[["Model identity","model",`${req} → ${act}`],["Usage integrity","usage",`${u.input} in / ${u.output} out / ${u.cacheRead} cache`],
-      ["Nonce replay guard","nonce",r.nonce?`echoed nonce ${state.nonce}`:`missing nonce ${state.nonce}`],
-      ["Claude Code truth","claims",r.claims?"no false claims":"false capability claim"],["Billing boundary","billing",r.billing?"ledger attached":"pending"]];
-    $("checksBody").innerHTML=rows.map(([n,k,det])=>{const ok=r[k];const cls=k==="billing"&&!ok?"partial":ok?"pass":"fail";const lbl=k==="billing"&&!ok?"pending":ok?"pass":"fail";return `<tr><td>${n}</td><td><span class="pill ${cls}">${lbl}</span></td><td class="muted">${escapeHtml(det)}</td></tr>`;}).join("");
-    $("digest").textContent=JSON.stringify({model:act,usage:u,verdict:$("verdict").textContent,text:text.slice(0,180)},null,2);
-  }
+  // ---------------- helpers ----------------
+  const ENGINE_PROVIDER = () => $("protocol").value.startsWith("Anthropic")?"anthropic":"openai";
+  function showToast(x){const e=$("toast");e.textContent=x;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600);}
+  function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+  function scoreColor(s){ return s>=80?"var(--green)":s>=55?"var(--amber)":"var(--red)"; }
+  function parseModels(){ return $("models").value.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean); }
 
-  async function doRun(){
-    const apiKey=$("apiKey").value.trim();
-    const endpoint=$("endpoint").value.replace(/\/$/,"");
-    const model=$("model").value.trim();
-    const provider=$("protocol").value.startsWith("Anthropic")?"anthropic":"openai";
-    if(!apiKey||/your-router\.com|example-router/.test(endpoint)){ showToast("Enter a real endpoint + API key"); return; }
-    const btn=$("runProbe"); const orig=btn.textContent; btn.textContent="Running 9 probes…"; btn.disabled=true; $("runTop").disabled=true;
-    showToast("Running probe battery via TokenTest engine…");
-    try{
-      const r=await fetch(ENGINE+"/check",{method:"POST",headers:{"content-type":"application/json"},
-        body:JSON.stringify({base_url:endpoint,api_key:apiKey,model,provider,deep:state.mode==="truth"})});
-      const data=await r.json(); renderFromEngine(data);
-      showToast(data.error?`Engine: ${data.error}`:`Done · ${data.verdict||""} ${data.score??""}`);
-    }catch(e){ showToast(`Engine request failed: ${e.message}`); }
-    finally{ btn.textContent=orig; btn.disabled=false; $("runTop").disabled=false; }
-  }
+  // ---------------- token / captcha gate ----------------
+  function getToken(){ try{ const raw=sessionStorage.getItem("tt_cap"); if(!raw)return null;
+    const exp=+raw.split(".")[1]; if(Date.now()>exp) return null; return raw; }catch{ return null; } }
+  function ensureToken(cb){ const tk=getToken(); if(tk) return cb(tk); openCaptcha(()=>cb(getToken())); }
 
+  // ---------------- batch run ----------------
+  let BATCH = []; // [{model, status:"pending"|done, data}]
+  async function checkModel(token, model){
+    const body={ token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(),
+      model, provider:ENGINE_PROVIDER(), deep:state.mode==="truth" };
+    try{ const r=await fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+      if(r.status===401){ sessionStorage.removeItem("tt_cap"); throw new Error("captcha"); }
+      return await r.json();
+    }catch(e){ if(e.message==="captcha") throw e; return {verdict:"error",score:0,error:String(e),summary:t("res_empty")}; }
+  }
   function requestRun(){
-    const apiKey=$("apiKey").value.trim(), endpoint=$("endpoint").value;
-    if(!apiKey||/your-router\.com|example-router/.test(endpoint)){ showToast("Enter a real endpoint + API key first"); return; }
-    openCaptcha(()=>doRun());
-  }
-
-  // ================= SLIDE CAPTCHA =================
-  let cap = { id:null, maxX:0, x:0, trail:[], t0:0, dragging:false, onPass:null };
-  async function loadChallenge(){
-    $("capMsg").textContent=""; $("capMsg").className="capMsg";
-    $("handle").className="handle"; $("handle").textContent="›"; $("handle").style.left="0px"; $("capPiece").style.left="0px";
-    $("slider").querySelector(".hint").style.opacity=1;
-    try{
-      const r=await fetch("/api/captcha/challenge",{method:"POST"}); const d=await r.json();
-      cap.id=d.challengeId; cap.maxX=d.maxX;
-      $("capBg").src=d.bg; $("capPiece").src=d.piece; $("capPiece").style.top=d.y+"px";
-    }catch(e){ $("capMsg").textContent="failed to load — refresh"; $("capMsg").className="capMsg err"; }
-  }
-  function openCaptcha(onPass){ cap.onPass=onPass; $("mask").classList.add("show"); loadChallenge(); }
-  function closeCaptcha(){ $("mask").classList.remove("show"); }
-
-  function pointX(e){ const t=e.touches?e.touches[0]:e; return t.clientX; }
-  function handleStart(e){
-    cap.dragging=true; cap.trail=[]; cap.t0=performance.now();
-    $("handle").classList.remove("bad","ok"); $("slider").querySelector(".hint").style.opacity=0;
-    moveTo(pointX(e)); e.preventDefault();
-  }
-  function moveTo(clientX){
-    const track=$("slider").getBoundingClientRect();
-    let x=clientX-track.left-24; x=Math.max(0,Math.min(cap.maxX,x));
-    cap.x=x; $("handle").style.left=x+"px"; $("capPiece").style.left=x+"px";
-    cap.trail.push({x:Math.round(x),t:Math.round(performance.now()-cap.t0)});
-  }
-  function handleMove(e){ if(!cap.dragging)return; moveTo(pointX(e)); }
-  async function handleEnd(){
-    if(!cap.dragging)return; cap.dragging=false;
-    try{
-      const r=await fetch("/api/captcha/verify",{method:"POST",headers:{"content-type":"application/json"},
-        body:JSON.stringify({challengeId:cap.id,x:Math.round(cap.x),trail:cap.trail})});
-      const d=await r.json();
-      if(d.ok){
-        $("handle").classList.add("ok"); $("handle").textContent="✓";
-        $("capMsg").textContent="✓ Verified — faster than 99% of users"; $("capMsg").className="capMsg good";
-        sessionStorage.setItem("tt_cap",d.token);
-        setTimeout(()=>{ closeCaptcha(); if(cap.onPass)cap.onPass(); },650);
-      }else{
-        $("handle").classList.add("bad");
-        $("capMsg").textContent = d.reason==="behavior" ? "✗ Try a smoother, slower drag" : "✗ Not aligned — try again";
-        $("capMsg").className="capMsg err";
-        setTimeout(loadChallenge,850);
+    const key=$("apiKey").value.trim(), ep=$("endpoint").value;
+    const models=parseModels();
+    if(!key||/your-router|example-router/.test(ep)){ showToast(LANG==="zh"?"请先填写真实地址和 API Key":"Enter a real endpoint + API key first"); return; }
+    if(!models.length){ showToast(LANG==="zh"?"请至少填一个模型":"List at least one model"); return; }
+    ensureToken(async(token)=>{
+      if(!token){ showToast(LANG==="zh"?"需要先通过人机验证":"Human check required"); return; }
+      BATCH = models.map(m=>({model:m,status:"pending",data:null})); renderMatrix();
+      $("runProbe").disabled=true; $("runTop").disabled=true;
+      for(let i=0;i<BATCH.length;i++){
+        try{ BATCH[i].data=await checkModel(token,BATCH[i].model); BATCH[i].status="done"; }
+        catch(e){ if(e.message==="captcha"){ $("runProbe").disabled=false;$("runTop").disabled=false;
+          showToast(LANG==="zh"?"验证已过期，请重试":"Verification expired — retry"); return; } }
+        renderMatrix();
       }
-    }catch(e){ $("capMsg").textContent="verify failed — refresh"; $("capMsg").className="capMsg err"; }
+      $("runProbe").disabled=false; $("runTop").disabled=false;
+      showToast(LANG==="zh"?"检测完成":"Verification complete");
+    });
   }
 
-  $("handle").addEventListener("mousedown",handleStart);
-  $("handle").addEventListener("touchstart",handleStart,{passive:false});
-  window.addEventListener("mousemove",handleMove);
-  window.addEventListener("touchmove",handleMove,{passive:false});
-  window.addEventListener("mouseup",handleEnd);
-  window.addEventListener("touchend",handleEnd);
-  $("capClose").addEventListener("click",closeCaptcha);
-  $("capRefresh").addEventListener("click",loadChallenge);
-  $("mask").addEventListener("click",e=>{ if(e.target===$("mask"))closeCaptcha(); });
+  function renderMatrix(){
+    const done=BATCH.filter(b=>b.status==="done");
+    const gen=done.filter(b=>b.data&&b.data.verdict==="genuine").length;
+    const avg=done.length?Math.round(done.reduce((a,b)=>a+(b.data.score||0),0)/done.length):0;
+    $("resSum").textContent = BATCH.length ?
+      `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${gen} ${LANG==="zh"?"真实":"genuine"} · ${LANG==="zh"?"均分":"avg"} ${avg}` : t("res_empty");
+    $("matrixBody").innerHTML = BATCH.map((b,i)=>{
+      if(b.status==="pending") return `<tr class="row"><td class="mModel">${esc(b.model)}</td><td colspan="4" class="muted"><span class="spin"></span> ${LANG==="zh"?"探测中…":"probing…"}</td><td></td></tr>`;
+      const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=d.verdict||"error";
+      const flags=(d.categories||[]).filter(c=>c.status==="fail").map(c=>catLabel(c)).join(", ");
+      return `<tr class="row" data-i="${i}">
+        <td class="mModel">${esc(b.model)}</td>
+        <td><span class="pill ${v}">${esc(verdictLabel(v))}</span></td>
+        <td><span class="scoreCell" style="color:${scoreColor(sc)}">${sc}</span><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div></td>
+        <td class="muted mono">${esc(d.resolved_model||d.requested_model||"—")}</td>
+        <td class="muted mono">${d.latency_ms!=null?Math.round(d.latency_ms)+"ms":"—"}</td>
+        <td class="expand">${LANG==="zh"?"详情 ▾":"details ▾"}</td></tr>
+        <tr class="detail" id="det-${i}" style="display:none"><td colspan="6"><div class="detailIn" id="detin-${i}"></div></td></tr>`;
+    }).join("") || `<tr class="emptyRow"><td colspan="6">${t("res_hint")}</td></tr>`;
+    $("matrixBody").querySelectorAll("tr.row").forEach(tr=>{
+      const i=tr.getAttribute("data-i"); if(i==null)return;
+      tr.addEventListener("click",()=>toggleDetail(+i));
+    });
+  }
+  function toggleDetail(i){
+    const det=$("det-"+i); if(!det)return; const open=det.style.display!=="none";
+    det.style.display=open?"none":"table-row";
+    if(!open) $("detin-"+i).innerHTML = detailHtml(BATCH[i].data);
+  }
+  function detailHtml(d){
+    if(!d) return `<div class="detSummary">—</div>`;
+    const cats=d.categories||[];
+    const rows=cats.length? cats.map(c=>{
+      const froms=(c.from||[]).map(f=>String(f).split("/")[0]);
+      const ev=(d.checks||[]).filter(x=>froms.includes(x.name)).map(x=>x.detail).join(" · ");
+      return `<tr><td>${esc(catLabel(c))}</td><td><span class="pill ${c.status}">${c.status} ${c.score}/${c.max}</span></td><td class="muted">${esc(ev).slice(0,260)}</td></tr>`;
+    }).join("") : `<tr><td colspan="3" class="muted">${esc(d.error||(LANG==="zh"?"无分类数据":"no category data"))}</td></tr>`;
+    return `<div class="detSummary">${esc(d.summary||d.error||"")}</div>
+      <table class="catTable"><tbody>${rows}</tbody></table>
+      <details style="margin-top:12px"><summary>${LANG==="zh"?"原始证据 JSON":"Raw evidence digest"}</summary><pre>${esc(JSON.stringify(d,null,2))}</pre></details>`;
+  }
 
-  // ================= wires =================
+  // ---------------- model autodiscovery ----------------
+  function discover(){
+    const key=$("apiKey").value.trim(), ep=$("endpoint").value;
+    if(!key||/your-router|example-router/.test(ep)){ showToast(LANG==="zh"?"请先填写地址和 Key":"Enter endpoint + key first"); return; }
+    ensureToken(async(token)=>{
+      if(!token)return; showToast(LANG==="zh"?"正在拉取模型列表…":"Fetching model list…");
+      try{ const r=await fetch("/api/models",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({token,base_url:$("endpoint").value.replace(/\/$/,""),api_key:key})});
+        const d=await r.json();
+        if(!d.models||!d.models.length){ showToast(LANG==="zh"?"未发现模型（中转可能未开放 /models）":"No models found (router may hide /models)"); $("chips").innerHTML=""; return; }
+        $("chips").innerHTML = d.models.slice(0,40).map(m=>`<span class="chip" data-m="${esc(m)}">+ ${esc(m)}</span>`).join("");
+        $("chips").querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+          const m=c.getAttribute("data-m"); const cur=parseModels();
+          if(!cur.includes(m)) $("models").value = (cur.concat(m)).join(", ");
+        }));
+        showToast(`${d.models.length} ${LANG==="zh"?"个模型可选":"models found"}`);
+      }catch(e){ showToast("discover failed: "+e.message); }
+    });
+  }
+
+  // ---------------- offline analyze ----------------
+  const sample={id:"msg_sample",model:"claude-sonnet-4-6",content:[{type:"text",text:"MODEL_TRUTH_OK 42f7a9c1"}],usage:{input_tokens:118,output_tokens:12}};
+  const state={mode:"quick"};
+  function analyzeLocal(p){
+    const req=parseModels()[0]||"", act=p.model||req;
+    const text=Array.isArray(p.content)?p.content.map(i=>i.text||"").join(" "):"";
+    const u=p.usage||{}; const inp=+(u.input_tokens||u.prompt_tokens||0), out=+(u.output_tokens||u.completion_tokens||0);
+    const r={model:!req||act.includes(req)||req.includes(act),usage:inp>0&&out>0,nonce:text.includes("MODEL_TRUTH_OK")};
+    const sc=(r.model?34:0)+(r.usage?33:0)+(r.nonce?33:0);
+    BATCH=[{model:(req||act)+" (offline)",status:"done",data:{verdict:sc>=80?"genuine":sc>=50?"suspicious":"error",score:sc,
+      resolved_model:act,latency_ms:null,summary:LANG==="zh"?"离线分析（仅基于粘贴的 JSON）":"Offline analysis (pasted JSON only)",
+      categories:[{key:"structure",name:"结构完整性",status:r.model?"pass":"fail",score:r.model?34:0,max:34},
+        {key:"token_audit",name:"Token 用量审计",status:r.usage?"pass":"fail",score:r.usage?33:0,max:33},
+        {key:"behavior",name:"行为验证",status:r.nonce?"pass":"fail",score:r.nonce?33:0,max:33}],
+      checks:[{name:"structure",detail:`${req||"?"} → ${act}`},{name:"token_audit",detail:`${inp} in / ${out} out`},{name:"behavior",detail:r.nonce?"nonce echoed":"nonce missing"}]}}];
+    renderMatrix();
+  }
+
+  // ---------------- SLIDE CAPTCHA ----------------
+  let cap={id:null,maxX:0,x:0,trail:[],t0:0,dragging:false,onPass:null};
+  async function loadChallenge(){
+    $("capMsg").textContent="";$("capMsg").className="capMsg";
+    $("handle").className="handle";$("handle").textContent="›";$("handle").style.left="0px";$("capPiece").style.left="0px";
+    $("slider").querySelector(".hint").style.opacity=1;
+    try{ const r=await fetch("/api/captcha/challenge",{method:"POST"});const d=await r.json();
+      cap.id=d.challengeId;cap.maxX=d.maxX;$("capBg").src=d.bg;$("capPiece").src=d.piece;$("capPiece").style.top=d.y+"px";
+    }catch(e){$("capMsg").textContent="failed — refresh";$("capMsg").className="capMsg err";}
+  }
+  function openCaptcha(onPass){cap.onPass=onPass;$("mask").classList.add("show");loadChallenge();}
+  function closeCaptcha(){$("mask").classList.remove("show");}
+  function pointX(e){const tt=e.touches?e.touches[0]:e;return tt.clientX;}
+  function hStart(e){cap.dragging=true;cap.trail=[];cap.t0=performance.now();$("handle").classList.remove("bad","ok");$("slider").querySelector(".hint").style.opacity=0;hMove2(pointX(e));e.preventDefault();}
+  function hMove2(cx){const tr=$("slider").getBoundingClientRect();let x=cx-tr.left-24;x=Math.max(0,Math.min(cap.maxX,x));cap.x=x;$("handle").style.left=x+"px";$("capPiece").style.left=x+"px";cap.trail.push({x:Math.round(x),t:Math.round(performance.now()-cap.t0)});}
+  function hMove(e){if(cap.dragging)hMove2(pointX(e));}
+  async function hEnd(){ if(!cap.dragging)return;cap.dragging=false;
+    try{ const r=await fetch("/api/captcha/verify",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({challengeId:cap.id,x:Math.round(cap.x),trail:cap.trail})});
+      const d=await r.json();
+      if(d.ok){ $("handle").classList.add("ok");$("handle").textContent="✓";
+        $("capMsg").textContent=LANG==="zh"?"✓ 验证通过 —— 快过 99% 用户":"✓ Verified — faster than 99% of users";$("capMsg").className="capMsg good";
+        sessionStorage.setItem("tt_cap",d.token);
+        setTimeout(()=>{closeCaptcha();if(cap.onPass)cap.onPass();},600);
+      }else{ $("handle").classList.add("bad");
+        $("capMsg").textContent=d.reason==="behavior"?(LANG==="zh"?"✗ 请更平滑地拖动":"✗ Try a smoother drag"):(LANG==="zh"?"✗ 未对齐，再试一次":"✗ Not aligned — try again");
+        $("capMsg").className="capMsg err";setTimeout(loadChallenge,850); }
+    }catch(e){$("capMsg").textContent="verify failed";$("capMsg").className="capMsg err";}
+  }
+  $("handle").addEventListener("mousedown",hStart);$("handle").addEventListener("touchstart",hStart,{passive:false});
+  window.addEventListener("mousemove",hMove);window.addEventListener("touchmove",hMove,{passive:false});
+  window.addEventListener("mouseup",hEnd);window.addEventListener("touchend",hEnd);
+  $("capClose").addEventListener("click",closeCaptcha);$("capRefresh").addEventListener("click",loadChallenge);
+  $("mask").addEventListener("click",e=>{if(e.target===$("mask"))closeCaptcha();});
+
+  // ---------------- wires ----------------
   document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{
-    document.querySelectorAll("[data-mode]").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active"); state.mode=b.dataset.mode;
-  }));
+    document.querySelectorAll("[data-mode]").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.mode=b.dataset.mode;}));
   $("runProbe").addEventListener("click",requestRun);
   $("runTop").addEventListener("click",requestRun);
-  $("loadSample").addEventListener("click",()=>{ $("responseJson").value=JSON.stringify(sampleAnthropic,null,2); analyzeLocal(sampleAnthropic); showToast("Sample loaded"); });
-  $("analyzeJson").addEventListener("click",()=>{ try{ const raw=$("responseJson").value.trim(); analyzeLocal(raw?JSON.parse(raw):sampleAnthropic); showToast("Response analyzed"); }catch(e){ showToast("Invalid JSON: "+e.message); } });
+  $("discoverBtn").addEventListener("click",discover);
+  $("loadSample").addEventListener("click",()=>{ $("responseJson").value=JSON.stringify(sample,null,2);analyzeLocal(sample);showToast(LANG==="zh"?"已载入示例":"Sample loaded"); });
+  $("analyzeJson").addEventListener("click",()=>{ try{const raw=$("responseJson").value.trim();analyzeLocal(raw?JSON.parse(raw):sample);}catch(e){showToast("Invalid JSON: "+e.message);} });
+  $("langBtn").addEventListener("click",()=>{ LANG=LANG==="en"?"zh":"en";localStorage.setItem("tt_lang",LANG);applyLang(); });
 
-  (function initPresets(){
-    const q=new URLSearchParams(location.search);
-    const p=location.pathname.replace(/\/+$/,"")||"/";
+  // deep-link presets
+  (function init(){
+    const q=new URLSearchParams(location.search);const p=location.pathname.replace(/\/+$/,"")||"/";
     const CR="http://host.docker.internal:8402";
-    const P={ "/blockrun":{provider:"openai",model:"gpt-4o",endpoint:CR,key:"x402"},
+    const P={"/blockrun":{provider:"openai",model:"gpt-4o",endpoint:CR,key:"x402"},
       "/blockrun-mini":{provider:"openai",model:"gpt-4o-mini",endpoint:CR,key:"x402"},
       "/blockrun-opus":{provider:"openai",model:"claude-opus-4.8",endpoint:CR,key:"x402"},
       "/blockrun-opus-47":{provider:"openai",model:"claude-opus-4.7",endpoint:CR,key:"x402"},
       "/blockrun-sonnet":{provider:"openai",model:"claude-sonnet-4.6",endpoint:CR,key:"x402"},
       "/blockrun-sol":{provider:"anthropic",model:"claude-sonnet-4-6",endpoint:"http://100.116.163.64:8413",key:"dummy"},
-      "/blockrun-sol-oai":{provider:"openai",model:"claude-sonnet-4-6",endpoint:"http://100.116.163.64:8403/v1",key:"dummy"} };
+      "/blockrun-sol-oai":{provider:"openai",model:"claude-sonnet-4-6",endpoint:"http://100.116.163.64:8403/v1",key:"dummy"}};
     const pr=P[p]||P["/"+(q.get("preset")||"")]||{};
-    const endpoint=q.get("endpoint")||pr.endpoint, model=q.get("model")||pr.model,
-      provider=(q.get("provider")||pr.provider||"").toLowerCase(), key=q.get("key")||pr.key;
-    if(endpoint)$("endpoint").value=endpoint; if(model)$("model").value=model;
+    const ep=q.get("endpoint")||pr.endpoint,model=q.get("model")||pr.model,
+      provider=(q.get("provider")||pr.provider||"").toLowerCase(),key=q.get("key")||pr.key;
+    if(ep)$("endpoint").value=ep; if(model)$("models").value=model;
     if(provider)$("protocol").value=provider.startsWith("openai")?"OpenAI /v1/chat/completions":"Anthropic /v1/messages";
     if(key)$("apiKey").value=key;
+    applyLang();
     if((q.get("run")==="1"||q.get("autorun")==="1")&&$("apiKey").value&&!/your-router|example-router/.test($("endpoint").value)) setTimeout(requestRun,400);
   })();
 </script>
