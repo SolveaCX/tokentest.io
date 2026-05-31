@@ -91,6 +91,10 @@
   .actBtn{background:#0a0a0a;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:6px 11px;font-size:12px;font-family:var(--mono);cursor:pointer}
   .actBtn:hover{color:var(--txt);border-color:var(--blue)}
   .shareBanner{background:rgba(48,128,255,.1);border-bottom:1px solid var(--line2);padding:11px 22px;font-family:var(--mono);font-size:12.5px;color:var(--blue);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .histItem{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 6px;border-bottom:1px solid var(--line2);cursor:pointer}
+  .histItem:hover{background:rgba(255,255,255,.03)}
+  .histItem .hm{font-family:var(--mono);font-size:13px} .histItem .hs{font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .histEmpty{color:var(--mut);text-align:center;padding:24px;font-size:13px}
   .matrix{width:100%;border-collapse:collapse;font-size:13.5px}
   .matrix th{text-align:left;color:var(--mut2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:12px 22px;border-bottom:1px solid var(--line2)}
   .matrix td{padding:13px 22px;border-bottom:1px solid var(--line2);vertical-align:middle}
@@ -250,6 +254,7 @@
             <button class="actBtn" id="btnJson" data-i18n="exp_json">JSON</button>
             <button class="actBtn" id="btnCsv" data-i18n="exp_csv">CSV</button>
           </div>
+          <button class="actBtn" id="btnHistory" style="display:none">🕘 <span data-i18n="history">History</span></button>
           <span class="sum" id="resSum" data-i18n="res_empty">no run yet</span>
         </div>
       </div>
@@ -292,6 +297,14 @@
   </div>
 </div>
 
+<div class="mask" id="histMask">
+  <div class="cap" style="width:460px">
+    <div class="capHead"><b data-i18n="hist_title">Run history</b><span></span><button class="capX" id="histClose" aria-label="Close">×</button></div>
+    <div id="histList" style="max-height:50vh;overflow:auto"></div>
+    <div style="text-align:center;margin-top:10px"><button class="capRefresh" id="histClear" data-i18n="hist_clear">clear history</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -321,6 +334,7 @@
       cap_title:"Security check",cap_sub:"slide to fit the piece",cap_hint:"Drag the slider to complete the puzzle →",cap_refresh:"↻ refresh",
       share:"⤴ Share",exp_json:"JSON",exp_csv:"CSV",link_copied:"Shareable link copied to clipboard",
       shared_report:"Shared verification report — read-only",run_own:"Run your own →",
+      history:"History",hist_title:"Run history",hist_clear:"clear history",hist_empty:"No past runs yet.",view_sample:"view a sample report",
       lang:"中文" },
     zh:{ nav_how:"工作原理",nav_verify:"开始检测",run:"运行",trust:"受中转运营商与采购团队信赖",
       h1:'验证任何模型的真伪<br><span class="accent">在你付费之前。</span>',
@@ -344,6 +358,7 @@
       cap_title:"安全验证",cap_sub:"拖动拼好缺口",cap_hint:"拖动滑块完成拼图 →",cap_refresh:"↻ 刷新",
       share:"⤴ 分享",exp_json:"JSON",exp_csv:"CSV",link_copied:"分享链接已复制到剪贴板",
       shared_report:"分享的验证报告 —— 只读",run_own:"自己跑一次 →",
+      history:"历史",hist_title:"运行历史",hist_clear:"清空历史",hist_empty:"暂无历史运行。",view_sample:"查看示例报告",
       lang:"EN" } };
   let LANG = localStorage.getItem("tt_lang") || "en";
   const VERDICT = {
@@ -423,6 +438,7 @@
         renderMatrix();
       }
       $("runProbe").disabled=false; $("runTop").disabled=false;
+      saveBatchToHistory();
       showToast(LANG==="zh"?"检测完成":"Verification complete");
     });
   }
@@ -520,6 +536,36 @@
     }catch(e){ return false; }
   }
 
+  // ---------------- run history (localStorage) ----------------
+  function loadHist(){ try{ return JSON.parse(localStorage.getItem("tt_hist")||"[]"); }catch{ return []; } }
+  function saveBatchToHistory(){
+    const rows=compactReport().rows; if(!rows.length) return;
+    const h=loadHist();
+    h.unshift({ ts:Date.now(), endpoint:$("endpoint").value.replace(/\/$/,""), rows });
+    localStorage.setItem("tt_hist", JSON.stringify(h.slice(0,25)));
+    updateHistoryBtn();
+  }
+  function updateHistoryBtn(){ $("btnHistory").style.display = loadHist().length ? "inline-block" : "none"; }
+  function openHistory(){
+    const h=loadHist();
+    $("histList").innerHTML = h.length ? h.map((e,i)=>{
+      const gen=e.rows.filter(r=>r.verdict==="genuine").length;
+      const avg=Math.round(e.rows.reduce((a,r)=>a+(r.score||0),0)/e.rows.length);
+      const when=new Date(e.ts).toLocaleString();
+      return `<div class="histItem" data-h="${i}"><div><div class="hm">${esc(e.endpoint)}</div><div class="hs">${when}</div></div>
+        <div class="hs">${e.rows.length} ${LANG==="zh"?"模型":"models"} · ${gen} ${LANG==="zh"?"真实":"genuine"} · ${LANG==="zh"?"均分":"avg"} ${avg}</div></div>`;
+    }).join("") : `<div class="histEmpty">${t("hist_empty")}</div>`;
+    $("histList").querySelectorAll("[data-h]").forEach(el=>el.addEventListener("click",()=>loadHistEntry(+el.getAttribute("data-h"))));
+    $("histMask").classList.add("show");
+  }
+  function loadHistEntry(i){
+    const e=loadHist()[i]; if(!e) return;
+    BATCH = e.rows.map(r=>({ model:r.model, status:"done", data:{ verdict:r.verdict, score:r.score, resolved_model:r.resolved,
+      latency_ms:r.latency, summary:r.summary, categories:r.cats||[], checks:[] } }));
+    $("histMask").classList.remove("show"); renderMatrix();
+    document.querySelector(".results").scrollIntoView({block:"start"});
+  }
+
   // ---------------- model autodiscovery ----------------
   function discover(){
     const key=$("apiKey").value.trim(), ep=$("endpoint").value;
@@ -607,6 +653,10 @@
   $("btnShare").addEventListener("click",shareReport);
   $("btnJson").addEventListener("click",exportJSON);
   $("btnCsv").addEventListener("click",exportCSV);
+  $("btnHistory").addEventListener("click",openHistory);
+  $("histClose").addEventListener("click",()=>$("histMask").classList.remove("show"));
+  $("histMask").addEventListener("click",e=>{ if(e.target===$("histMask"))$("histMask").classList.remove("show"); });
+  $("histClear").addEventListener("click",()=>{ localStorage.removeItem("tt_hist"); updateHistoryBtn(); openHistory(); });
 
   // deep-link presets
   (function init(){
@@ -625,7 +675,7 @@
     if(ep)$("endpoint").value=ep; if(model)$("models").value=model;
     if(provider)$("protocol").value=provider.startsWith("openai")?"OpenAI /v1/chat/completions":"Anthropic /v1/messages";
     if(key)$("apiKey").value=key;
-    applyLang();
+    applyLang(); updateHistoryBtn();
     const hm=(location.hash||"").match(/^#report=(.+)$/);
     if(hm){ loadSharedReport(hm[1]); return; }
     if((q.get("run")==="1"||q.get("autorun")==="1")&&$("apiKey").value&&!/your-router|example-router/.test($("endpoint").value)) setTimeout(requestRun,400);
