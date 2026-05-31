@@ -1,0 +1,1173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TokenTest.io</title>
+  <style>
+    :root {
+      --bg: #080a0d;
+      --panel: rgba(17, 21, 27, 0.82);
+      --panel-strong: rgba(20, 26, 34, 0.96);
+      --ink: #edf7f0;
+      --muted: #8fa19a;
+      --line: rgba(143, 234, 187, 0.18);
+      --blue: #58d1ff;
+      --green: #42f58d;
+      --amber: #ffce5c;
+      --red: #ff5f6d;
+      --soft-blue: rgba(88, 209, 255, 0.12);
+      --soft-green: rgba(66, 245, 141, 0.12);
+      --soft-amber: rgba(255, 206, 92, 0.13);
+      --soft-red: rgba(255, 95, 109, 0.12);
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.46);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(rgba(66, 245, 141, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88, 209, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(135deg, #080a0d 0%, #0b1112 44%, #090a0d 100%);
+      background-size: 42px 42px, 42px 42px, auto;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      overflow-x: hidden;
+    }
+
+    header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 24px;
+      background: rgba(8, 10, 13, 0.78);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 780;
+      letter-spacing: 0;
+      font-size: 19px;
+      text-shadow: 0 0 22px rgba(66, 245, 141, 0.24);
+    }
+
+    .mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #11151b;
+      border: 1px solid rgba(66, 245, 141, 0.38);
+      color: var(--green);
+      font-weight: 850;
+      font-size: 13px;
+      box-shadow: 0 0 22px rgba(66, 245, 141, 0.22), inset 0 0 18px rgba(88, 209, 255, 0.08);
+    }
+
+    .rightActions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .primaryButton, .secondaryButton, .dangerButton {
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      padding: 0 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 760;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .primaryButton {
+      background: var(--green);
+      color: #07100b;
+      box-shadow: 0 0 28px rgba(66, 245, 141, 0.24);
+    }
+    .secondaryButton { background: rgba(255,255,255,.04); border-color: var(--line); color: var(--ink); }
+    .dangerButton { background: var(--soft-red); border-color: #ffc9c5; color: var(--red); }
+
+    main {
+      width: min(1480px, calc(100% - 32px));
+      margin: 18px auto 60px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .topGrid {
+      display: grid;
+      grid-template-columns: minmax(380px, 430px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel, .card, .resultPanel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+      backdrop-filter: blur(18px);
+    }
+
+    .panelHeader {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(90deg, rgba(66,245,141,.08), rgba(88,209,255,.04));
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: 26px; line-height: 1.1; letter-spacing: 0; margin-bottom: 8px; overflow-wrap: anywhere; }
+    h2 { font-size: 17px; letter-spacing: 0; margin: 0; }
+    h3 { font-size: 14px; margin-bottom: 8px; }
+
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    .formBody {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 680;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: rgba(8, 10, 13, 0.72);
+      color: var(--ink);
+      border-radius: 8px;
+      min-height: 38px;
+      padding: 9px 10px;
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      line-height: 1.45;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(66, 245, 141, 0.78);
+      box-shadow: 0 0 0 3px rgba(66, 245, 141, 0.12), 0 0 22px rgba(66, 245, 141, 0.12);
+    }
+
+    .twoCols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .advanced {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+      overflow: hidden;
+    }
+
+    .advanced summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .advanced summary::-webkit-details-marker { display: none; }
+
+    .advanced summary::after {
+      content: "+";
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      border: 1px solid var(--line);
+      background: rgba(66,245,141,.08);
+      font-weight: 900;
+    }
+
+    .advanced[open] summary::after { content: "-"; }
+
+    .advancedBody {
+      padding: 0 12px 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .segmented button {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      height: 30px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .segmented button.active {
+      background: rgba(66, 245, 141, 0.14);
+      color: var(--ink);
+      box-shadow: inset 0 0 16px rgba(66, 245, 141, .1);
+      font-weight: 760;
+    }
+
+    .checkline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(143, 234, 187, 0.1);
+    }
+
+    .checkline:last-child { border-bottom: 0; }
+
+    .toggle {
+      width: 38px;
+      height: 22px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      padding: 2px;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .toggle::before {
+      content: "";
+      display: block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      transition: transform .16s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    }
+
+    .toggle.on { background: var(--green); }
+    .toggle.on::before { transform: translateX(16px); }
+
+    .heroTool {
+      min-height: 480px;
+      display: grid;
+      grid-template-rows: auto auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .heroTool::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent 0%, rgba(66, 245, 141, 0.07) 50%, transparent 100%);
+      height: 180px;
+      animation: scan 4.5s linear infinite;
+      mix-blend-mode: screen;
+      z-index: 0;
+    }
+
+    .heroTool > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes scan {
+      from { transform: translateY(-190px); }
+      to { transform: translateY(720px); }
+    }
+
+    .scoreStrip {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 18px;
+      border-bottom: 1px solid var(--line);
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 8px),
+        linear-gradient(90deg, rgba(66, 245, 141, .1), rgba(88, 209, 255, .08)),
+        rgba(14, 19, 25, .86);
+    }
+
+    .scoreDial {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background:
+        conic-gradient(var(--green) calc(var(--score, 76) * 1%), rgba(255,255,255,.1) 0);
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      filter: drop-shadow(0 0 24px rgba(66, 245, 141, .25));
+    }
+
+    .scoreDialInner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #0b1015;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 1px solid var(--line);
+    }
+
+    .scoreValue {
+      font-size: 44px;
+      line-height: 1;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .signalGrid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      align-content: start;
+    }
+
+    .signal {
+      border: 1px solid var(--line);
+      background: rgba(8, 10, 13, 0.72);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 92px;
+      box-shadow: inset 0 0 24px rgba(88, 209, 255, 0.035);
+    }
+
+    .signal b {
+      display: block;
+      font-size: 20px;
+      line-height: 1;
+      margin-bottom: 7px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid currentColor;
+      white-space: nowrap;
+    }
+
+    .pass { color: var(--green); background: var(--soft-green); }
+    .warn { color: var(--amber); background: var(--soft-amber); }
+    .fail { color: var(--red); background: var(--soft-red); }
+    .info { color: var(--blue); background: var(--soft-blue); }
+
+    .resultBody {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .quickVerdict {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(8, 10, 13, 0.56);
+    }
+
+    .quickVerdict b {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .evidenceDrawer,
+    .methodPanel {
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .evidenceDrawer summary,
+    .methodPanel summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .evidenceDrawer summary::-webkit-details-marker,
+    .methodPanel summary::-webkit-details-marker { display: none; }
+
+    .evidenceDrawer summary::after,
+    .methodPanel summary::after {
+      content: "+";
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      border: 1px solid var(--line);
+      background: rgba(66,245,141,.08);
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .evidenceDrawer[open] summary::after,
+    .methodPanel[open] summary::after { content: "-"; }
+
+    .matrix {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 560px;
+    }
+
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      background: rgba(255,255,255,.045);
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: .03em;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+    .tableWrap { overflow: auto; }
+
+    .evidence {
+      display: grid;
+      gap: 12px;
+    }
+
+    .terminal {
+      background: #05070a;
+      color: #d7ffe5;
+      border-radius: 8px;
+      padding: 14px;
+      overflow: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      min-height: 170px;
+      font-size: 12px;
+      line-height: 1.55;
+      border: 1px solid rgba(66, 245, 141, 0.2);
+      box-shadow: inset 0 0 28px rgba(66, 245, 141, 0.05);
+    }
+
+    .cardsGrid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      padding: 16px;
+      min-height: 166px;
+    }
+
+    .cardIcon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--soft-blue);
+      color: var(--blue);
+      font-weight: 850;
+      margin-bottom: 12px;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .pipeStep {
+      border: 1px solid var(--line);
+      background: rgba(8, 10, 13, 0.62);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 124px;
+      position: relative;
+    }
+
+    .pipeStep:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      top: 50%;
+      width: 12px;
+      height: 12px;
+      transform: translateY(-50%) rotate(45deg);
+      background: var(--panel-strong);
+      border-top: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      z-index: 1;
+    }
+
+    .footerPanel {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .methodBody {
+      padding: 0 18px 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .fullButton { width: 100%; height: 46px; font-size: 14px; }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #172033;
+      color: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: .18s ease;
+      z-index: 20;
+      max-width: min(420px, calc(100vw - 36px));
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1180px) {
+      .topGrid, .resultBody { grid-template-columns: 1fr; }
+      .scoreStrip { grid-template-columns: 170px 1fr; }
+      .cardsGrid { grid-template-columns: repeat(2, 1fr); }
+      .pipeline { grid-template-columns: 1fr 1fr; }
+      .pipeStep::after { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      header { padding: 0 12px; }
+      .rightActions { min-width: 0; }
+      .rightActions .secondaryButton { display: none; }
+      .rightActions .primaryButton { width: 64px; padding: 0; }
+      main { width: 100%; max-width: 100%; padding: 0 12px; margin-top: 10px; overflow: hidden; }
+      .topGrid { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; max-width: 100%; }
+      .topGrid, .resultBody, .formBody { min-width: 0; }
+      .topGrid > *, .resultBody > * { width: 100%; max-width: 100%; margin-bottom: 16px; }
+      .panel, .resultPanel, .card {
+        width: 100% !important;
+        max-width: 100%;
+        overflow: hidden;
+      }
+      .panelHeader .badge { display: none; }
+      .segmented { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .segmented button { font-size: 11px; }
+      h1 { font-size: 22px; line-height: 1.15; }
+      .scoreStrip { padding: 16px; }
+      .scoreStrip { grid-template-columns: 1fr; }
+      .scoreDial { width: 176px; margin: 0 auto; }
+      .signalGrid, .cardsGrid, .pipeline, .twoCols { grid-template-columns: 1fr; }
+      .quickVerdict, .footerPanel { align-items: stretch; flex-direction: column; }
+      .heroTool { min-height: unset; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="mark">TT</span><span>TokenTest.io</span></div>
+    <div class="rightActions">
+      <button class="primaryButton" id="runTop">Run</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="topGrid" id="verify">
+      <aside class="panel">
+        <div class="panelHeader">
+          <h2>Verification Run</h2>
+          <span class="badge info">local first</span>
+        </div>
+        <div class="formBody">
+          <label>Endpoint
+            <input id="endpoint" value="https://api.example-router.com" spellcheck="false">
+          </label>
+          <label>Model
+            <input id="model" value="claude-sonnet-4-6" spellcheck="false">
+          </label>
+          <label>API Key
+            <input id="apiKey" value="" type="password" placeholder="sk-..." spellcheck="false">
+          </label>
+          <button class="primaryButton fullButton" id="runProbe">Run Verification</button>
+
+          <details class="advanced">
+            <summary>Options</summary>
+            <div class="advancedBody">
+              <label>Protocol
+                <select id="protocol">
+                  <option>Anthropic /v1/messages</option>
+                  <option>OpenAI /v1/chat/completions</option>
+                </select>
+              </label>
+              <div class="segmented" role="tablist" aria-label="Mode">
+                <button class="active" data-mode="quick">Quick</button>
+                <button data-mode="truth">Truth</button>
+                <button data-mode="billing">Cost</button>
+              </div>
+              <label>Analyze existing response JSON
+                <textarea id="responseJson" spellcheck="false"></textarea>
+              </label>
+              <div class="checkline">
+                <span><strong>Nonce replay guard</strong><br><span class="small muted">unique token must return intact</span></span>
+                <button class="toggle on" data-toggle="nonce" aria-label="Toggle nonce"></button>
+              </div>
+              <div class="checkline">
+                <span><strong>Usage integrity</strong><br><span class="small muted">input/output/cache token evidence</span></span>
+                <button class="toggle on" data-toggle="usage" aria-label="Toggle usage"></button>
+              </div>
+              <div class="checkline">
+                <span><strong>Claude Code truth</strong><br><span class="small muted">compact/tools/permission claims</span></span>
+                <button class="toggle on" data-toggle="claims" aria-label="Toggle claims"></button>
+              </div>
+              <div class="checkline">
+                <span><strong>Billing boundary</strong><br><span class="small muted">request evidence vs backend ledger</span></span>
+                <button class="toggle on" data-toggle="billing" aria-label="Toggle billing"></button>
+              </div>
+              <div class="twoCols">
+                <button class="secondaryButton" id="loadSample">Load sample</button>
+                <button class="secondaryButton" id="analyzeJson">Analyze JSON</button>
+              </div>
+            </div>
+          </details>
+        </div>
+      </aside>
+
+      <section class="resultPanel heroTool">
+        <div class="scoreStrip">
+          <div class="scoreDial" id="scoreDial" style="--score:76">
+            <div class="scoreDialInner">
+              <div>
+                <div class="scoreValue" id="scoreValue">76</div>
+                <div class="small muted">trust score</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h1 id="judgment">Router truth is partially verified</h1>
+            <p class="muted" id="judgmentText">Request-side evidence is strong, but backend billing is still pending. Nonce checks and usage details are the first blockers before procurement.</p>
+            <div class="signalGrid">
+              <div class="signal"><b id="sigModel">OK</b><span class="muted small">model identity</span></div>
+              <div class="signal"><b id="sigUsage">OK</b><span class="muted small">usage fields</span></div>
+              <div class="signal"><b id="sigNonce">Watch</b><span class="muted small">nonce replay</span></div>
+              <div class="signal"><b id="sigBilling">Pending</b><span class="muted small">real billing</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quickVerdict">
+          <div>
+            <b id="runLabel">No run yet</b>
+            <span class="small muted" id="runMeta">Run once to produce an evidence report.</span>
+          </div>
+          <button class="secondaryButton" id="exportReport">Export JSON</button>
+        </div>
+
+        <details class="evidenceDrawer">
+          <summary><span>Evidence</span><span class="badge info" id="evidenceCount">ready</span></summary>
+          <div class="resultBody" id="evidence">
+            <div class="matrix tableWrap">
+              <table>
+                <thead>
+                  <tr><th>Check</th><th>Status</th><th>Evidence</th><th>Procurement impact</th></tr>
+                </thead>
+                <tbody id="checksBody"></tbody>
+              </table>
+            </div>
+            <div class="evidence">
+              <div>
+                <h3>Prompt packet</h3>
+                <pre class="terminal" id="promptPacket"></pre>
+              </div>
+              <div>
+                <h3>Evidence digest</h3>
+                <pre class="terminal" id="digest"></pre>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+    </section>
+
+    <details class="panel methodPanel">
+      <summary><span>Method</span><span class="badge info">cctest plus billing truth</span></summary>
+      <div class="methodBody">
+        <div class="cardsGrid" id="matrix">
+          <article class="card">
+            <div class="cardIcon">M</div>
+            <h3>Model Truth</h3>
+            <p class="muted">Requested model, actual model, alias policy, identity answer, and unsupported-model behavior are recorded as separate facts.</p>
+          </article>
+          <article class="card">
+            <div class="cardIcon">N</div>
+            <h3>Nonce Guard</h3>
+            <p class="muted">Every matrix run inserts a unique nonce. Missing or stale nonce marks replay, prompt interception, or model obedience failure.</p>
+          </article>
+          <article class="card">
+            <div class="cardIcon">U</div>
+            <h3>Usage Ledger</h3>
+            <p class="muted">Input, output, cache creation, and cache read tokens stay separate so billing reconciliation can be audited later.</p>
+          </article>
+          <article class="card">
+            <div class="cardIcon">B</div>
+            <h3>Billing Boundary</h3>
+            <p class="muted">Published prices never become real-cost conclusions. Reports stay pending until ledger, balance delta, or backend rows exist.</p>
+          </article>
+        </div>
+        <div class="pipeline">
+          <div class="pipeStep"><h3>1. Discover</h3><p class="muted">List models, protocol, pricing metadata, and visible aliases.</p></div>
+          <div class="pipeStep"><h3>2. Probe</h3><p class="muted">Run identity, long output, nonce, usage, and Claude Code behavior checks.</p></div>
+          <div class="pipeStep"><h3>3. Reconcile</h3><p class="muted">Match request window to backend ledger rows or wallet balance delta.</p></div>
+          <div class="pipeStep"><h3>4. Compare</h3><p class="muted">Calculate official expected charge only after real billing exists.</p></div>
+          <div class="pipeStep"><h3>5. Publish</h3><p class="muted">Generate a shareable HTML evidence report with secrets redacted.</p></div>
+        </div>
+      </div>
+    </details>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const sampleAnthropic = {
+      id: "msg_tokentest_sample",
+      type: "message",
+      role: "assistant",
+      model: "claude-sonnet-4-6",
+      content: [{ type: "text", text: "MODEL_TRUTH_OK 42f7a9c1" }],
+      usage: {
+        input_tokens: 118,
+        output_tokens: 12,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0
+      }
+    };
+
+    const state = {
+      mode: "quick",
+      nonce: "42f7a9c1",
+      lastReport: null,
+      toggles: { nonce: true, usage: true, claims: true, billing: true }
+    };
+
+    const checks = [
+      ["model", "Model identity", "actual model matches requested model", "Blocks supplier acceptance if mismatched"],
+      ["usage", "Usage integrity", "input/output tokens are present", "Blocks cost comparison if missing"],
+      ["nonce", "Nonce replay guard", "unique nonce is echoed intact", "Flags cache, replay, or obedience failure"],
+      ["claims", "Claude Code truth", "no false local tool or /compact claims", "Flags misleading compatibility claims"],
+      ["billing", "Billing boundary", "real ledger evidence is attached", "Keeps report pending before procurement"]
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    function showToast(text) {
+      const el = $("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 2400);
+    }
+
+    function activeChecks() {
+      return checks.filter(([key]) => key === "model" || state.toggles[key]);
+    }
+
+    function parseResponse() {
+      const raw = $("responseJson").value.trim();
+      if (!raw) return sampleAnthropic;
+      return JSON.parse(raw);
+    }
+
+    function responseText(payload) {
+      if (!payload) return "";
+      if (Array.isArray(payload.content)) {
+        return payload.content.map((item) => item.text || item.content || "").join("\\n").trim();
+      }
+      const choice = payload.choices && payload.choices[0];
+      if (choice && choice.message) {
+        const content = choice.message.content;
+        return Array.isArray(content) ? content.map((item) => item.text || "").join("\\n") : String(content || "");
+      }
+      return "";
+    }
+
+    function usageOf(payload) {
+      const usage = payload.usage || {};
+      return {
+        input: Number(usage.input_tokens || usage.prompt_tokens || 0),
+        output: Number(usage.output_tokens || usage.completion_tokens || 0),
+        cacheCreate: Number(usage.cache_creation_input_tokens || 0),
+        cacheRead: Number(usage.cache_read_input_tokens || (usage.prompt_tokens_details || {}).cached_tokens || 0)
+      };
+    }
+
+    function analyze(payload, options = {}) {
+      const requestedModel = $("model").value.trim();
+      const actualModel = payload.model || payload.response_model || requestedModel;
+      const text = responseText(payload);
+      const usage = usageOf(payload);
+      const nonce = options.nonce || state.nonce;
+      const hasUsage = usage.input > 0 && usage.output > 0;
+      const nonceOk = text.includes(`MODEL_TRUTH_OK ${nonce}`) || !state.toggles.nonce;
+      const falseCompact = /can_actually_compact_local_session["'\\s:]+true/i.test(text);
+      const falseBypass = /can_bypass_permissions["'\\s:]+true/i.test(text);
+      const claimsOk = !(falseCompact || falseBypass);
+      const billingOk = Boolean(payload.backend_billing || payload.billing_rows || payload.balance_delta_usd);
+      const results = {
+        model: actualModel === requestedModel || actualModel.includes(requestedModel) || requestedModel.includes(actualModel),
+        usage: hasUsage,
+        nonce: nonceOk,
+        claims: claimsOk,
+        billing: billingOk
+      };
+      const score =
+        (results.model ? 22 : 0) +
+        (results.usage ? 22 : 0) +
+        (results.nonce ? 22 : 0) +
+        (results.claims ? 18 : 0) +
+        (results.billing ? 16 : 0);
+
+      return {
+        score,
+        requestedModel,
+        actualModel,
+        text,
+        usage,
+        results,
+        nonce,
+        responseId: payload.id || payload.response_id || "pending",
+        billingStatus: billingOk ? "ledger-attached" : "pending-billing",
+        raw: payload
+      };
+    }
+
+    function statusBadge(ok, key) {
+      if (key === "billing" && !ok) return '<span class="badge warn">pending</span>';
+      return ok ? '<span class="badge pass">pass</span>' : '<span class="badge fail">fail</span>';
+    }
+
+    function renderEmpty() {
+      $("scoreValue").textContent = "0";
+      $("scoreDial").style.setProperty("--score", 0);
+      $("judgment").textContent = "Ready for verification";
+      $("judgmentText").textContent = "Waiting for router evidence.";
+      $("sigModel").textContent = "Ready";
+      $("sigUsage").textContent = "Ready";
+      $("sigNonce").textContent = "Ready";
+      $("sigBilling").textContent = "Ready";
+      $("runLabel").textContent = "No run yet";
+      $("runMeta").textContent = "Run once to produce an evidence report.";
+      $("evidenceCount").textContent = "empty";
+      $("checksBody").innerHTML = '<tr><td colspan="4" class="muted">No evidence yet.</td></tr>';
+      $("promptPacket").textContent = "pending";
+      $("digest").textContent = "pending";
+    }
+
+    function render(report) {
+      state.lastReport = report;
+      $("scoreValue").textContent = report.score;
+      $("scoreDial").style.setProperty("--score", report.score);
+      $("judgment").textContent = report.score >= 86 ? "Router truth is verified" : report.score >= 68 ? "Router truth is partially verified" : "Router truth is not verified";
+      $("judgmentText").textContent = report.billingStatus === "pending-billing"
+        ? "Request-side evidence is available, but real backend billing is still pending."
+        : "Request-side evidence and backend billing evidence are both attached.";
+      $("sigModel").textContent = report.results.model ? "OK" : "Fail";
+      $("sigUsage").textContent = report.results.usage ? "OK" : "Fail";
+      $("sigNonce").textContent = report.results.nonce ? "OK" : "Fail";
+      $("sigBilling").textContent = report.results.billing ? "OK" : "Pending";
+      $("runLabel").textContent = report.results.billing ? "Verified with billing evidence" : "Verified, billing pending";
+      $("runMeta").textContent = `${report.actualModel} · ${report.responseId}`;
+      $("evidenceCount").textContent = `${activeChecks().length} checks`;
+
+      $("checksBody").innerHTML = activeChecks().map(([key, name, evidence, impact]) => {
+        const ok = report.results[key];
+        let detail = evidence;
+        if (key === "model") detail = `${report.requestedModel} -> ${report.actualModel}`;
+        if (key === "usage") detail = `${report.usage.input} input / ${report.usage.output} output / ${report.usage.cacheRead} cache read`;
+        if (key === "nonce") detail = report.results.nonce ? `echoed MODEL_TRUTH_OK ${report.nonce}` : `missing MODEL_TRUTH_OK ${report.nonce}`;
+        if (key === "billing") detail = report.billingStatus;
+        return `<tr><td>${name}</td><td>${statusBadge(ok, key)}</td><td>${escapeHtml(detail)}</td><td>${impact}</td></tr>`;
+      }).join("");
+
+      $("promptPacket").textContent = JSON.stringify({
+        protocol: $("protocol").value,
+        endpoint: $("endpoint").value,
+        model: report.requestedModel,
+        nonce_prompt: `Reply exactly: MODEL_TRUTH_OK ${report.nonce}`,
+        max_tokens: state.mode === "billing" ? 320 : 120
+      }, null, 2);
+
+      $("digest").textContent = JSON.stringify({
+        response_id: report.responseId,
+        actual_model: report.actualModel,
+        usage: report.usage,
+        billing_status: report.billingStatus,
+        text_excerpt: report.text.slice(0, 180)
+      }, null, 2);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[ch]));
+    }
+
+    // ---- TokenTest engine (our own MCP-backed prober) ----
+    const ENGINE = "https://mcp-quality.flatkey.ai";
+    const CAT_COLOR = { pass: "#22c55e", partial: "#f59e0b", fail: "#ef4444", skip: "#9ca3af" };
+
+    function renderFromEngine(data) {
+      state.lastReport = data;
+      const score = Number.isFinite(data.score) ? data.score : 0;
+      $("scoreDial").style.setProperty("--score", score);
+      $("scoreValue").textContent = score;
+      const vmap = {
+        genuine: "真实 / Genuine",
+        suspicious: "可疑 / Suspicious",
+        likely_fake_or_degraded: "疑似假 / 降智 · Likely fake or degraded",
+        auth_failed: "鉴权失败 / Auth failed",
+        unreachable: "不可达 / Unreachable",
+        error: "错误 / Error"
+      };
+      $("judgment").textContent = (vmap[data.verdict] || data.verdict || "—") + " · " + score + "/100";
+      $("judgmentText").textContent = data.summary || data.error || "";
+      const cats = data.categories || [];
+      const byKey = Object.fromEntries(cats.map((c) => [c.key, c]));
+      const sig = (k) => {
+        const c = byKey[k];
+        if (!c) return "—";
+        return c.status === "pass" ? "OK" : c.status === "partial" ? "Watch" : c.status === "skip" ? "—" : "Fail";
+      };
+      $("sigModel").textContent = sig("llm_fingerprint");
+      $("sigUsage").textContent = sig("token_audit");
+      $("sigNonce").textContent = sig("behavior");
+      $("sigBilling").textContent = sig("signature");
+      $("runLabel").textContent = (data.provider || "").toUpperCase() + " · " + (data.resolved_model || data.requested_model || "");
+      $("runMeta").textContent = `latency ${data.latency_ms ?? "?"}ms · ttft ${data.ttft_ms ?? "?"}ms`;
+      $("evidenceCount").textContent = `${cats.length} categories`;
+      $("checksBody").innerHTML = cats.map((c) => {
+        const color = CAT_COLOR[c.status] || "#9ca3af";
+        const badge = `<b style="color:${color}">${c.status.toUpperCase()} ${c.score}/${c.max}</b>`;
+        const froms = (c.from || []).map((f) => f.split("/")[0]);
+        const detail = (data.checks || [])
+          .filter((x) => froms.includes(x.name))
+          .map((x) => x.detail)
+          .join(" · ");
+        return `<tr><td>${c.name}</td><td>${badge}</td><td>${escapeHtml(detail).slice(0, 320)}</td><td></td></tr>`;
+      }).join("");
+      $("promptPacket").textContent = JSON.stringify(
+        { engine: ENGINE + "/check", provider: data.provider, model: data.requested_model, probes: (data.checks || []).length }, null, 2);
+      $("digest").textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function runProbe() {
+      const apiKey = $("apiKey").value.trim();
+      const endpoint = $("endpoint").value.replace(/\/$/, "");
+      const model = $("model").value.trim();
+      const provider = $("protocol").value.startsWith("Anthropic") ? "anthropic" : "openai";
+
+      if (!apiKey || endpoint.includes("example-router.com")) {
+        showToast("Enter a real endpoint + API key to run the engine");
+        return;
+      }
+      const btn = $("runProbe");
+      const orig = btn.textContent;
+      btn.textContent = "Running 9 probes…";
+      btn.disabled = true;
+      showToast("Running full probe battery via TokenTest engine…");
+      try {
+        const r = await fetch(ENGINE + "/check", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ base_url: endpoint, api_key: apiKey, model, provider, deep: state.mode === "truth" })
+        });
+        const data = await r.json();
+        renderFromEngine(data);
+        showToast(data.error ? `Engine: ${data.error}` : `Done · ${data.verdict || ""} ${data.score ?? ""}`);
+      } catch (error) {
+        showToast(`Engine request failed: ${error.message}`);
+      } finally {
+        btn.textContent = orig;
+        btn.disabled = false;
+      }
+    }
+
+    document.querySelectorAll("[data-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-mode]").forEach((b) => b.classList.remove("active"));
+        button.classList.add("active");
+        state.mode = button.dataset.mode;
+      });
+    });
+
+    document.querySelectorAll("[data-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.toggle;
+        state.toggles[key] = !state.toggles[key];
+        button.classList.toggle("on", state.toggles[key]);
+        if (state.lastReport) render(state.lastReport);
+      });
+    });
+
+    $("loadSample").addEventListener("click", () => {
+      $("responseJson").value = JSON.stringify(sampleAnthropic, null, 2);
+      render(analyze(sampleAnthropic));
+      showToast("Sample loaded");
+    });
+    $("runTop").addEventListener("click", runProbe);
+    $("runProbe").addEventListener("click", runProbe);
+
+    // ---- deep-link presets: /blockrun  or  ?endpoint=&model=&provider=&key=&run=1 ----
+    (function initPresets() {
+      const q = new URLSearchParams(location.search);
+      const path = location.pathname.replace(/\/+$/, "") || "/";
+      // baked presets — ClawRouter / blockrun local proxy (OpenAI-compatible,
+      // base http://localhost:8402, key literal "<redacted-preset-key>"). Endpoint uses
+      // <internal-host-redacted> so the containerized engine reaches the host proxy.
+      const CLAWROUTER = "http://<internal-host-redacted>:8402";
+      const PRESETS = {
+        "/blockrun":         { provider: "openai", model: "gpt-4o",          endpoint: CLAWROUTER, key: "<redacted-preset-key>" },
+        "/blockrun-mini":    { provider: "openai", model: "gpt-4o-mini",     endpoint: CLAWROUTER, key: "<redacted-preset-key>" },
+        "/blockrun-opus":    { provider: "openai", model: "claude-opus-4.8", endpoint: CLAWROUTER, key: "<redacted-preset-key>" },
+        "/blockrun-opus-47": { provider: "openai", model: "claude-opus-4.7", endpoint: CLAWROUTER, key: "<redacted-preset-key>" },
+        "/blockrun-sonnet":  { provider: "openai", model: "claude-sonnet-4.6", endpoint: CLAWROUTER, key: "<redacted-preset-key>" },
+        // BlockRun Solana chain (separate VPS, NAS tailnet <private-ip-redacted>) — Anthropic :8413 / OpenAI :8403
+        "/blockrun-sol":     { provider: "anthropic", model: "claude-sonnet-4-6", endpoint: "http://<private-ip-redacted>:8413",      key: "<redacted-preset-key>" },
+        "/blockrun-sol-oai": { provider: "openai",    model: "claude-sonnet-4-6", endpoint: "http://<private-ip-redacted>:8403/v1", key: "<redacted-preset-key>" }
+      };
+      const preset = PRESETS[path] || PRESETS["/" + (q.get("preset") || "")] || {};
+      const endpoint = q.get("endpoint") || preset.endpoint;
+      const model = q.get("model") || preset.model;
+      const provider = (q.get("provider") || preset.provider || "").toLowerCase();
+      const key = q.get("key") || preset.key;
+      if (endpoint) $("endpoint").value = endpoint;
+      if (model) $("model").value = model;
+      if (provider) $("protocol").value = provider.startsWith("openai")
+        ? "OpenAI /v1/chat/completions" : "Anthropic /v1/messages";
+      if (key) $("apiKey").value = key;
+      if ((q.get("run") === "1" || q.get("autorun") === "1")
+          && $("endpoint").value && $("apiKey").value && !$("endpoint").value.includes("example-router.com")) {
+        setTimeout(runProbe, 350);
+      }
+    })();
+    $("analyzeJson").addEventListener("click", () => {
+      try {
+        render(analyze(parseResponse()));
+        showToast("Response analyzed");
+      } catch (error) {
+        showToast(`Invalid JSON: ${error.message}`);
+      }
+    });
+    $("exportReport").addEventListener("click", () => {
+      if (!state.lastReport) {
+        showToast("Run verification first");
+        return;
+      }
+      const payload = JSON.stringify(state.lastReport, null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tokentest-report.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    $("responseJson").value = "";
+    renderEmpty();
+  </script>
+</body>
+</html>

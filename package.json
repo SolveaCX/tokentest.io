@@ -1,0 +1,17 @@
+{
+  "name": "tokentest-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tokentest-mcp": "./mcp/server.js"
+  },
+  "scripts": {
+    "start:mcp": "node ./mcp/server.js",
+    "test:mcp": "node ./mcp/smoke-test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.0"
+  }
+}
