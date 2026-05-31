@@ -388,14 +388,23 @@
   function ensureToken(cb){ const tk=getToken(); if(tk) return cb(tk); openCaptcha(()=>cb(getToken())); }
 
   // ---------------- batch run ----------------
-  let BATCH = []; // [{model, status:"pending"|done, data}]
-  async function checkModel(token, model){
+  let BATCH = []; // [{model, status:"pending"|done, data, retrying}]
+  const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+  const RETRY=2; // extra attempts on transient upstream errors
+  async function checkModel(token, model, onStatus){
     const body={ token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(),
       model, provider:providerFor(model), deep:state.mode==="truth" };
-    try{ const r=await fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
-      if(r.status===401){ sessionStorage.removeItem("tt_cap"); throw new Error("captcha"); }
-      return await r.json();
-    }catch(e){ if(e.message==="captcha") throw e; return {verdict:"error",score:0,error:String(e),summary:t("res_empty")}; }
+    for(let attempt=0;attempt<=RETRY;attempt++){
+      try{ const r=await fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+        if(r.status===401){ sessionStorage.removeItem("tt_cap"); throw new Error("captcha"); }
+        const d=await r.json();
+        const transient = d.verdict==="error" && /50[023]|429|upstream|connect|unreach|timeout|temporar/i.test(String(d.error||d.summary||""));
+        if(transient && attempt<RETRY){ if(onStatus)onStatus(attempt+1); await sleep(1300+attempt*900); continue; }
+        return d;
+      }catch(e){ if(e.message==="captcha") throw e;
+        if(attempt<RETRY){ if(onStatus)onStatus(attempt+1); await sleep(1100); continue; }
+        return {verdict:"error",score:0,error:String(e),summary:t("res_empty")}; }
+    }
   }
   function requestRun(){
     const key=$("apiKey").value.trim(), ep=$("endpoint").value;
@@ -407,7 +416,8 @@
       BATCH = models.map(m=>({model:m,status:"pending",data:null})); renderMatrix();
       $("runProbe").disabled=true; $("runTop").disabled=true;
       for(let i=0;i<BATCH.length;i++){
-        try{ BATCH[i].data=await checkModel(token,BATCH[i].model); BATCH[i].status="done"; }
+        try{ BATCH[i].data=await checkModel(token,BATCH[i].model,(n)=>{ BATCH[i].retrying=n; renderMatrix(); });
+          BATCH[i].status="done"; BATCH[i].retrying=0; }
         catch(e){ if(e.message==="captcha"){ $("runProbe").disabled=false;$("runTop").disabled=false;
           showToast(LANG==="zh"?"验证已过期，请重试":"Verification expired — retry"); return; } }
         renderMatrix();
@@ -424,7 +434,8 @@
     $("resSum").textContent = BATCH.length ?
       `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${gen} ${LANG==="zh"?"真实":"genuine"} · ${LANG==="zh"?"均分":"avg"} ${avg}` : t("res_empty");
     $("matrixBody").innerHTML = BATCH.map((b,i)=>{
-      if(b.status==="pending") return `<tr class="row"><td class="mModel">${esc(b.model)}</td><td colspan="4" class="muted"><span class="spin"></span> ${LANG==="zh"?"探测中…":"probing…"}</td><td></td></tr>`;
+      if(b.status==="pending"){ const rt=b.retrying?` · ${LANG==="zh"?"重试":"retry"} ${b.retrying}/${RETRY}`:"";
+        return `<tr class="row"><td class="mModel">${esc(b.model)}<div class="small muted mono" style="margin-top:2px;font-size:11px">${providerFor(b.model)}</div></td><td colspan="4" class="muted"><span class="spin"></span> ${LANG==="zh"?"探测中…":"probing…"}${rt}</td><td></td></tr>`; }
       const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=d.verdict||"error";
       const flags=(d.categories||[]).filter(c=>c.status==="fail").map(c=>catLabel(c)).join(", ");
       return `<tr class="row" data-i="${i}">
@@ -519,8 +530,11 @@
         body:JSON.stringify({token,base_url:$("endpoint").value.replace(/\/$/,""),api_key:key})});
         const d=await r.json();
         if(!d.models||!d.models.length){ showToast(LANG==="zh"?"未发现模型（中转可能未开放 /models）":"No models found (router may hide /models)"); $("chips").innerHTML=""; return; }
-        $("chips").innerHTML = d.models.slice(0,40).map(m=>`<span class="chip" data-m="${esc(m)}">+ ${esc(m)}</span>`).join("");
-        $("chips").querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+        const all=d.models.slice(0,40);
+        $("chips").innerHTML = `<span class="chip" data-all="1" style="border-color:var(--blue);color:var(--blue)">✚ ${LANG==="zh"?"全部添加":"add all"}</span>`
+          + all.map(m=>`<span class="chip" data-m="${esc(m)}">+ ${esc(m)}</span>`).join("");
+        $("chips").querySelector("[data-all]").addEventListener("click",()=>{ $("models").value = all.join(", "); showToast(`${all.length} ${LANG==="zh"?"个模型已加入":"models added"}`); });
+        $("chips").querySelectorAll(".chip[data-m]").forEach(c=>c.addEventListener("click",()=>{
           const m=c.getAttribute("data-m"); const cur=parseModels();
           if(!cur.includes(m)) $("models").value = (cur.concat(m)).join(", ");
         }));
