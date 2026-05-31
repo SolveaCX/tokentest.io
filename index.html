@@ -356,6 +356,12 @@
 
   // ---------------- helpers ----------------
   const ENGINE_PROVIDER = () => $("protocol").value.startsWith("Anthropic")?"anthropic":"openai";
+  // per-model provider auto-detect so one batch can mix gpt + claude models
+  function providerFor(model){
+    if(/claude|anthropic|sonnet|opus|haiku/i.test(model)) return "anthropic";
+    if(/gpt|openai|o[134]\b|chatgpt|davinci/i.test(model)) return "openai";
+    return ENGINE_PROVIDER();
+  }
   function showToast(x){const e=$("toast");e.textContent=x;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600);}
   function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
   function scoreColor(s){ return s>=80?"var(--green)":s>=55?"var(--amber)":"var(--red)"; }
@@ -370,7 +376,7 @@
   let BATCH = []; // [{model, status:"pending"|done, data}]
   async function checkModel(token, model){
     const body={ token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(),
-      model, provider:ENGINE_PROVIDER(), deep:state.mode==="truth" };
+      model, provider:providerFor(model), deep:state.mode==="truth" };
     try{ const r=await fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
       if(r.status===401){ sessionStorage.removeItem("tt_cap"); throw new Error("captcha"); }
       return await r.json();
@@ -407,7 +413,7 @@
       const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=d.verdict||"error";
       const flags=(d.categories||[]).filter(c=>c.status==="fail").map(c=>catLabel(c)).join(", ");
       return `<tr class="row" data-i="${i}">
-        <td class="mModel">${esc(b.model)}</td>
+        <td class="mModel">${esc(b.model)}<div class="small muted mono" style="margin-top:2px;font-size:11px">${providerFor(b.model)}</div></td>
         <td><span class="pill ${v}">${esc(verdictLabel(v))}</span></td>
         <td><span class="scoreCell" style="color:${scoreColor(sc)}">${sc}</span><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div></td>
         <td class="muted mono">${esc(d.resolved_model||d.requested_model||"—")}</td>
