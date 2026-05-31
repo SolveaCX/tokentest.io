@@ -265,7 +265,7 @@
           <th data-i18n="th_latency">Latency</th><th></th>
         </tr></thead>
         <tbody id="matrixBody">
-          <tr class="emptyRow"><td colspan="6" data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare authenticity side by side.</td></tr>
+          <tr class="emptyRow"><td colspan="6"><span data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare authenticity side by side.</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)" data-i18n="view_sample">view a sample report</a></td></tr>
         </tbody>
       </table>
     </div>
@@ -380,8 +380,7 @@
     document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
     $("langBtn").textContent=t("lang");
-    if(BATCH.length) renderMatrix(); else { $("resSum").textContent=t("res_empty");
-      const er=document.querySelector(".emptyRow td"); if(er) er.textContent=t("res_hint"); }
+    if(BATCH.length) renderMatrix(); else { $("resSum").textContent=t("res_empty"); }
   }
 
   // ---------------- helpers ----------------
@@ -462,7 +461,7 @@
         <td class="muted mono">${d.latency_ms!=null?Math.round(d.latency_ms)+"ms":"—"}</td>
         <td class="expand">${LANG==="zh"?"详情 ▾":"details ▾"}</td></tr>
         <tr class="detail" id="det-${i}" style="display:none"><td colspan="6"><div class="detailIn" id="detin-${i}"></div></td></tr>`;
-    }).join("") || `<tr class="emptyRow"><td colspan="6">${t("res_hint")}</td></tr>`;
+    }).join("") || `<tr class="emptyRow"><td colspan="6"><span>${t("res_hint")}</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)">${t("view_sample")}</a></td></tr>`;
     $("matrixBody").querySelectorAll("tr.row").forEach(tr=>{
       const i=tr.getAttribute("data-i"); if(i==null)return;
       tr.addEventListener("click",()=>toggleDetail(+i));
@@ -535,6 +534,24 @@
       return true;
     }catch(e){ return false; }
   }
+
+  // ---------------- baked sample report (so the tool is legible even if a router is offline) ----------------
+  const SAMPLE_REPORT={ v:1, ts:0, sample:true, rows:[
+    {model:"claude-opus-4-8",provider:"anthropic",verdict:"genuine",score:91,resolved:"claude-opus-4-8",latency:980,summary:"High confidence: behavior, billing, protocol and capabilities all match a real Anthropic endpoint.",
+      cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"pass",score:100,max:100},{key:"behavior",name:"行为验证",status:"pass",score:92,max:100},{key:"signature",name:"签名校验",status:"pass",score:100,max:100},{key:"token_audit",name:"Token 用量审计",status:"pass",score:11,max:11},{key:"multimodal",name:"多模态能力",status:"pass",score:100,max:100}]},
+    {model:"base-gpt",provider:"openai",verdict:"genuine",score:83,resolved:"base-gpt",latency:1102,summary:"High confidence, but multimodal input was rejected by the relay.",
+      cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"pass",score:100,max:100},{key:"behavior",name:"行为验证",status:"pass",score:85,max:100},{key:"signature",name:"签名校验",status:"pass",score:100,max:100},{key:"multimodal",name:"多模态能力",status:"fail",score:0,max:100}]},
+    {model:"cheap-opus",provider:"anthropic",verdict:"likely_fake_or_degraded",score:34,resolved:"claude-3-haiku",latency:420,summary:"Requested Opus but fingerprint matches a much smaller model — likely a silent downgrade.",
+      cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"fail",score:10,max:100},{key:"behavior",name:"行为验证",status:"partial",score:40,max:100}]},
+    {model:"ghost-gpt4o",provider:"openai",verdict:"suspicious",score:58,resolved:"gpt-4o",latency:760,summary:"Stripped upstream headers; usage numbers are implausibly round.",
+      cats:[{key:"signature",name:"签名校验",status:"fail",score:0,max:100},{key:"token_audit",name:"Token 用量审计",status:"partial",score:6,max:11}]} ] };
+  function loadSampleReport(){
+    BATCH = SAMPLE_REPORT.rows.map(r=>({model:r.model,status:"done",data:{verdict:r.verdict,score:r.score,resolved_model:r.resolved,latency_ms:r.latency,summary:r.summary,categories:r.cats,checks:[]}}));
+    renderMatrix();
+    showToast(LANG==="zh"?"已载入示例（演示数据）":"Sample loaded (demo data)");
+    document.querySelector(".results").scrollIntoView({block:"start"});
+  }
+  window.__loadSampleReport=loadSampleReport;
 
   // ---------------- run history (localStorage) ----------------
   function loadHist(){ try{ return JSON.parse(localStorage.getItem("tt_hist")||"[]"); }catch{ return []; } }
