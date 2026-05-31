@@ -1,1173 +1,484 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TokenTest.io</title>
-  <style>
-    :root {
-      --bg: #080a0d;
-      --panel: rgba(17, 21, 27, 0.82);
-      --panel-strong: rgba(20, 26, 34, 0.96);
-      --ink: #edf7f0;
-      --muted: #8fa19a;
-      --line: rgba(143, 234, 187, 0.18);
-      --blue: #58d1ff;
-      --green: #42f58d;
-      --amber: #ffce5c;
-      --red: #ff5f6d;
-      --soft-blue: rgba(88, 209, 255, 0.12);
-      --soft-green: rgba(66, 245, 141, 0.12);
-      --soft-amber: rgba(255, 206, 92, 0.13);
-      --soft-red: rgba(255, 95, 109, 0.12);
-      --shadow: 0 18px 44px rgba(0, 0, 0, 0.46);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background:
-        linear-gradient(rgba(66, 245, 141, 0.045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(88, 209, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(135deg, #080a0d 0%, #0b1112 44%, #090a0d 100%);
-      background-size: 42px 42px, 42px 42px, auto;
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.45;
-      overflow-x: hidden;
-    }
-
-    header {
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 0 24px;
-      background: rgba(8, 10, 13, 0.78);
-      border-bottom: 1px solid var(--line);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(18px);
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 780;
-      letter-spacing: 0;
-      font-size: 19px;
-      text-shadow: 0 0 22px rgba(66, 245, 141, 0.24);
-    }
-
-    .mark {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      background: #11151b;
-      border: 1px solid rgba(66, 245, 141, 0.38);
-      color: var(--green);
-      font-weight: 850;
-      font-size: 13px;
-      box-shadow: 0 0 22px rgba(66, 245, 141, 0.22), inset 0 0 18px rgba(88, 209, 255, 0.08);
-    }
-
-    .rightActions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .primaryButton, .secondaryButton, .dangerButton {
-      height: 38px;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      padding: 0 14px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 760;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-
-    .primaryButton {
-      background: var(--green);
-      color: #07100b;
-      box-shadow: 0 0 28px rgba(66, 245, 141, 0.24);
-    }
-    .secondaryButton { background: rgba(255,255,255,.04); border-color: var(--line); color: var(--ink); }
-    .dangerButton { background: var(--soft-red); border-color: #ffc9c5; color: var(--red); }
-
-    main {
-      width: min(1480px, calc(100% - 32px));
-      margin: 18px auto 60px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .topGrid {
-      display: grid;
-      grid-template-columns: minmax(380px, 430px) minmax(0, 1fr);
-      gap: 16px;
-      align-items: start;
-    }
-
-    .panel, .card, .resultPanel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      min-width: 0;
-      backdrop-filter: blur(18px);
-    }
-
-    .panelHeader {
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      background: linear-gradient(90deg, rgba(66,245,141,.08), rgba(88,209,255,.04));
-    }
-
-    h1, h2, h3, p { margin-top: 0; }
-    h1 { font-size: 26px; line-height: 1.1; letter-spacing: 0; margin-bottom: 8px; overflow-wrap: anywhere; }
-    h2 { font-size: 17px; letter-spacing: 0; margin: 0; }
-    h3 { font-size: 14px; margin-bottom: 8px; }
-
-    .muted { color: var(--muted); }
-    .small { font-size: 12px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-
-    .formBody {
-      padding: 16px 18px 18px;
-      display: grid;
-      gap: 16px;
-    }
-
-    label {
-      display: grid;
-      gap: 7px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 680;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      min-width: 0;
-      border: 1px solid var(--line);
-      background: rgba(8, 10, 13, 0.72);
-      color: var(--ink);
-      border-radius: 8px;
-      min-height: 38px;
-      padding: 9px 10px;
-      font: inherit;
-      font-size: 13px;
-      outline: none;
-    }
-
-    textarea {
-      min-height: 112px;
-      resize: vertical;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      line-height: 1.45;
-    }
-
-    input:focus, textarea:focus, select:focus {
-      border-color: rgba(66, 245, 141, 0.78);
-      box-shadow: 0 0 0 3px rgba(66, 245, 141, 0.12), 0 0 22px rgba(66, 245, 141, 0.12);
-    }
-
-    .twoCols {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .advanced {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.025);
-      overflow: hidden;
-    }
-
-    .advanced summary {
-      cursor: pointer;
-      list-style: none;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 760;
-    }
-
-    .advanced summary::-webkit-details-marker { display: none; }
-
-    .advanced summary::after {
-      content: "+";
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      display: grid;
-      place-items: center;
-      color: var(--green);
-      border: 1px solid var(--line);
-      background: rgba(66,245,141,.08);
-      font-weight: 900;
-    }
-
-    .advanced[open] summary::after { content: "-"; }
-
-    .advancedBody {
-      padding: 0 12px 12px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .segmented {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      padding: 4px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.035);
-    }
-
-    .segmented button {
-      border: 0;
-      border-radius: 6px;
-      background: transparent;
-      color: var(--muted);
-      height: 30px;
-      font: inherit;
-      font-size: 12px;
-      cursor: pointer;
-      min-width: 0;
-    }
-
-    .segmented button.active {
-      background: rgba(66, 245, 141, 0.14);
-      color: var(--ink);
-      box-shadow: inset 0 0 16px rgba(66, 245, 141, .1);
-      font-weight: 760;
-    }
-
-    .checkline {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 9px 0;
-      border-bottom: 1px solid rgba(143, 234, 187, 0.1);
-    }
-
-    .checkline:last-child { border-bottom: 0; }
-
-    .toggle {
-      width: 38px;
-      height: 22px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.14);
-      padding: 2px;
-      border: 0;
-      cursor: pointer;
-    }
-
-    .toggle::before {
-      content: "";
-      display: block;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: white;
-      transition: transform .16s ease;
-      box-shadow: 0 1px 2px rgba(0,0,0,.18);
-    }
-
-    .toggle.on { background: var(--green); }
-    .toggle.on::before { transform: translateX(16px); }
-
-    .heroTool {
-      min-height: 480px;
-      display: grid;
-      grid-template-rows: auto auto;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .heroTool::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(180deg, transparent 0%, rgba(66, 245, 141, 0.07) 50%, transparent 100%);
-      height: 180px;
-      animation: scan 4.5s linear infinite;
-      mix-blend-mode: screen;
-      z-index: 0;
-    }
-
-    .heroTool > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    @keyframes scan {
-      from { transform: translateY(-190px); }
-      to { transform: translateY(720px); }
-    }
-
-    .scoreStrip {
-      padding: 18px;
-      display: grid;
-      grid-template-columns: 210px 1fr;
-      gap: 18px;
-      border-bottom: 1px solid var(--line);
-      background:
-        repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 8px),
-        linear-gradient(90deg, rgba(66, 245, 141, .1), rgba(88, 209, 255, .08)),
-        rgba(14, 19, 25, .86);
-    }
-
-    .scoreDial {
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background:
-        conic-gradient(var(--green) calc(var(--score, 76) * 1%), rgba(255,255,255,.1) 0);
-      display: grid;
-      place-items: center;
-      padding: 10px;
-      filter: drop-shadow(0 0 24px rgba(66, 245, 141, .25));
-    }
-
-    .scoreDialInner {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: #0b1015;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      border: 1px solid var(--line);
-    }
-
-    .scoreValue {
-      font-size: 44px;
-      line-height: 1;
-      font-weight: 850;
-      letter-spacing: 0;
-    }
-
-    .signalGrid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      align-content: start;
-    }
-
-    .signal {
-      border: 1px solid var(--line);
-      background: rgba(8, 10, 13, 0.72);
-      border-radius: 8px;
-      padding: 12px;
-      min-height: 92px;
-      box-shadow: inset 0 0 24px rgba(88, 209, 255, 0.035);
-    }
-
-    .signal b {
-      display: block;
-      font-size: 20px;
-      line-height: 1;
-      margin-bottom: 7px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      min-height: 24px;
-      border-radius: 999px;
-      padding: 2px 8px;
-      font-size: 12px;
-      font-weight: 800;
-      border: 1px solid currentColor;
-      white-space: nowrap;
-    }
-
-    .pass { color: var(--green); background: var(--soft-green); }
-    .warn { color: var(--amber); background: var(--soft-amber); }
-    .fail { color: var(--red); background: var(--soft-red); }
-    .info { color: var(--blue); background: var(--soft-blue); }
-
-    .resultBody {
-      padding: 18px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 320px;
-      gap: 16px;
-      align-items: start;
-    }
-
-    .quickVerdict {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      background: rgba(8, 10, 13, 0.56);
-    }
-
-    .quickVerdict b {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 2px;
-    }
-
-    .evidenceDrawer,
-    .methodPanel {
-      border-top: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .evidenceDrawer summary,
-    .methodPanel summary {
-      cursor: pointer;
-      list-style: none;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 780;
-    }
-
-    .evidenceDrawer summary::-webkit-details-marker,
-    .methodPanel summary::-webkit-details-marker { display: none; }
-
-    .evidenceDrawer summary::after,
-    .methodPanel summary::after {
-      content: "+";
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      display: grid;
-      place-items: center;
-      color: var(--green);
-      border: 1px solid var(--line);
-      background: rgba(66,245,141,.08);
-      font-weight: 900;
-      flex: 0 0 auto;
-    }
-
-    .evidenceDrawer[open] summary::after,
-    .methodPanel[open] summary::after { content: "-"; }
-
-    .matrix {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 560px;
-    }
-
-    th, td {
-      padding: 9px 10px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: top;
-      font-size: 13px;
-    }
-
-    th {
-      background: rgba(255,255,255,.045);
-      color: var(--muted);
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: .03em;
-    }
-
-    tr:last-child td { border-bottom: 0; }
-    .tableWrap { overflow: auto; }
-
-    .evidence {
-      display: grid;
-      gap: 12px;
-    }
-
-    .terminal {
-      background: #05070a;
-      color: #d7ffe5;
-      border-radius: 8px;
-      padding: 14px;
-      overflow: auto;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      min-height: 170px;
-      font-size: 12px;
-      line-height: 1.55;
-      border: 1px solid rgba(66, 245, 141, 0.2);
-      box-shadow: inset 0 0 28px rgba(66, 245, 141, 0.05);
-    }
-
-    .cardsGrid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-
-    .card {
-      padding: 16px;
-      min-height: 166px;
-    }
-
-    .cardIcon {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      background: var(--soft-blue);
-      color: var(--blue);
-      font-weight: 850;
-      margin-bottom: 12px;
-    }
-
-    .pipeline {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-    }
-
-    .pipeStep {
-      border: 1px solid var(--line);
-      background: rgba(8, 10, 13, 0.62);
-      border-radius: 8px;
-      padding: 14px;
-      min-height: 124px;
-      position: relative;
-    }
-
-    .pipeStep:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      right: -7px;
-      top: 50%;
-      width: 12px;
-      height: 12px;
-      transform: translateY(-50%) rotate(45deg);
-      background: var(--panel-strong);
-      border-top: 1px solid var(--line);
-      border-right: 1px solid var(--line);
-      z-index: 1;
-    }
-
-    .footerPanel {
-      padding: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-    }
-
-    .methodBody {
-      padding: 0 18px 18px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .fullButton { width: 100%; height: 46px; font-size: 14px; }
-
-    .toast {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      background: #172033;
-      color: white;
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 12px 14px;
-      font-size: 13px;
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
-      transition: .18s ease;
-      z-index: 20;
-      max-width: min(420px, calc(100vw - 36px));
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 1180px) {
-      .topGrid, .resultBody { grid-template-columns: 1fr; }
-      .scoreStrip { grid-template-columns: 170px 1fr; }
-      .cardsGrid { grid-template-columns: repeat(2, 1fr); }
-      .pipeline { grid-template-columns: 1fr 1fr; }
-      .pipeStep::after { display: none; }
-    }
-
-    @media (max-width: 760px) {
-      header { padding: 0 12px; }
-      .rightActions { min-width: 0; }
-      .rightActions .secondaryButton { display: none; }
-      .rightActions .primaryButton { width: 64px; padding: 0; }
-      main { width: 100%; max-width: 100%; padding: 0 12px; margin-top: 10px; overflow: hidden; }
-      .topGrid { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; max-width: 100%; }
-      .topGrid, .resultBody, .formBody { min-width: 0; }
-      .topGrid > *, .resultBody > * { width: 100%; max-width: 100%; margin-bottom: 16px; }
-      .panel, .resultPanel, .card {
-        width: 100% !important;
-        max-width: 100%;
-        overflow: hidden;
-      }
-      .panelHeader .badge { display: none; }
-      .segmented { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .segmented button { font-size: 11px; }
-      h1 { font-size: 22px; line-height: 1.15; }
-      .scoreStrip { padding: 16px; }
-      .scoreStrip { grid-template-columns: 1fr; }
-      .scoreDial { width: 176px; margin: 0 auto; }
-      .signalGrid, .cardsGrid, .pipeline, .twoCols { grid-template-columns: 1fr; }
-      .quickVerdict, .footerPanel { align-items: stretch; flex-direction: column; }
-      .heroTool { min-height: unset; }
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TokenTest.io — Verify the model, route, usage & billing before you buy</title>
+<meta name="description" content="TokenTest is the verification console for AI middle-layer buyers. Prove a router's real model, route, token usage and billing — black-box, your key is never stored." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0a0a0a; --bg2:#0f0f10; --panel:#111113; --line:rgba(255,255,255,.10);
+    --line2:rgba(255,255,255,.06); --txt:#fafafa; --mut:rgba(255,255,255,.60);
+    --mut2:rgba(255,255,255,.40); --red:#fb2c36; --blue:#3080ff; --green:#00c758;
+    --amber:#f99c00; --purple:#a855f7;
+    --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .mono{font-family:var(--mono)}
+  .muted{color:var(--mut)} .small{font-size:13px}
+
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(620px 380px at 18% -8%, rgba(251,44,54,.16), transparent 70%),
+      radial-gradient(560px 420px at 92% 4%, rgba(48,128,255,.14), transparent 70%);}
+
+  nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);
+    background:rgba(10,10,10,.72);border-bottom:1px solid var(--line2)}
+  .navIn{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
+  .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;
+    font-family:var(--mono);font-weight:600;font-size:13px;color:#fff;
+    background:linear-gradient(135deg,var(--red),#b3121b);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+  .navLinks{display:flex;gap:26px;font-size:14px}
+  .navLinks a{color:var(--mut)} .navLinks a:hover{color:var(--txt)}
+  .navRight{display:flex;align-items:center;gap:14px}
+  .ghost{font-size:14px;color:var(--mut)}
+  @media(max-width:760px){.navLinks{display:none}}
+
+  .hero{padding:72px 0 30px;text-align:center}
+  .avatars{display:flex;justify-content:center;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:0}
+  .avatars .av{width:34px;height:34px;border-radius:50%;border:2px solid var(--bg);
+    margin-left:-9px;background:#222;display:grid;place-items:center;font-size:12px;
+    font-family:var(--mono);color:#fff}
+  .avatars .av:first-child{margin-left:0}
+  .trustline{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--mut);
+    border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.03em;margin:0 0 18px;font-weight:700}
+  h1 .accent{background:linear-gradient(90deg,var(--red),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{max-width:620px;margin:0 auto;font-size:18px;color:var(--mut)}
+  .heroSafety{margin-top:18px;font-size:13px;color:var(--mut2);font-family:var(--mono)}
+
+  .console{margin:34px auto 0;max-width:920px}
+  .card{background:linear-gradient(180deg,var(--panel),#0c0c0d);border:1px solid var(--line);
+    border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -40px rgba(0,0,0,.9)}
+  .cardHead{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line2)}
+  .cardHead h2{font-size:15px;margin:0;font-weight:600;letter-spacing:-.01em}
+  .cardHead .tag{font-family:var(--mono);font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .grid2{display:grid;grid-template-columns:1.1fr .9fr}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .pad{padding:22px}
+  .pad+.pad{border-left:1px solid var(--line2)}
+  @media(max-width:820px){.pad+.pad{border-left:none;border-top:1px solid var(--line2)}}
+
+  label{display:block;font-size:12px;color:var(--mut);margin:0 0 7px;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+  .field{margin-bottom:16px}
+  input,select{width:100%;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;
+    color:var(--txt);font-family:var(--mono);font-size:14px;padding:12px 13px;outline:none;transition:.15s}
+  input:focus,select:focus{border-color:rgba(251,44,54,.55);box-shadow:0 0 0 3px rgba(251,44,54,.12)}
+  input::placeholder{color:var(--mut2)}
+  .modes{display:inline-flex;gap:2px;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:16px}
+  .modes button{background:transparent;border:0;color:var(--mut);font-family:var(--mono);font-size:13px;
+    padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s}
+  .modes button.active{background:rgba(255,255,255,.08);color:var(--txt)}
+  .run{width:100%;margin-top:4px;background:var(--red);color:#fff;border:0;border-radius:11px;
+    font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:.15s;
+    box-shadow:0 8px 28px -10px rgba(251,44,54,.7)}
+  .run:hover{filter:brightness(1.07)} .run:disabled{opacity:.6;cursor:default}
+  .runNote{text-align:center;font-size:12px;color:var(--mut2);margin-top:10px;font-family:var(--mono)}
+
+  .checks{list-style:none;margin:0;padding:0}
+  .checks li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line2);align-items:flex-start}
+  .checks li:last-child{border-bottom:0}
+  .ci{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;
+    font-size:12px;background:rgba(251,44,54,.14);color:var(--red);font-family:var(--mono)}
+  .checks b{font-size:13.5px;font-weight:600}
+  .checks .small{display:block;color:var(--mut2);margin-top:2px}
+
+  .results{margin-top:26px}
+  .resGrid{display:grid;grid-template-columns:200px 1fr;gap:0}
+  @media(max-width:720px){.resGrid{grid-template-columns:1fr}}
+  .dialWrap{padding:24px;border-right:1px solid var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  @media(max-width:720px){.dialWrap{border-right:0;border-bottom:1px solid var(--line2)}}
+  .dial{width:148px;height:148px;border-radius:50%;display:grid;place-items:center;
+    background:conic-gradient(var(--green) calc(var(--score,0)*1%),rgba(255,255,255,.07) 0);transition:.6s}
+  .dialIn{width:120px;height:120px;border-radius:50%;background:#0c0c0d;display:grid;place-items:center;text-align:center}
+  .dialV{font-family:var(--mono);font-size:38px;font-weight:600;line-height:1}
+  .verdict{font-size:14px;font-weight:600;text-align:center}
+  .resBody{padding:22px}
+  .resHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:12px}
+  .resHead h3{margin:0;font-size:16px}
+  .resSummary{color:var(--mut);font-size:14px;margin:0 0 16px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--mut2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:0 0 8px}
+  td{padding:9px 0;border-top:1px solid var(--line2);vertical-align:top}
+  td:first-child{font-weight:500;width:34%}
+  .pill{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:5px;white-space:nowrap}
+  .pass{background:rgba(0,199,88,.15);color:var(--green)}
+  .partial{background:rgba(249,156,0,.15);color:var(--amber)}
+  .fail{background:rgba(251,44,54,.15);color:var(--red)}
+  .skip{background:rgba(255,255,255,.08);color:var(--mut)}
+  .raw{margin-top:18px}
+  details summary{cursor:pointer;color:var(--mut);font-size:13px;font-family:var(--mono)}
+  pre{background:#0a0a0a;border:1px solid var(--line2);border-radius:10px;padding:14px;
+    overflow:auto;font-family:var(--mono);font-size:12px;color:var(--mut);max-height:340px;margin:10px 0 0}
+  .advanced{margin-top:14px}
+  .advanced summary{font-size:12px}
+  .twoBtn{display:flex;gap:8px;margin-top:10px}
+  .sbtn{flex:1;background:#0a0a0a;border:1px solid var(--line);color:var(--mut);border-radius:9px;
+    padding:9px;font-size:13px;font-family:var(--mono);cursor:pointer}
+  .sbtn:hover{color:var(--txt)}
+  textarea{width:100%;min-height:96px;background:#0a0a0a;border:1px solid var(--line2);border-radius:9px;
+    color:var(--mut);font-family:var(--mono);font-size:12px;padding:11px;margin-top:10px;resize:vertical}
+
+  .mask{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.66);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:20px}
+  .mask.show{display:flex}
+  .cap{width:380px;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:18px;box-shadow:0 40px 100px -30px #000}
+  .capHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+  .capHead b{font-size:15px} .capHead span{font-size:13px;color:var(--mut);margin-left:auto}
+  .capX{cursor:pointer;color:var(--mut2);font-size:20px;line-height:1;background:none;border:0}
+  .board{position:relative;width:340px;max-width:100%;height:180px;border-radius:10px;overflow:hidden;
+    border:1px solid var(--line2);margin:0 auto;user-select:none}
+  .board img.bg{width:100%;height:100%;display:block}
+  .board img.pc{position:absolute;top:0;left:0;width:52px;height:52px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));pointer-events:none}
+  .slider{position:relative;height:42px;margin:14px auto 4px;width:340px;max-width:100%;
+    background:#0a0a0a;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center}
+  .slider .hint{position:absolute;width:100%;text-align:center;font-size:12px;color:var(--mut2);font-family:var(--mono);pointer-events:none}
+  .handle{position:absolute;left:0;top:0;height:40px;width:48px;border-radius:9px;cursor:grab;
+    background:linear-gradient(180deg,#1b1b1d,#161618);border:1px solid var(--line);
+    display:grid;place-items:center;color:var(--txt);touch-action:none;font-size:18px}
+  .handle:active{cursor:grabbing}
+  .handle.ok{background:linear-gradient(180deg,#00c758,#00a64a);border-color:#00c758}
+  .handle.bad{background:linear-gradient(180deg,#fb2c36,#b3121b);border-color:#fb2c36}
+  .capMsg{text-align:center;font-size:13px;margin-top:10px;min-height:18px;font-family:var(--mono)}
+  .capMsg.good{color:var(--green)} .capMsg.err{color:var(--red)}
+  .capRefresh{background:none;border:0;color:var(--mut);font-size:12px;font-family:var(--mono);cursor:pointer;margin-top:2px}
+
+  .how{padding:64px 0 20px}
+  .how h2{font-size:26px;letter-spacing:-.02em;text-align:center;margin:0 0 30px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:720px){.steps{grid-template-columns:1fr}}
+  .step{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:20px}
+  .step .n{font-family:var(--mono);color:var(--red);font-size:13px;margin-bottom:8px}
+  .step h3{margin:0 0 6px;font-size:15px} .step p{margin:0;color:var(--mut);font-size:14px}
+  footer{border-top:1px solid var(--line2);margin-top:60px;padding:28px 0;color:var(--mut2);font-size:13px;
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:#161618;border:1px solid var(--line);border-radius:10px;padding:11px 18px;font-size:13px;
+    font-family:var(--mono);transition:.25s;z-index:120;pointer-events:none;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
 </head>
 <body>
-  <header>
-    <div class="brand"><span class="mark">TT</span><span>TokenTest.io</span></div>
-    <div class="rightActions">
-      <button class="primaryButton" id="runTop">Run</button>
-    </div>
-  </header>
+<nav><div class="wrap navIn">
+  <a class="brand" href="/"><span class="mark">TT</span> TokenTest<span class="muted">.io</span></a>
+  <div class="navLinks">
+    <a href="#how">How it works</a>
+    <a href="#verify">Verify</a>
+    <a href="https://github.com/mguozhen/tokentest.io" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <div class="navRight">
+    <span class="ghost mono">EN</span>
+    <button class="run" id="runTop" style="width:auto;padding:8px 18px;font-size:14px;box-shadow:none">Run</button>
+  </div>
+</div></nav>
 
-  <main>
-    <section class="topGrid" id="verify">
-      <aside class="panel">
-        <div class="panelHeader">
-          <h2>Verification Run</h2>
-          <span class="badge info">local first</span>
-        </div>
-        <div class="formBody">
-          <label>Endpoint
-            <input id="endpoint" value="https://api.example-router.com" spellcheck="false">
-          </label>
-          <label>Model
-            <input id="model" value="claude-sonnet-4-6" spellcheck="false">
-          </label>
-          <label>API Key
-            <input id="apiKey" value="" type="password" placeholder="sk-..." spellcheck="false">
-          </label>
-          <button class="primaryButton fullButton" id="runProbe">Run Verification</button>
+<header class="hero wrap">
+  <div class="avatars">
+    <span class="av">A</span><span class="av">K</span><span class="av">M</span><span class="av">R</span>
+    <span class="trustline" style="margin-left:14px"><span class="dot"></span>Trusted by router operators &amp; procurement teams</span>
+  </div>
+  <h1>Prove the model is real<br><span class="accent">before you pay for it.</span></h1>
+  <p class="sub">TokenTest is the black-box verification console for AI middle-layer buyers. Check a router's
+    actual model, route, token usage and billing in one run — your API key is never stored.</p>
+  <div class="heroSafety">⛨ Black-box probing · for safety, prefer a test-only API key</div>
 
+  <section class="console" id="verify">
+    <div class="card">
+      <div class="cardHead">
+        <h2>Verification Run</h2>
+        <span class="tag">black-box · key not stored</span>
+      </div>
+      <div class="grid2">
+        <div class="pad">
+          <div class="modes" role="tablist">
+            <button class="active" data-mode="quick">Quick</button>
+            <button data-mode="truth">Truth</button>
+            <button data-mode="billing">Cost</button>
+          </div>
+          <div class="field">
+            <label>API endpoint</label>
+            <input id="endpoint" placeholder="https://api.your-router.com" value="https://api.your-router.com" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label>API key</label>
+            <input id="apiKey" type="password" placeholder="sk-..." spellcheck="false" />
+          </div>
+          <div class="field" style="margin-bottom:18px">
+            <label>Target model</label>
+            <input id="model" value="claude-opus-4-8" spellcheck="false" />
+          </div>
+          <button class="run" id="runProbe">Start verification</button>
+          <div class="runNote">Sends ~9 probe requests · est. $0.01–$0.30</div>
           <details class="advanced">
-            <summary>Options</summary>
-            <div class="advancedBody">
-              <label>Protocol
-                <select id="protocol">
-                  <option>Anthropic /v1/messages</option>
-                  <option>OpenAI /v1/chat/completions</option>
-                </select>
-              </label>
-              <div class="segmented" role="tablist" aria-label="Mode">
-                <button class="active" data-mode="quick">Quick</button>
-                <button data-mode="truth">Truth</button>
-                <button data-mode="billing">Cost</button>
-              </div>
-              <label>Analyze existing response JSON
-                <textarea id="responseJson" spellcheck="false"></textarea>
-              </label>
-              <div class="checkline">
-                <span><strong>Nonce replay guard</strong><br><span class="small muted">unique token must return intact</span></span>
-                <button class="toggle on" data-toggle="nonce" aria-label="Toggle nonce"></button>
-              </div>
-              <div class="checkline">
-                <span><strong>Usage integrity</strong><br><span class="small muted">input/output/cache token evidence</span></span>
-                <button class="toggle on" data-toggle="usage" aria-label="Toggle usage"></button>
-              </div>
-              <div class="checkline">
-                <span><strong>Claude Code truth</strong><br><span class="small muted">compact/tools/permission claims</span></span>
-                <button class="toggle on" data-toggle="claims" aria-label="Toggle claims"></button>
-              </div>
-              <div class="checkline">
-                <span><strong>Billing boundary</strong><br><span class="small muted">request evidence vs backend ledger</span></span>
-                <button class="toggle on" data-toggle="billing" aria-label="Toggle billing"></button>
-              </div>
-              <div class="twoCols">
-                <button class="secondaryButton" id="loadSample">Load sample</button>
-                <button class="secondaryButton" id="analyzeJson">Analyze JSON</button>
-              </div>
+            <summary>Advanced · protocol &amp; offline analyze</summary>
+            <div class="field" style="margin-top:12px">
+              <label>Protocol</label>
+              <select id="protocol">
+                <option>Anthropic /v1/messages</option>
+                <option>OpenAI /v1/chat/completions</option>
+              </select>
+            </div>
+            <textarea id="responseJson" placeholder="Paste a raw response JSON to analyze offline (no key needed)"></textarea>
+            <div class="twoBtn">
+              <button class="sbtn" id="loadSample">Load sample</button>
+              <button class="sbtn" id="analyzeJson">Analyze JSON</button>
             </div>
           </details>
         </div>
-      </aside>
-
-      <section class="resultPanel heroTool">
-        <div class="scoreStrip">
-          <div class="scoreDial" id="scoreDial" style="--score:76">
-            <div class="scoreDialInner">
-              <div>
-                <div class="scoreValue" id="scoreValue">76</div>
-                <div class="small muted">trust score</div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h1 id="judgment">Router truth is partially verified</h1>
-            <p class="muted" id="judgmentText">Request-side evidence is strong, but backend billing is still pending. Nonce checks and usage details are the first blockers before procurement.</p>
-            <div class="signalGrid">
-              <div class="signal"><b id="sigModel">OK</b><span class="muted small">model identity</span></div>
-              <div class="signal"><b id="sigUsage">OK</b><span class="muted small">usage fields</span></div>
-              <div class="signal"><b id="sigNonce">Watch</b><span class="muted small">nonce replay</span></div>
-              <div class="signal"><b id="sigBilling">Pending</b><span class="muted small">real billing</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="quickVerdict">
-          <div>
-            <b id="runLabel">No run yet</b>
-            <span class="small muted" id="runMeta">Run once to produce an evidence report.</span>
-          </div>
-          <button class="secondaryButton" id="exportReport">Export JSON</button>
-        </div>
-
-        <details class="evidenceDrawer">
-          <summary><span>Evidence</span><span class="badge info" id="evidenceCount">ready</span></summary>
-          <div class="resultBody" id="evidence">
-            <div class="matrix tableWrap">
-              <table>
-                <thead>
-                  <tr><th>Check</th><th>Status</th><th>Evidence</th><th>Procurement impact</th></tr>
-                </thead>
-                <tbody id="checksBody"></tbody>
-              </table>
-            </div>
-            <div class="evidence">
-              <div>
-                <h3>Prompt packet</h3>
-                <pre class="terminal" id="promptPacket"></pre>
-              </div>
-              <div>
-                <h3>Evidence digest</h3>
-                <pre class="terminal" id="digest"></pre>
-              </div>
-            </div>
-          </div>
-        </details>
-      </section>
-    </section>
-
-    <details class="panel methodPanel">
-      <summary><span>Method</span><span class="badge info">cctest plus billing truth</span></summary>
-      <div class="methodBody">
-        <div class="cardsGrid" id="matrix">
-          <article class="card">
-            <div class="cardIcon">M</div>
-            <h3>Model Truth</h3>
-            <p class="muted">Requested model, actual model, alias policy, identity answer, and unsupported-model behavior are recorded as separate facts.</p>
-          </article>
-          <article class="card">
-            <div class="cardIcon">N</div>
-            <h3>Nonce Guard</h3>
-            <p class="muted">Every matrix run inserts a unique nonce. Missing or stale nonce marks replay, prompt interception, or model obedience failure.</p>
-          </article>
-          <article class="card">
-            <div class="cardIcon">U</div>
-            <h3>Usage Ledger</h3>
-            <p class="muted">Input, output, cache creation, and cache read tokens stay separate so billing reconciliation can be audited later.</p>
-          </article>
-          <article class="card">
-            <div class="cardIcon">B</div>
-            <h3>Billing Boundary</h3>
-            <p class="muted">Published prices never become real-cost conclusions. Reports stay pending until ledger, balance delta, or backend rows exist.</p>
-          </article>
-        </div>
-        <div class="pipeline">
-          <div class="pipeStep"><h3>1. Discover</h3><p class="muted">List models, protocol, pricing metadata, and visible aliases.</p></div>
-          <div class="pipeStep"><h3>2. Probe</h3><p class="muted">Run identity, long output, nonce, usage, and Claude Code behavior checks.</p></div>
-          <div class="pipeStep"><h3>3. Reconcile</h3><p class="muted">Match request window to backend ledger rows or wallet balance delta.</p></div>
-          <div class="pipeStep"><h3>4. Compare</h3><p class="muted">Calculate official expected charge only after real billing exists.</p></div>
-          <div class="pipeStep"><h3>5. Publish</h3><p class="muted">Generate a shareable HTML evidence report with secrets redacted.</p></div>
+        <div class="pad">
+          <label>What we verify</label>
+          <ul class="checks">
+            <li><span class="ci">M</span><div><b>Model identity</b><span class="small">Actual model returned vs the model you requested</span></div></li>
+            <li><span class="ci">U</span><div><b>Usage integrity</b><span class="small">input / output / cache token evidence is present &amp; plausible</span></div></li>
+            <li><span class="ci">N</span><div><b>Nonce replay guard</b><span class="small">A unique nonce must echo back intact every run</span></div></li>
+            <li><span class="ci">C</span><div><b>Claude Code truth</b><span class="small">No false /compact, local-tool or permission-bypass claims</span></div></li>
+            <li><span class="ci">$</span><div><b>Billing boundary</b><span class="small">Separates request-side evidence from real backend ledger</span></div></li>
+          </ul>
         </div>
       </div>
-    </details>
-  </main>
+    </div>
 
-  <div class="toast" id="toast"></div>
+    <div class="card results">
+      <div class="resGrid">
+        <div class="dialWrap">
+          <div class="dial" id="dial" style="--score:0"><div class="dialIn">
+            <div><div class="dialV" id="scoreValue">0</div><div class="small muted">trust score</div></div>
+          </div></div>
+          <div class="verdict" id="verdict">Ready to verify</div>
+        </div>
+        <div class="resBody">
+          <div class="resHead">
+            <h3 id="runLabel">No run yet</h3>
+            <span class="small muted mono" id="runMeta">run once to produce evidence</span>
+          </div>
+          <p class="resSummary" id="summary">Enter a router endpoint, key and model, then pass the human check to run a live evidence report.</p>
+          <table>
+            <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+            <tbody id="checksBody"><tr><td colspan="3" class="muted">No evidence yet.</td></tr></tbody>
+          </table>
+          <div class="raw">
+            <details><summary>Raw evidence digest</summary><pre id="digest">pending</pre></details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</header>
 
-  <script>
-    const sampleAnthropic = {
-      id: "msg_tokentest_sample",
-      type: "message",
-      role: "assistant",
-      model: "claude-sonnet-4-6",
-      content: [{ type: "text", text: "MODEL_TRUTH_OK 42f7a9c1" }],
-      usage: {
-        input_tokens: 118,
-        output_tokens: 12,
-        cache_creation_input_tokens: 0,
-        cache_read_input_tokens: 0
+<section class="how wrap" id="how">
+  <h2>Three steps to a shareable evidence report</h2>
+  <div class="steps">
+    <div class="step"><div class="n">01 · Configure</div><h3>Point at any router</h3><p>Anthropic or OpenAI-compatible base URL, a test key, and the model you were sold.</p></div>
+    <div class="step"><div class="n">02 · Probe</div><h3>Black-box battery</h3><p>Identity, long-output stability, nonce replay, usage integrity and Claude Code behavior — in one pass.</p></div>
+    <div class="step"><div class="n">03 · Decide</div><h3>Genuine or degraded</h3><p>A trust score plus a per-category verdict you can export and hand to procurement.</p></div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span>© TokenTest.io — verification console for AI middle-layer buyers</span>
+  <span class="mono">your key is never stored</span>
+</footer>
+
+<div class="mask" id="mask">
+  <div class="cap">
+    <div class="capHead"><b>Security check</b><span>slide to fit the piece</span>
+      <button class="capX" id="capClose" aria-label="Close">×</button></div>
+    <div class="board" id="board">
+      <img class="bg" id="capBg" alt="" /><img class="pc" id="capPiece" alt="" />
+    </div>
+    <div class="slider" id="slider">
+      <span class="hint">Drag the slider to complete the puzzle →</span>
+      <div class="handle" id="handle">›</div>
+    </div>
+    <div class="capMsg" id="capMsg"></div>
+    <div style="text-align:center"><button class="capRefresh" id="capRefresh">↻ refresh</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const ENGINE = "https://mcp-quality.flatkey.ai";
+  const CAT_COLOR = { pass:"pass", partial:"partial", fail:"fail", skip:"skip" };
+
+  const sampleAnthropic = {
+    id:"msg_tokentest_sample", type:"message", role:"assistant", model:"claude-sonnet-4-6",
+    content:[{type:"text",text:"MODEL_TRUTH_OK 42f7a9c1"}],
+    usage:{input_tokens:118,output_tokens:12,cache_creation_input_tokens:0,cache_read_input_tokens:0}
+  };
+  const state = { mode:"quick", nonce:"42f7a9c1", lastReport:null };
+
+  function showToast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600);}
+  function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+  function setScore(s){ s=Math.max(0,Math.min(100,Number(s)||0)); $("dial").style.setProperty("--score",s); $("scoreValue").textContent=s; }
+
+  function renderFromEngine(d){
+    state.lastReport=d;
+    const score=Number.isFinite(d.score)?d.score:0; setScore(score);
+    const vmap={genuine:"Genuine ✓",suspicious:"Suspicious",likely_fake_or_degraded:"Likely fake / degraded",
+      auth_failed:"Auth failed",unreachable:"Unreachable",error:"Error"};
+    $("verdict").textContent=(vmap[d.verdict]||d.verdict||"—");
+    $("runLabel").textContent=((d.provider||"").toUpperCase()+" · "+(d.resolved_model||d.requested_model||"—")).trim();
+    $("runMeta").textContent=`latency ${d.latency_ms??"?"}ms · ttft ${d.ttft_ms??"?"}ms`;
+    $("summary").textContent=d.summary||d.error||"";
+    const cats=d.categories||[];
+    $("checksBody").innerHTML = cats.length ? cats.map(c=>{
+      const cls=CAT_COLOR[c.status]||"skip";
+      const froms=(c.from||[]).map(f=>String(f).split("/")[0]);
+      const detail=(d.checks||[]).filter(x=>froms.includes(x.name)).map(x=>x.detail).join(" · ");
+      return `<tr><td>${escapeHtml(c.name)}</td><td><span class="pill ${cls}">${c.status} ${c.score}/${c.max}</span></td><td class="muted">${escapeHtml(detail).slice(0,300)}</td></tr>`;
+    }).join("") : `<tr><td colspan="3" class="muted">No categories returned.</td></tr>`;
+    $("digest").textContent=JSON.stringify(d,null,2);
+  }
+
+  function responseText(p){ if(!p)return"";
+    if(Array.isArray(p.content))return p.content.map(i=>i.text||i.content||"").join("\n").trim();
+    const ch=p.choices&&p.choices[0];
+    if(ch&&ch.message){const c=ch.message.content;return Array.isArray(c)?c.map(i=>i.text||"").join("\n"):String(c||"");}
+    return ""; }
+  function usageOf(p){const u=p.usage||{};return{input:+(u.input_tokens||u.prompt_tokens||0),output:+(u.output_tokens||u.completion_tokens||0),cacheRead:+(u.cache_read_input_tokens||(u.prompt_tokens_details||{}).cached_tokens||0)};}
+  function analyzeLocal(p){
+    const req=$("model").value.trim(), act=p.model||p.response_model||req, text=responseText(p), u=usageOf(p);
+    const r={ model:act===req||act.includes(req)||req.includes(act), usage:u.input>0&&u.output>0,
+      nonce:text.includes(`MODEL_TRUTH_OK ${state.nonce}`),
+      claims:!(/can_actually_compact_local_session["'\s:]+true/i.test(text)||/can_bypass_permissions["'\s:]+true/i.test(text)),
+      billing:Boolean(p.backend_billing||p.billing_rows||p.balance_delta_usd) };
+    const score=(r.model?22:0)+(r.usage?22:0)+(r.nonce?22:0)+(r.claims?18:0)+(r.billing?16:0);
+    setScore(score);
+    $("verdict").textContent=score>=86?"Genuine ✓":score>=68?"Partially verified":"Not verified";
+    $("runLabel").textContent="Offline analyze";
+    $("runMeta").textContent=`${act} · ${p.id||"sample"}`;
+    $("summary").textContent=r.billing?"Request + backend billing evidence attached.":"Request-side evidence only — backend billing pending.";
+    const rows=[["Model identity","model",`${req} → ${act}`],["Usage integrity","usage",`${u.input} in / ${u.output} out / ${u.cacheRead} cache`],
+      ["Nonce replay guard","nonce",r.nonce?`echoed nonce ${state.nonce}`:`missing nonce ${state.nonce}`],
+      ["Claude Code truth","claims",r.claims?"no false claims":"false capability claim"],["Billing boundary","billing",r.billing?"ledger attached":"pending"]];
+    $("checksBody").innerHTML=rows.map(([n,k,det])=>{const ok=r[k];const cls=k==="billing"&&!ok?"partial":ok?"pass":"fail";const lbl=k==="billing"&&!ok?"pending":ok?"pass":"fail";return `<tr><td>${n}</td><td><span class="pill ${cls}">${lbl}</span></td><td class="muted">${escapeHtml(det)}</td></tr>`;}).join("");
+    $("digest").textContent=JSON.stringify({model:act,usage:u,verdict:$("verdict").textContent,text:text.slice(0,180)},null,2);
+  }
+
+  async function doRun(){
+    const apiKey=$("apiKey").value.trim();
+    const endpoint=$("endpoint").value.replace(/\/$/,"");
+    const model=$("model").value.trim();
+    const provider=$("protocol").value.startsWith("Anthropic")?"anthropic":"openai";
+    if(!apiKey||/your-router\.com|example-router/.test(endpoint)){ showToast("Enter a real endpoint + API key"); return; }
+    const btn=$("runProbe"); const orig=btn.textContent; btn.textContent="Running 9 probes…"; btn.disabled=true; $("runTop").disabled=true;
+    showToast("Running probe battery via TokenTest engine…");
+    try{
+      const r=await fetch(ENGINE+"/check",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({base_url:endpoint,api_key:apiKey,model,provider,deep:state.mode==="truth"})});
+      const data=await r.json(); renderFromEngine(data);
+      showToast(data.error?`Engine: ${data.error}`:`Done · ${data.verdict||""} ${data.score??""}`);
+    }catch(e){ showToast(`Engine request failed: ${e.message}`); }
+    finally{ btn.textContent=orig; btn.disabled=false; $("runTop").disabled=false; }
+  }
+
+  function requestRun(){
+    const apiKey=$("apiKey").value.trim(), endpoint=$("endpoint").value;
+    if(!apiKey||/your-router\.com|example-router/.test(endpoint)){ showToast("Enter a real endpoint + API key first"); return; }
+    openCaptcha(()=>doRun());
+  }
+
+  // ================= SLIDE CAPTCHA =================
+  let cap = { id:null, maxX:0, x:0, trail:[], t0:0, dragging:false, onPass:null };
+  async function loadChallenge(){
+    $("capMsg").textContent=""; $("capMsg").className="capMsg";
+    $("handle").className="handle"; $("handle").textContent="›"; $("handle").style.left="0px"; $("capPiece").style.left="0px";
+    $("slider").querySelector(".hint").style.opacity=1;
+    try{
+      const r=await fetch("/api/captcha/challenge",{method:"POST"}); const d=await r.json();
+      cap.id=d.challengeId; cap.maxX=d.maxX;
+      $("capBg").src=d.bg; $("capPiece").src=d.piece; $("capPiece").style.top=d.y+"px";
+    }catch(e){ $("capMsg").textContent="failed to load — refresh"; $("capMsg").className="capMsg err"; }
+  }
+  function openCaptcha(onPass){ cap.onPass=onPass; $("mask").classList.add("show"); loadChallenge(); }
+  function closeCaptcha(){ $("mask").classList.remove("show"); }
+
+  function pointX(e){ const t=e.touches?e.touches[0]:e; return t.clientX; }
+  function handleStart(e){
+    cap.dragging=true; cap.trail=[]; cap.t0=performance.now();
+    $("handle").classList.remove("bad","ok"); $("slider").querySelector(".hint").style.opacity=0;
+    moveTo(pointX(e)); e.preventDefault();
+  }
+  function moveTo(clientX){
+    const track=$("slider").getBoundingClientRect();
+    let x=clientX-track.left-24; x=Math.max(0,Math.min(cap.maxX,x));
+    cap.x=x; $("handle").style.left=x+"px"; $("capPiece").style.left=x+"px";
+    cap.trail.push({x:Math.round(x),t:Math.round(performance.now()-cap.t0)});
+  }
+  function handleMove(e){ if(!cap.dragging)return; moveTo(pointX(e)); }
+  async function handleEnd(){
+    if(!cap.dragging)return; cap.dragging=false;
+    try{
+      const r=await fetch("/api/captcha/verify",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({challengeId:cap.id,x:Math.round(cap.x),trail:cap.trail})});
+      const d=await r.json();
+      if(d.ok){
+        $("handle").classList.add("ok"); $("handle").textContent="✓";
+        $("capMsg").textContent="✓ Verified — faster than 99% of users"; $("capMsg").className="capMsg good";
+        sessionStorage.setItem("tt_cap",d.token);
+        setTimeout(()=>{ closeCaptcha(); if(cap.onPass)cap.onPass(); },650);
+      }else{
+        $("handle").classList.add("bad");
+        $("capMsg").textContent = d.reason==="behavior" ? "✗ Try a smoother, slower drag" : "✗ Not aligned — try again";
+        $("capMsg").className="capMsg err";
+        setTimeout(loadChallenge,850);
       }
-    };
+    }catch(e){ $("capMsg").textContent="verify failed — refresh"; $("capMsg").className="capMsg err"; }
+  }
 
-    const state = {
-      mode: "quick",
-      nonce: "42f7a9c1",
-      lastReport: null,
-      toggles: { nonce: true, usage: true, claims: true, billing: true }
-    };
+  $("handle").addEventListener("mousedown",handleStart);
+  $("handle").addEventListener("touchstart",handleStart,{passive:false});
+  window.addEventListener("mousemove",handleMove);
+  window.addEventListener("touchmove",handleMove,{passive:false});
+  window.addEventListener("mouseup",handleEnd);
+  window.addEventListener("touchend",handleEnd);
+  $("capClose").addEventListener("click",closeCaptcha);
+  $("capRefresh").addEventListener("click",loadChallenge);
+  $("mask").addEventListener("click",e=>{ if(e.target===$("mask"))closeCaptcha(); });
 
-    const checks = [
-      ["model", "Model identity", "actual model matches requested model", "Blocks supplier acceptance if mismatched"],
-      ["usage", "Usage integrity", "input/output tokens are present", "Blocks cost comparison if missing"],
-      ["nonce", "Nonce replay guard", "unique nonce is echoed intact", "Flags cache, replay, or obedience failure"],
-      ["claims", "Claude Code truth", "no false local tool or /compact claims", "Flags misleading compatibility claims"],
-      ["billing", "Billing boundary", "real ledger evidence is attached", "Keeps report pending before procurement"]
-    ];
+  // ================= wires =================
+  document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll("[data-mode]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); state.mode=b.dataset.mode;
+  }));
+  $("runProbe").addEventListener("click",requestRun);
+  $("runTop").addEventListener("click",requestRun);
+  $("loadSample").addEventListener("click",()=>{ $("responseJson").value=JSON.stringify(sampleAnthropic,null,2); analyzeLocal(sampleAnthropic); showToast("Sample loaded"); });
+  $("analyzeJson").addEventListener("click",()=>{ try{ const raw=$("responseJson").value.trim(); analyzeLocal(raw?JSON.parse(raw):sampleAnthropic); showToast("Response analyzed"); }catch(e){ showToast("Invalid JSON: "+e.message); } });
 
-    const $ = (id) => document.getElementById(id);
-
-    function showToast(text) {
-      const el = $("toast");
-      el.textContent = text;
-      el.classList.add("show");
-      setTimeout(() => el.classList.remove("show"), 2400);
-    }
-
-    function activeChecks() {
-      return checks.filter(([key]) => key === "model" || state.toggles[key]);
-    }
-
-    function parseResponse() {
-      const raw = $("responseJson").value.trim();
-      if (!raw) return sampleAnthropic;
-      return JSON.parse(raw);
-    }
-
-    function responseText(payload) {
-      if (!payload) return "";
-      if (Array.isArray(payload.content)) {
-        return payload.content.map((item) => item.text || item.content || "").join("\\n").trim();
-      }
-      const choice = payload.choices && payload.choices[0];
-      if (choice && choice.message) {
-        const content = choice.message.content;
-        return Array.isArray(content) ? content.map((item) => item.text || "").join("\\n") : String(content || "");
-      }
-      return "";
-    }
-
-    function usageOf(payload) {
-      const usage = payload.usage || {};
-      return {
-        input: Number(usage.input_tokens || usage.prompt_tokens || 0),
-        output: Number(usage.output_tokens || usage.completion_tokens || 0),
-        cacheCreate: Number(usage.cache_creation_input_tokens || 0),
-        cacheRead: Number(usage.cache_read_input_tokens || (usage.prompt_tokens_details || {}).cached_tokens || 0)
-      };
-    }
-
-    function analyze(payload, options = {}) {
-      const requestedModel = $("model").value.trim();
-      const actualModel = payload.model || payload.response_model || requestedModel;
-      const text = responseText(payload);
-      const usage = usageOf(payload);
-      const nonce = options.nonce || state.nonce;
-      const hasUsage = usage.input > 0 && usage.output > 0;
-      const nonceOk = text.includes(`MODEL_TRUTH_OK ${nonce}`) || !state.toggles.nonce;
-      const falseCompact = /can_actually_compact_local_session["'\\s:]+true/i.test(text);
-      const falseBypass = /can_bypass_permissions["'\\s:]+true/i.test(text);
-      const claimsOk = !(falseCompact || falseBypass);
-      const billingOk = Boolean(payload.backend_billing || payload.billing_rows || payload.balance_delta_usd);
-      const results = {
-        model: actualModel === requestedModel || actualModel.includes(requestedModel) || requestedModel.includes(actualModel),
-        usage: hasUsage,
-        nonce: nonceOk,
-        claims: claimsOk,
-        billing: billingOk
-      };
-      const score =
-        (results.model ? 22 : 0) +
-        (results.usage ? 22 : 0) +
-        (results.nonce ? 22 : 0) +
-        (results.claims ? 18 : 0) +
-        (results.billing ? 16 : 0);
-
-      return {
-        score,
-        requestedModel,
-        actualModel,
-        text,
-        usage,
-        results,
-        nonce,
-        responseId: payload.id || payload.response_id || "pending",
-        billingStatus: billingOk ? "ledger-attached" : "pending-billing",
-        raw: payload
-      };
-    }
-
-    function statusBadge(ok, key) {
-      if (key === "billing" && !ok) return '<span class="badge warn">pending</span>';
-      return ok ? '<span class="badge pass">pass</span>' : '<span class="badge fail">fail</span>';
-    }
-
-    function renderEmpty() {
-      $("scoreValue").textContent = "0";
-      $("scoreDial").style.setProperty("--score", 0);
-      $("judgment").textContent = "Ready for verification";
-      $("judgmentText").textContent = "Waiting for router evidence.";
-      $("sigModel").textContent = "Ready";
-      $("sigUsage").textContent = "Ready";
-      $("sigNonce").textContent = "Ready";
-      $("sigBilling").textContent = "Ready";
-      $("runLabel").textContent = "No run yet";
-      $("runMeta").textContent = "Run once to produce an evidence report.";
-      $("evidenceCount").textContent = "empty";
-      $("checksBody").innerHTML = '<tr><td colspan="4" class="muted">No evidence yet.</td></tr>';
-      $("promptPacket").textContent = "pending";
-      $("digest").textContent = "pending";
-    }
-
-    function render(report) {
-      state.lastReport = report;
-      $("scoreValue").textContent = report.score;
-      $("scoreDial").style.setProperty("--score", report.score);
-      $("judgment").textContent = report.score >= 86 ? "Router truth is verified" : report.score >= 68 ? "Router truth is partially verified" : "Router truth is not verified";
-      $("judgmentText").textContent = report.billingStatus === "pending-billing"
-        ? "Request-side evidence is available, but real backend billing is still pending."
-        : "Request-side evidence and backend billing evidence are both attached.";
-      $("sigModel").textContent = report.results.model ? "OK" : "Fail";
-      $("sigUsage").textContent = report.results.usage ? "OK" : "Fail";
-      $("sigNonce").textContent = report.results.nonce ? "OK" : "Fail";
-      $("sigBilling").textContent = report.results.billing ? "OK" : "Pending";
-      $("runLabel").textContent = report.results.billing ? "Verified with billing evidence" : "Verified, billing pending";
-      $("runMeta").textContent = `${report.actualModel} · ${report.responseId}`;
-      $("evidenceCount").textContent = `${activeChecks().length} checks`;
-
-      $("checksBody").innerHTML = activeChecks().map(([key, name, evidence, impact]) => {
-        const ok = report.results[key];
-        let detail = evidence;
-        if (key === "model") detail = `${report.requestedModel} -> ${report.actualModel}`;
-        if (key === "usage") detail = `${report.usage.input} input / ${report.usage.output} output / ${report.usage.cacheRead} cache read`;
-        if (key === "nonce") detail = report.results.nonce ? `echoed MODEL_TRUTH_OK ${report.nonce}` : `missing MODEL_TRUTH_OK ${report.nonce}`;
-        if (key === "billing") detail = report.billingStatus;
-        return `<tr><td>${name}</td><td>${statusBadge(ok, key)}</td><td>${escapeHtml(detail)}</td><td>${impact}</td></tr>`;
-      }).join("");
-
-      $("promptPacket").textContent = JSON.stringify({
-        protocol: $("protocol").value,
-        endpoint: $("endpoint").value,
-        model: report.requestedModel,
-        nonce_prompt: `Reply exactly: MODEL_TRUTH_OK ${report.nonce}`,
-        max_tokens: state.mode === "billing" ? 320 : 120
-      }, null, 2);
-
-      $("digest").textContent = JSON.stringify({
-        response_id: report.responseId,
-        actual_model: report.actualModel,
-        usage: report.usage,
-        billing_status: report.billingStatus,
-        text_excerpt: report.text.slice(0, 180)
-      }, null, 2);
-    }
-
-    function escapeHtml(value) {
-      return String(value).replace(/[&<>"']/g, (ch) => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[ch]));
-    }
-
-    // ---- TokenTest engine (our own MCP-backed prober) ----
-    const ENGINE = "https://mcp-quality.flatkey.ai";
-    const CAT_COLOR = { pass: "#22c55e", partial: "#f59e0b", fail: "#ef4444", skip: "#9ca3af" };
-
-    function renderFromEngine(data) {
-      state.lastReport = data;
-      const score = Number.isFinite(data.score) ? data.score : 0;
-      $("scoreDial").style.setProperty("--score", score);
-      $("scoreValue").textContent = score;
-      const vmap = {
-        genuine: "真实 / Genuine",
-        suspicious: "可疑 / Suspicious",
-        likely_fake_or_degraded: "疑似假 / 降智 · Likely fake or degraded",
-        auth_failed: "鉴权失败 / Auth failed",
-        unreachable: "不可达 / Unreachable",
-        error: "错误 / Error"
-      };
-      $("judgment").textContent = (vmap[data.verdict] || data.verdict || "—") + " · " + score + "/100";
-      $("judgmentText").textContent = data.summary || data.error || "";
-      const cats = data.categories || [];
-      const byKey = Object.fromEntries(cats.map((c) => [c.key, c]));
-      const sig = (k) => {
-        const c = byKey[k];
-        if (!c) return "—";
-        return c.status === "pass" ? "OK" : c.status === "partial" ? "Watch" : c.status === "skip" ? "—" : "Fail";
-      };
-      $("sigModel").textContent = sig("llm_fingerprint");
-      $("sigUsage").textContent = sig("token_audit");
-      $("sigNonce").textContent = sig("behavior");
-      $("sigBilling").textContent = sig("signature");
-      $("runLabel").textContent = (data.provider || "").toUpperCase() + " · " + (data.resolved_model || data.requested_model || "");
-      $("runMeta").textContent = `latency ${data.latency_ms ?? "?"}ms · ttft ${data.ttft_ms ?? "?"}ms`;
-      $("evidenceCount").textContent = `${cats.length} categories`;
-      $("checksBody").innerHTML = cats.map((c) => {
-        const color = CAT_COLOR[c.status] || "#9ca3af";
-        const badge = `<b style="color:${color}">${c.status.toUpperCase()} ${c.score}/${c.max}</b>`;
-        const froms = (c.from || []).map((f) => f.split("/")[0]);
-        const detail = (data.checks || [])
-          .filter((x) => froms.includes(x.name))
-          .map((x) => x.detail)
-          .join(" · ");
-        return `<tr><td>${c.name}</td><td>${badge}</td><td>${escapeHtml(detail).slice(0, 320)}</td><td></td></tr>`;
-      }).join("");
-      $("promptPacket").textContent = JSON.stringify(
-        { engine: ENGINE + "/check", provider: data.provider, model: data.requested_model, probes: (data.checks || []).length }, null, 2);
-      $("digest").textContent = JSON.stringify(data, null, 2);
-    }
-
-    async function runProbe() {
-      const apiKey = $("apiKey").value.trim();
-      const endpoint = $("endpoint").value.replace(/\/$/, "");
-      const model = $("model").value.trim();
-      const provider = $("protocol").value.startsWith("Anthropic") ? "anthropic" : "openai";
-
-      if (!apiKey || endpoint.includes("example-router.com")) {
-        showToast("Enter a real endpoint + API key to run the engine");
-        return;
-      }
-      const btn = $("runProbe");
-      const orig = btn.textContent;
-      btn.textContent = "Running 9 probes…";
-      btn.disabled = true;
-      showToast("Running full probe battery via TokenTest engine…");
-      try {
-        const r = await fetch(ENGINE + "/check", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ base_url: endpoint, api_key: apiKey, model, provider, deep: state.mode === "truth" })
-        });
-        const data = await r.json();
-        renderFromEngine(data);
-        showToast(data.error ? `Engine: ${data.error}` : `Done · ${data.verdict || ""} ${data.score ?? ""}`);
-      } catch (error) {
-        showToast(`Engine request failed: ${error.message}`);
-      } finally {
-        btn.textContent = orig;
-        btn.disabled = false;
-      }
-    }
-
-    document.querySelectorAll("[data-mode]").forEach((button) => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll("[data-mode]").forEach((b) => b.classList.remove("active"));
-        button.classList.add("active");
-        state.mode = button.dataset.mode;
-      });
-    });
-
-    document.querySelectorAll("[data-toggle]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const key = button.dataset.toggle;
-        state.toggles[key] = !state.toggles[key];
-        button.classList.toggle("on", state.toggles[key]);
-        if (state.lastReport) render(state.lastReport);
-      });
-    });
-
-    $("loadSample").addEventListener("click", () => {
-      $("responseJson").value = JSON.stringify(sampleAnthropic, null, 2);
-      render(analyze(sampleAnthropic));
-      showToast("Sample loaded");
-    });
-    $("runTop").addEventListener("click", runProbe);
-    $("runProbe").addEventListener("click", runProbe);
-
-    // ---- deep-link presets: /blockrun  or  ?endpoint=&model=&provider=&key=&run=1 ----
-    (function initPresets() {
-      const q = new URLSearchParams(location.search);
-      const path = location.pathname.replace(/\/+$/, "") || "/";
-      // baked presets — ClawRouter / blockrun local proxy (OpenAI-compatible,
-      // base http://localhost:8402, key literal "x402"). Endpoint uses
-      // host.docker.internal so the containerized engine reaches the host proxy.
-      const CLAWROUTER = "http://host.docker.internal:8402";
-      const PRESETS = {
-        "/blockrun":         { provider: "openai", model: "gpt-4o",          endpoint: CLAWROUTER, key: "x402" },
-        "/blockrun-mini":    { provider: "openai", model: "gpt-4o-mini",     endpoint: CLAWROUTER, key: "x402" },
-        "/blockrun-opus":    { provider: "openai", model: "claude-opus-4.8", endpoint: CLAWROUTER, key: "x402" },
-        "/blockrun-opus-47": { provider: "openai", model: "claude-opus-4.7", endpoint: CLAWROUTER, key: "x402" },
-        "/blockrun-sonnet":  { provider: "openai", model: "claude-sonnet-4.6", endpoint: CLAWROUTER, key: "x402" },
-        // BlockRun Solana chain (separate VPS, NAS tailnet 100.116.163.64) — Anthropic :8413 / OpenAI :8403
-        "/blockrun-sol":     { provider: "anthropic", model: "claude-sonnet-4-6", endpoint: "http://100.116.163.64:8413",      key: "dummy" },
-        "/blockrun-sol-oai": { provider: "openai",    model: "claude-sonnet-4-6", endpoint: "http://100.116.163.64:8403/v1", key: "dummy" }
-      };
-      const preset = PRESETS[path] || PRESETS["/" + (q.get("preset") || "")] || {};
-      const endpoint = q.get("endpoint") || preset.endpoint;
-      const model = q.get("model") || preset.model;
-      const provider = (q.get("provider") || preset.provider || "").toLowerCase();
-      const key = q.get("key") || preset.key;
-      if (endpoint) $("endpoint").value = endpoint;
-      if (model) $("model").value = model;
-      if (provider) $("protocol").value = provider.startsWith("openai")
-        ? "OpenAI /v1/chat/completions" : "Anthropic /v1/messages";
-      if (key) $("apiKey").value = key;
-      if ((q.get("run") === "1" || q.get("autorun") === "1")
-          && $("endpoint").value && $("apiKey").value && !$("endpoint").value.includes("example-router.com")) {
-        setTimeout(runProbe, 350);
-      }
-    })();
-    $("analyzeJson").addEventListener("click", () => {
-      try {
-        render(analyze(parseResponse()));
-        showToast("Response analyzed");
-      } catch (error) {
-        showToast(`Invalid JSON: ${error.message}`);
-      }
-    });
-    $("exportReport").addEventListener("click", () => {
-      if (!state.lastReport) {
-        showToast("Run verification first");
-        return;
-      }
-      const payload = JSON.stringify(state.lastReport, null, 2);
-      const blob = new Blob([payload], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "tokentest-report.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    $("responseJson").value = "";
-    renderEmpty();
-  </script>
+  (function initPresets(){
+    const q=new URLSearchParams(location.search);
+    const p=location.pathname.replace(/\/+$/,"")||"/";
+    const CR="http://host.docker.internal:8402";
+    const P={ "/blockrun":{provider:"openai",model:"gpt-4o",endpoint:CR,key:"x402"},
+      "/blockrun-mini":{provider:"openai",model:"gpt-4o-mini",endpoint:CR,key:"x402"},
+      "/blockrun-opus":{provider:"openai",model:"claude-opus-4.8",endpoint:CR,key:"x402"},
+      "/blockrun-opus-47":{provider:"openai",model:"claude-opus-4.7",endpoint:CR,key:"x402"},
+      "/blockrun-sonnet":{provider:"openai",model:"claude-sonnet-4.6",endpoint:CR,key:"x402"},
+      "/blockrun-sol":{provider:"anthropic",model:"claude-sonnet-4-6",endpoint:"http://100.116.163.64:8413",key:"dummy"},
+      "/blockrun-sol-oai":{provider:"openai",model:"claude-sonnet-4-6",endpoint:"http://100.116.163.64:8403/v1",key:"dummy"} };
+    const pr=P[p]||P["/"+(q.get("preset")||"")]||{};
+    const endpoint=q.get("endpoint")||pr.endpoint, model=q.get("model")||pr.model,
+      provider=(q.get("provider")||pr.provider||"").toLowerCase(), key=q.get("key")||pr.key;
+    if(endpoint)$("endpoint").value=endpoint; if(model)$("model").value=model;
+    if(provider)$("protocol").value=provider.startsWith("openai")?"OpenAI /v1/chat/completions":"Anthropic /v1/messages";
+    if(key)$("apiKey").value=key;
+    if((q.get("run")==="1"||q.get("autorun")==="1")&&$("apiKey").value&&!/your-router|example-router/.test($("endpoint").value)) setTimeout(requestRun,400);
+  })();
+</script>
 </body>
 </html>
