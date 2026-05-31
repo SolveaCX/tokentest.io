@@ -87,6 +87,10 @@
   .resHead{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line2);gap:12px;flex-wrap:wrap}
   .resHead h3{margin:0;font-size:15px}
   .resHead .sum{font-family:var(--mono);font-size:12px;color:var(--mut)}
+  .actBtns{display:flex;gap:6px}
+  .actBtn{background:#0a0a0a;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:6px 11px;font-size:12px;font-family:var(--mono);cursor:pointer}
+  .actBtn:hover{color:var(--txt);border-color:var(--blue)}
+  .shareBanner{background:rgba(48,128,255,.1);border-bottom:1px solid var(--line2);padding:11px 22px;font-family:var(--mono);font-size:12.5px;color:var(--blue);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .matrix{width:100%;border-collapse:collapse;font-size:13.5px}
   .matrix th{text-align:left;color:var(--mut2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:12px 22px;border-bottom:1px solid var(--line2)}
   .matrix td{padding:13px 22px;border-bottom:1px solid var(--line2);vertical-align:middle}
@@ -240,7 +244,14 @@
     <div class="card results">
       <div class="resHead">
         <h3 data-i18n="res_title">Comparison matrix</h3>
-        <span class="sum" id="resSum" data-i18n="res_empty">no run yet</span>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="actBtns" id="actBtns" style="display:none">
+            <button class="actBtn" id="btnShare" data-i18n="share">Share</button>
+            <button class="actBtn" id="btnJson" data-i18n="exp_json">JSON</button>
+            <button class="actBtn" id="btnCsv" data-i18n="exp_csv">CSV</button>
+          </div>
+          <span class="sum" id="resSum" data-i18n="res_empty">no run yet</span>
+        </div>
       </div>
       <table class="matrix">
         <thead><tr>
@@ -308,6 +319,8 @@
       how3_t:"Compare",how3_h:"Genuine or degraded",how3_p:"A trust score and per-category verdict for every model, side by side.",
       foot:"© TokenTest.io — verification console for AI middle-layer buyers",foot2:"your key is never stored",
       cap_title:"Security check",cap_sub:"slide to fit the piece",cap_hint:"Drag the slider to complete the puzzle →",cap_refresh:"↻ refresh",
+      share:"⤴ Share",exp_json:"JSON",exp_csv:"CSV",link_copied:"Shareable link copied to clipboard",
+      shared_report:"Shared verification report — read-only",run_own:"Run your own →",
       lang:"中文" },
     zh:{ nav_how:"工作原理",nav_verify:"开始检测",run:"运行",trust:"受中转运营商与采购团队信赖",
       h1:'验证任何模型的真伪<br><span class="accent">在你付费之前。</span>',
@@ -329,6 +342,8 @@
       how3_t:"对比",how3_h:"真实或降智",how3_p:"为每个模型给出信任分与逐项判定，横向并列。",
       foot:"© TokenTest.io —— AI 中间层买家的验证控制台",foot2:"你的 Key 绝不存储",
       cap_title:"安全验证",cap_sub:"拖动拼好缺口",cap_hint:"拖动滑块完成拼图 →",cap_refresh:"↻ 刷新",
+      share:"⤴ 分享",exp_json:"JSON",exp_csv:"CSV",link_copied:"分享链接已复制到剪贴板",
+      shared_report:"分享的验证报告 —— 只读",run_own:"自己跑一次 →",
       lang:"EN" } };
   let LANG = localStorage.getItem("tt_lang") || "en";
   const VERDICT = {
@@ -425,6 +440,7 @@
       const i=tr.getAttribute("data-i"); if(i==null)return;
       tr.addEventListener("click",()=>toggleDetail(+i));
     });
+    updateActions();
   }
   function toggleDetail(i){
     const det=$("det-"+i); if(!det)return; const open=det.style.display!=="none";
@@ -442,6 +458,55 @@
     return `<div class="detSummary">${esc(d.summary||d.error||"")}</div>
       <table class="catTable"><tbody>${rows}</tbody></table>
       <details style="margin-top:12px"><summary>${LANG==="zh"?"原始证据 JSON":"Raw evidence digest"}</summary><pre>${esc(JSON.stringify(d,null,2))}</pre></details>`;
+  }
+
+  // ---------------- export & shareable report ----------------
+  const b64u = (s)=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  const unb64u = (s)=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
+  function doneRows(){ return BATCH.filter(b=>b.status==="done"&&b.data); }
+  function updateActions(){ $("actBtns").style.display = doneRows().length ? "flex" : "none"; }
+  function compactReport(){
+    return { v:1, ts:Date.now(), rows: doneRows().map(b=>({
+      model:b.model, provider:providerFor(b.model),
+      verdict:b.data.verdict, score:b.data.score, resolved:b.data.resolved_model||b.data.requested_model,
+      latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
+      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max})) })) };
+  }
+  function shareReport(){
+    if(!doneRows().length){ showToast(LANG==="zh"?"先跑一次再分享":"Run a check first"); return; }
+    const enc=b64u(JSON.stringify(compactReport()));
+    const url=location.origin+location.pathname+"#report="+enc;
+    (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>showToast(t("link_copied")))
+      .catch(()=>{ prompt(t("link_copied"),url); });
+  }
+  function exportJSON(){
+    const blob=new Blob([JSON.stringify({generated:new Date().toISOString(),endpoint:$("endpoint").value,results:doneRows().map(b=>({model:b.model,provider:providerFor(b.model),...b.data}))},null,2)],{type:"application/json"});
+    dl(blob,"tokentest-report.json");
+  }
+  function exportCSV(){
+    const head=["model","provider","verdict","score","resolved_model","latency_ms","failed_categories"];
+    const lines=[head.join(",")].concat(doneRows().map(b=>{
+      const fails=(b.data.categories||[]).filter(c=>c.status==="fail").map(c=>catLabel(c)).join("; ");
+      const row=[b.model,providerFor(b.model),b.data.verdict,b.data.score,b.data.resolved_model||b.data.requested_model||"",b.data.latency_ms!=null?Math.round(b.data.latency_ms):"",fails];
+      return row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",");
+    }));
+    dl(new Blob([lines.join("\n")],{type:"text/csv"}),"tokentest-report.csv");
+  }
+  function dl(blob,name){ const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u); }
+  function loadSharedReport(enc){
+    try{
+      const rep=JSON.parse(unb64u(enc));
+      BATCH = (rep.rows||[]).map(r=>({ model:r.model, status:"done", data:{
+        verdict:r.verdict, score:r.score, resolved_model:r.resolved, latency_ms:r.latency, summary:r.summary, categories:r.cats||[], checks:[] } }));
+      // read-only banner + collapse config
+      const banner=document.createElement("div"); banner.className="shareBanner";
+      const when=rep.ts?new Date(rep.ts).toLocaleString():"";
+      banner.innerHTML=`<span>${t("shared_report")}${when?" · "+when:""}</span><a href="${location.pathname}" style="color:var(--blue)">${t("run_own")}</a>`;
+      const card=document.querySelector(".results"); card.insertBefore(banner,card.firstChild);
+      renderMatrix(); updateActions();
+      document.querySelector(".results").scrollIntoView({block:"start"});
+      return true;
+    }catch(e){ return false; }
   }
 
   // ---------------- model autodiscovery ----------------
@@ -525,6 +590,9 @@
   $("loadSample").addEventListener("click",()=>{ $("responseJson").value=JSON.stringify(sample,null,2);analyzeLocal(sample);showToast(LANG==="zh"?"已载入示例":"Sample loaded"); });
   $("analyzeJson").addEventListener("click",()=>{ try{const raw=$("responseJson").value.trim();analyzeLocal(raw?JSON.parse(raw):sample);}catch(e){showToast("Invalid JSON: "+e.message);} });
   $("langBtn").addEventListener("click",()=>{ LANG=LANG==="en"?"zh":"en";localStorage.setItem("tt_lang",LANG);applyLang(); });
+  $("btnShare").addEventListener("click",shareReport);
+  $("btnJson").addEventListener("click",exportJSON);
+  $("btnCsv").addEventListener("click",exportCSV);
 
   // deep-link presets
   (function init(){
@@ -544,6 +612,8 @@
     if(provider)$("protocol").value=provider.startsWith("openai")?"OpenAI /v1/chat/completions":"Anthropic /v1/messages";
     if(key)$("apiKey").value=key;
     applyLang();
+    const hm=(location.hash||"").match(/^#report=(.+)$/);
+    if(hm){ loadSharedReport(hm[1]); return; }
     if((q.get("run")==="1"||q.get("autorun")==="1")&&$("apiKey").value&&!/your-router|example-router/.test($("endpoint").value)) setTimeout(requestRun,400);
   })();
 </script>
