@@ -4,6 +4,7 @@ import express from "express";
 import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { discoverModels, evaluateModel } from "./lib/evaluator.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -159,21 +160,14 @@ export function tokenValid(token) {
 }
 app.post("/api/captcha/check", (req, res) => res.json({ ok: tokenValid((req.body || {}).token) }));
 
-// ---- engine proxy (captcha-gated, server-to-server: no CORS, key only transits, never stored) ----
-const ENGINE = process.env.ENGINE_URL || "https://mcp-quality.flatkey.ai";
-
 app.post("/api/check", async (req, res) => {
   const { token, base_url, api_key, model, provider, deep } = req.body || {};
   if (!tokenValid(token)) return res.status(401).json({ verdict: "error", score: 0, error: "captcha_required", summary: "Human verification required." });
   if (!base_url || !api_key || !model) return res.status(400).json({ verdict: "error", score: 0, error: "missing_fields" });
   try {
-    const r = await fetch(ENGINE + "/check", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ base_url, api_key, model, provider, deep: !!deep }),
-    });
-    res.status(r.status).json(await r.json());
+    res.json(await evaluateModel({ base_url, api_key, model, provider, deep: !!deep }));
   } catch (e) {
-    res.status(502).json({ verdict: "error", score: 0, error: String(e), summary: "Engine unreachable." });
+    res.status(502).json({ verdict: "error", score: 0, error: String(e), summary: "Local evaluator failed." });
   }
 });
 
@@ -183,11 +177,7 @@ app.post("/api/models", async (req, res) => {
   if (!tokenValid(token)) return res.status(401).json({ models: [], error: "captcha_required" });
   if (!base_url) return res.json({ models: [], error: "missing_base_url" });
   try {
-    const url = String(base_url).replace(/\/$/, "") + "/models";
-    const r = await fetch(url, { headers: { authorization: "Bearer " + (api_key || "") } });
-    const data = await r.json().catch(() => ({}));
-    const ids = (data.data || data.models || []).map((m) => m.id || m.name).filter(Boolean);
-    res.json({ models: ids });
+    res.json(await discoverModels({ base_url, api_key }));
   } catch (e) {
     res.json({ models: [], error: String(e) });
   }

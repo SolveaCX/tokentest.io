@@ -112,17 +112,50 @@
   .expand{color:var(--mut2);font-family:var(--mono);font-size:12px}
   .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--txt);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
   @keyframes sp{to{transform:rotate(360deg)}}
-  .detail{background:#0a0a0a}
-  .detail td{padding:0}
-  .detailIn{padding:6px 22px 18px}
-  .detSummary{color:var(--mut);font-size:13px;margin:10px 0 12px;font-family:var(--mono)}
-  .catTable{width:100%;border-collapse:collapse;font-size:12.5px}
-  .catTable td{padding:8px 0;border-top:1px solid var(--line2);vertical-align:top}
-  .catTable td:first-child{width:30%;font-weight:500}
-  .catTable td:nth-child(2){width:18%}
-  pre{background:#0c0c0d;border:1px solid var(--line2);border-radius:10px;padding:13px;overflow:auto;font-family:var(--mono);font-size:11.5px;color:var(--mut);max-height:280px;margin:10px 0 0}
-  details summary{cursor:pointer;color:var(--mut);font-size:12px;font-family:var(--mono)}
-  .emptyRow td{color:var(--mut);padding:26px 22px;text-align:center}
+	  .detail{background:#080808}
+	  .detail td{padding:0}
+	  .detailIn{padding:16px 22px 22px}
+	  .detailPanel{border:1px solid var(--line2);border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));overflow:hidden;max-width:calc(100vw - 48px);margin:0 auto}
+	  .detailTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start;padding:16px 18px;border-bottom:1px solid var(--line2)}
+	  .detailKicker{font-family:var(--mono);font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+	  .detailTitle{font-size:14px;color:var(--txt);font-weight:500;line-height:1.55;overflow-wrap:anywhere}
+	  .detailStats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+	  .statTile{min-width:88px;border:1px solid var(--line2);border-radius:8px;padding:8px 10px;background:rgba(0,0,0,.22)}
+	  .statTile b{display:block;font-family:var(--mono);font-size:16px;color:var(--txt);line-height:1.1}
+	  .statTile span{display:block;margin-top:4px;font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em}
+	  .detailFacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line2);border-bottom:1px solid var(--line2)}
+	  .fact{background:#0a0a0a;padding:11px 14px;min-width:0}
+	  .fact span{display:block;font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+	  .fact b{display:block;font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	  .catGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px}
+	  .packGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:14px 14px 0}
+	  .packTile{border:1px solid var(--line2);border-radius:8px;padding:12px;background:rgba(0,0,0,.22)}
+	  .packTile b{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+	  .packTile span{display:block;font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:7px}
+	  .packSection{padding:14px;border-top:1px solid var(--line2)}
+	  .packSection+.packSection{padding-top:0;border-top:0}
+	  .packHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+	  .packHead h4{margin:0;font-size:13px}
+	  .packHead p{margin:3px 0 0;color:var(--mut2);font-size:12px}
+	  .catCard{border:1px solid var(--line2);border-radius:8px;background:rgba(0,0,0,.22);padding:12px;min-height:124px}
+	  .catCard.pass{border-color:rgba(0,199,88,.18)}
+	  .catCard.partial{border-color:rgba(249,156,0,.20)}
+	  .catCard.fail{border-color:rgba(251,44,54,.20)}
+	  .catHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+	  .catName{font-size:13px;font-weight:600;color:var(--txt);overflow-wrap:anywhere}
+	  .catSub{font-size:12px;color:var(--mut);line-height:1.45;margin-top:9px;overflow-wrap:anywhere}
+	  .catMeter{height:6px;border-radius:999px;background:rgba(255,255,255,.08);margin-top:11px;overflow:hidden}
+	  .catMeter span{display:block;height:100%;border-radius:999px}
+	  .evidenceStrip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:0 14px 14px}
+	  .evBox{border:1px solid var(--line2);border-radius:8px;padding:11px 12px;background:#0a0a0a;min-width:0}
+	  .evBox span{display:block;font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+	  .evBox b,.evBox code{font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:500;word-break:break-word;white-space:pre-wrap}
+	  .rawBox{border-top:1px solid var(--line2);padding:12px 14px;background:rgba(0,0,0,.18)}
+	  pre{background:#0c0c0d;border:1px solid var(--line2);border-radius:8px;padding:13px;overflow:auto;font-family:var(--mono);font-size:11.5px;color:var(--mut);max-height:240px;margin:10px 0 0;text-align:left}
+	  details summary{cursor:pointer;color:var(--mut);font-size:12px;font-family:var(--mono)}
+	  .emptyRow td{color:var(--mut);padding:26px 22px;text-align:center}
+	  @media(max-width:900px){.detailTop{grid-template-columns:1fr}.detailStats{justify-content:flex-start}.detailFacts{grid-template-columns:repeat(2,minmax(0,1fr))}.catGrid{grid-template-columns:1fr}.packGrid{grid-template-columns:1fr 1fr}.evidenceStrip{grid-template-columns:1fr}}
+	  @media(max-width:620px){.catGrid,.detailFacts{grid-template-columns:1fr}.detailIn{padding:12px}}
 
   .advanced{margin-top:14px} .advanced summary{font-size:12px}
   .twoBtn{display:flex;gap:8px;margin-top:10px}
@@ -365,11 +398,15 @@
     genuine:{en:"Genuine ✓",zh:"真实 ✓"},suspicious:{en:"Suspicious",zh:"可疑"},
     likely_fake_or_degraded:{en:"Likely fake / degraded",zh:"疑似假 / 降智"},
     auth_failed:{en:"Auth failed",zh:"鉴权失败"},unreachable:{en:"Unreachable",zh:"不可达"},error:{en:"Error",zh:"错误"} };
-  const CATLABEL = {
-    llm_fingerprint:{en:"LLM fingerprint"},token_audit:{en:"Token usage audit"},behavior:{en:"Behavior"},
-    signature:{en:"Signature"},multimodal:{en:"Multimodal"},structure:{en:"Structural integrity"},
-    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
-    "签名校验":{en:"Signature"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
+	  const CATLABEL = {
+	    llm_fingerprint:{en:"LLM fingerprint"},token_audit:{en:"Token usage audit"},behavior:{en:"Behavior"},
+	    signature:{en:"Signature"},multimodal:{en:"Multimodal"},structure:{en:"Structural integrity"},
+	    instruction_json:{en:"Structured output"},instruction_constraints:{en:"Constraint following"},
+	    instruction_no_extra:{en:"No extra text"},instruction_language:{en:"Language constraint"},
+	    reasoning_arithmetic:{en:"Arithmetic"},reasoning_logic:{en:"Logic"},reasoning_code:{en:"Code understanding"},
+	    safety_prompt_injection:{en:"Prompt injection resistance"},safety_secret_leakage:{en:"Secret protection"},safety_harmful_code:{en:"Harmful-code boundary"},
+	    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
+	    "签名校验":{en:"Signature"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
   const t = (k) => (I18N[LANG][k] ?? I18N.en[k] ?? k);
   function verdictLabel(v){ const m=VERDICT[v]; return m?(m[LANG]||m.en):(v||"—"); }
   function catLabel(cat){ const byKey=CATLABEL[cat.key]||CATLABEL[cat.name];
@@ -476,28 +513,119 @@
   function detailHtml(d){
     if(!d) return `<div class="detSummary">—</div>`;
     const cats=d.categories||[];
-    const rows=cats.length? cats.map(c=>{
+    const packs=normalizePacks(d);
+    const verdict=verdictLabel(d.verdict||"");
+    const score=Number.isFinite(d.score)?d.score:0;
+    const usage=d.usage||{};
+    const tokens=[usage.input_tokens||usage.prompt_tokens||0,usage.output_tokens||usage.completion_tokens||0].map(n=>Number(n)||0);
+    const tokenText=tokens[0]||tokens[1]?`${tokens[0]} in / ${tokens[1]} out`:"not reported";
+    const evidence=d.evidence||{};
+    const resolved=d.resolved_model||d.requested_model||"—";
+    const packSummary=packs.length?`<div class="packGrid">${packs.map(p=>`<div class="packTile">
+      <b>${esc(packLabel(p.key,p.name))}<span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(p.score)}%</span></b>
+      <div class="catMeter"><span style="width:${Math.max(0,Math.min(100,Number(p.score)||0))}%;background:${scoreColor(Number(p.score)||0)}"></span></div>
+      <span>${esc(p.summary||packHint(p.key))}</span>
+    </div>`).join("")}</div>`:"";
+    const packSections=packs.length?packs.map(p=>{
+      const packCats=(p.categories||[]).length?p.categories:cats.filter(c=>c.pack===p.key);
+      return `<div class="packSection">
+        <div class="packHead"><div><h4>${esc(packLabel(p.key,p.name))}</h4><p>${esc(p.summary||packHint(p.key))}</p></div><span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(p.score)}%</span></div>
+        <div class="catGrid">${renderCategoryCards(packCats,d)}</div>
+      </div>`;
+    }).join(""):`<div class="catGrid">${renderCategoryCards(cats,d)}</div>`;
+    return `<div class="detailPanel">
+      <div class="detailTop">
+        <div>
+          <div class="detailKicker">${LANG==="zh"?"模型证据报告":"Model evidence report"}</div>
+          <div class="detailTitle">${esc(d.summary||d.error||"")}</div>
+        </div>
+        <div class="detailStats">
+          <div class="statTile"><b style="color:${scoreColor(score)}">${score}</b><span>${LANG==="zh"?"总分":"Score"}</span></div>
+          <div class="statTile"><b>${esc(verdict)}</b><span>${LANG==="zh"?"结论":"Verdict"}</span></div>
+          <div class="statTile"><b>${d.latency_ms!=null?Math.round(d.latency_ms)+"ms":"—"}</b><span>${LANG==="zh"?"耗时":"Latency"}</span></div>
+        </div>
+      </div>
+      <div class="detailFacts">
+        <div class="fact"><span>${LANG==="zh"?"请求模型":"Requested"}</span><b title="${esc(d.requested_model||"")}">${esc(d.requested_model||"—")}</b></div>
+        <div class="fact"><span>${LANG==="zh"?"实际返回":"Resolved"}</span><b title="${esc(resolved)}">${esc(resolved)}</b></div>
+        <div class="fact"><span>${LANG==="zh"?"提供方":"Provider"}</span><b>${esc(d.provider||"unknown")}</b></div>
+        <div class="fact"><span>${LANG==="zh"?"Token 证据":"Token evidence"}</span><b>${esc(tokenText)}</b></div>
+      </div>
+      ${packSummary}
+      ${packSections}
+      <div class="evidenceStrip">
+        <div class="evBox"><span>${LANG==="zh"?"响应 ID":"Response id"}</span><code>${esc(evidence.response_id||"not reported")}</code></div>
+        <div class="evBox"><span>${LANG==="zh"?"结束原因":"Finish reason"}</span><code>${esc(evidence.finish_reason||"not reported")}</code></div>
+        <div class="evBox"><span>${LANG==="zh"?"输出预览":"Output preview"}</span><code>${esc(evidence.content_preview||"not captured").slice(0,180)}</code></div>
+      </div>
+      <details class="rawBox"><summary>${LANG==="zh"?"查看原始 JSON 证据":"View raw JSON evidence"}</summary><pre>${esc(JSON.stringify(d,null,2))}</pre></details>
+    </div>`;
+  }
+  function renderCategoryCards(cats,d){
+    return cats.length? cats.map(c=>{
       const froms=(c.from||[]).map(f=>String(f).split("/")[0]);
       const ev=(d.checks||[]).filter(x=>froms.includes(x.name)).map(x=>x.detail).join(" · ");
-      return `<tr><td>${esc(catLabel(c))}</td><td><span class="pill ${c.status}">${c.status} ${c.score}/${c.max}</span></td><td class="muted">${esc(ev).slice(0,260)}</td></tr>`;
-    }).join("") : `<tr><td colspan="3" class="muted">${esc(d.error||(LANG==="zh"?"无分类数据":"no category data"))}</td></tr>`;
-    return `<div class="detSummary">${esc(d.summary||d.error||"")}</div>
-      <table class="catTable"><tbody>${rows}</tbody></table>
-      <details style="margin-top:12px"><summary>${LANG==="zh"?"原始证据 JSON":"Raw evidence digest"}</summary><pre>${esc(JSON.stringify(d,null,2))}</pre></details>`;
+      const max=Number(c.max)||100, val=Math.max(0,Math.min(100,Math.round((Number(c.score)||0)/max*100)));
+      return `<div class="catCard ${esc(c.status||"pending")}">
+        <div class="catHead">
+          <div class="catName">${esc(catLabel(c))}</div>
+          <span class="pill ${esc(c.status||"pending")}">${esc(statusCopy(c.status))} ${esc(c.score)}/${esc(c.max)}</span>
+        </div>
+        <div class="catMeter"><span style="width:${val}%;background:${scoreColor(Number(c.score)||0)}"></span></div>
+        <div class="catSub">${esc(ev||categoryHint(c,d)).slice(0,260)}</div>
+      </div>`;
+    }).join("") : `<div class="catCard fail"><div class="catName">${LANG==="zh"?"无分类数据":"No category data"}</div><div class="catSub">${esc(d.error||"")}</div></div>`;
+  }
+  function normalizePacks(d){
+    if(Array.isArray(d.pack_results)&&d.pack_results.length) return d.pack_results;
+    if(Array.isArray(d.packs)&&d.packs.length) return d.packs.map(p=>({key:p.key,name:p.name,score:p.score,status:p.status,summary:p.summary,categories:p.cats||p.categories||[]}));
+    const cats=d.categories||[];
+    if(!cats.length) return [];
+    const grouped={};
+    cats.forEach(c=>{ const k=c.pack||"authenticity"; (grouped[k]||(grouped[k]=[])).push(c); });
+    return Object.entries(grouped).map(([key,items])=>({key,name:packLabel(key),score:Math.round(items.reduce((a,c)=>a+(c.score||0),0)/items.length),status:statusForScore(Math.round(items.reduce((a,c)=>a+(c.score||0),0)/items.length)),summary:packHint(key),categories:items}));
+  }
+  function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
+  function packLabel(key,name){
+    if(name&&LANG==="zh") return name;
+    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"]}[key]||[name||key,name||key];
+    return LANG==="zh"?m[0]:m[1];
+  }
+  function packHint(key){
+    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。"};
+    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries."};
+    return (LANG==="zh"?zh:en)[key]||"";
+  }
+  function statusCopy(s){
+    if(LANG==="zh") return s==="pass"?"通过":s==="partial"?"部分":s==="fail"?"失败":(s||"—");
+    return s||"—";
+  }
+  function categoryHint(c,d){
+    const key=c.key||c.name||"";
+    const detail=c.detail||"";
+    if(detail) return detail;
+    if(key==="llm_fingerprint") return LANG==="zh"?"请求模型与返回模型一致。":"Requested model matches the resolved model.";
+    if(key==="structure") return LANG==="zh"?"响应结构包含可解析的 id、choices 和 message。":"Response includes parseable id, choices and message fields.";
+    if(key==="behavior") return LANG==="zh"?"模型按要求返回了探针 JSON。":"The model followed the probe and returned the expected JSON.";
+    if(key==="signature") return LANG==="zh"?"发现响应 ID 或指纹，但缺少更强的上游签名。":"Response id or fingerprint was present, but stronger upstream signatures were not available.";
+    if(key==="multimodal") return LANG==="zh"?"当前为文本评测，仅记录多模态能力为部分证据。":"This text pass records multimodal support as partial evidence.";
+    if(key==="token_audit") return (d.usage&&Object.keys(d.usage).length)?(LANG==="zh"?"返回了可审计的 token 用量。":"Auditable token usage was returned."):(LANG==="zh"?"未返回 token 用量。":"Token usage was not returned.");
+    return LANG==="zh"?"该维度根据探针证据评分。":"This dimension is scored from probe evidence.";
   }
 
   // ---------------- export & shareable report ----------------
   const b64u = (s)=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
   const unb64u = (s)=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
   function doneRows(){ return BATCH.filter(b=>b.status==="done"&&b.data); }
-  function updateActions(){ $("actBtns").style.display = doneRows().length ? "flex" : "none"; }
-  function compactReport(){
-    return { v:1, ts:Date.now(), rows: doneRows().map(b=>({
-      model:b.model, provider:providerFor(b.model),
-      verdict:b.data.verdict, score:b.data.score, resolved:b.data.resolved_model||b.data.requested_model,
-      latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
-      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max})) })) };
-  }
+	  function updateActions(){ $("actBtns").style.display = doneRows().length ? "flex" : "none"; }
+	  function compactReport(){
+	    return { v:1, ts:Date.now(), rows: doneRows().map(b=>({
+	      model:b.model, provider:providerFor(b.model),
+	      verdict:b.data.verdict, score:b.data.score, resolved:b.data.resolved_model||b.data.requested_model,
+	      latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
+	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack||p.key,detail:c.detail,from:c.from}))})),
+	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack,detail:c.detail,from:c.from})) })) };
+	  }
   function shareReport(){
     if(!doneRows().length){ showToast(LANG==="zh"?"先跑一次再分享":"Run a check first"); return; }
     const enc=b64u(JSON.stringify(compactReport()));
@@ -522,8 +650,8 @@
   function loadSharedReport(enc){
     try{
       const rep=JSON.parse(unb64u(enc));
-      BATCH = (rep.rows||[]).map(r=>({ model:r.model, status:"done", data:{
-        verdict:r.verdict, score:r.score, resolved_model:r.resolved, latency_ms:r.latency, summary:r.summary, categories:r.cats||[], checks:[] } }));
+	      BATCH = (rep.rows||[]).map(r=>({ model:r.model, status:"done", data:{
+	        verdict:r.verdict, score:r.score, resolved_model:r.resolved, latency_ms:r.latency, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
       // read-only banner + collapse config
       const banner=document.createElement("div"); banner.className="shareBanner";
       const when=rep.ts?new Date(rep.ts).toLocaleString():"";
@@ -575,10 +703,10 @@
     $("histList").querySelectorAll("[data-h]").forEach(el=>el.addEventListener("click",()=>loadHistEntry(+el.getAttribute("data-h"))));
     $("histMask").classList.add("show");
   }
-  function loadHistEntry(i){
-    const e=loadHist()[i]; if(!e) return;
-    BATCH = e.rows.map(r=>({ model:r.model, status:"done", data:{ verdict:r.verdict, score:r.score, resolved_model:r.resolved,
-      latency_ms:r.latency, summary:r.summary, categories:r.cats||[], checks:[] } }));
+	  function loadHistEntry(i){
+	    const e=loadHist()[i]; if(!e) return;
+	    BATCH = e.rows.map(r=>({ model:r.model, status:"done", data:{ verdict:r.verdict, score:r.score, resolved_model:r.resolved,
+	      latency_ms:r.latency, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
     $("histMask").classList.remove("show"); renderMatrix();
     document.querySelector(".results").scrollIntoView({block:"start"});
   }
