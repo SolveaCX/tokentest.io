@@ -8,7 +8,12 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "mcp": "node mcp-server.js",
+    "test:evaluator": "node scripts/local_eval_test.mjs",
+    "test:server": "node scripts/server_route_test.mjs",
+    "test:mcp": "node scripts/mcp_server_test.mjs",
+    "test:e2e": "node scripts/ui_e2e.mjs"
   },
   "dependencies": {
     "express": "^4.21.2"
