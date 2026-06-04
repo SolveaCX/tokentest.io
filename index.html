@@ -400,7 +400,7 @@
     auth_failed:{en:"Auth failed",zh:"鉴权失败"},unreachable:{en:"Unreachable",zh:"不可达"},error:{en:"Error",zh:"错误"} };
 	  const CATLABEL = {
 	    llm_fingerprint:{en:"LLM fingerprint"},token_audit:{en:"Token usage audit"},behavior:{en:"Behavior"},
-	    signature:{en:"Signature"},multimodal:{en:"Multimodal"},structure:{en:"Structural integrity"},
+	    signature:{en:"Signature"},text_baseline:{en:"Text baseline"},multimodal:{en:"Multimodal"},structure:{en:"Structural integrity"},
 	    instruction_json:{en:"Structured output"},instruction_constraints:{en:"Constraint following"},
 	    instruction_no_extra:{en:"No extra text"},instruction_language:{en:"Language constraint"},
 	    reasoning_arithmetic:{en:"Arithmetic"},reasoning_logic:{en:"Logic"},reasoning_code:{en:"Code understanding"},
@@ -409,9 +409,8 @@
 	    channel_web_search:{en:"Web search channel"},channel_long_output:{en:"Long output stability"},channel_thinking:{en:"Thinking / reasoning tokens"},
 	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},
 	    public_ifeval:{en:"IFEval Lite"},public_gsm8k:{en:"GSM8K Lite"},public_truthfulqa:{en:"TruthfulQA Lite"},public_code:{en:"Code Lite"},public_ceval_zh:{en:"Chinese knowledge Lite"},
-	    shulex_support_policy:{en:"Support policy"},shulex_voc_analysis:{en:"VOC analysis"},shulex_ticket_summary:{en:"Ticket summary"},shulex_rag_grounding:{en:"RAG grounding"},shulex_privacy_safety:{en:"Privacy boundary"},
 	    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
-	    "签名校验":{en:"Signature"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
+	    "签名校验":{en:"Signature"},"文本通道基线":{en:"Text baseline"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
   const t = (k) => (I18N[LANG][k] ?? I18N.en[k] ?? k);
   function verdictLabel(v){ const m=VERDICT[v]; return m?(m[LANG]||m.en):(v||"—"); }
   function catLabel(cat){ const byKey=CATLABEL[cat.key]||CATLABEL[cat.name];
@@ -593,12 +592,12 @@
   function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
   function packLabel(key,name){
     if(name&&LANG==="zh") return name;
-    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"],public_benchmark_lite:["公共基准 Lite","Public Lite"],shulex_business_lite:["Shulex 业务 Lite","Shulex Lite"]}[key]||[name||key,name||key];
+    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"],public_benchmark_lite:["公共基准 Lite","Public Lite"]}[key]||[name||key,name||key];
     return LANG==="zh"?m[0]:m[1];
   }
   function packHint(key){
-    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。",public_benchmark_lite:"低成本公共基准探针：指令、数学、事实、代码和中文知识。",shulex_business_lite:"Shulex 业务探针：客服、VOC、工单摘要、RAG 和隐私边界。"};
-    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence.",public_benchmark_lite:"Low-cost public probes for instruction, math, truthfulness, code and Chinese knowledge.",shulex_business_lite:"Shulex business probes for support, VOC, ticket summary, RAG and privacy boundaries."};
+    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。",public_benchmark_lite:"低成本公共基准探针：指令、数学、事实、代码和中文知识。"};
+    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence.",public_benchmark_lite:"Low-cost public probes for instruction, math, truthfulness, code and Chinese knowledge."};
     return (LANG==="zh"?zh:en)[key]||"";
   }
   function statusCopy(s){
@@ -613,7 +612,8 @@
     if(key==="structure") return LANG==="zh"?"响应结构包含可解析的 id、choices 和 message。":"Response includes parseable id, choices and message fields.";
     if(key==="behavior") return LANG==="zh"?"模型按要求返回了探针 JSON。":"The model followed the probe and returned the expected JSON.";
     if(key==="signature") return LANG==="zh"?"发现响应 ID 或指纹，但缺少更强的上游签名。":"Response id or fingerprint was present, but stronger upstream signatures were not available.";
-    if(key==="multimodal") return LANG==="zh"?"当前为文本评测，仅记录多模态能力为部分证据。":"This text pass records multimodal support as partial evidence.";
+    if(key==="text_baseline") return LANG==="zh"?"当前真实性包记录文本接口基线；视觉和文档能力在通道能力包里单独评分。":"This authenticity pack records the text endpoint baseline; vision and document capability are scored in the channel pack.";
+    if(key==="multimodal") return LANG==="zh"?"旧报告字段：多模态能力现在请看通道能力里的视觉/文档维度。":"Legacy report field: multimodal capability is now represented by vision/document checks in the channel pack.";
     if(key==="token_audit") return (d.usage&&Object.keys(d.usage).length)?(LANG==="zh"?"返回了可审计的 token 用量。":"Auditable token usage was returned."):(LANG==="zh"?"未返回 token 用量。":"Token usage was not returned.");
     if(key==="channel_tool_use") return LANG==="zh"?"检查模型/路由器是否接受工具调用并返回 tool_calls。":"Checks whether the endpoint accepts tool calls and returns tool_calls.";
     if(key==="channel_vision") return LANG==="zh"?"检查图片输入是否能被模型正确读取。":"Checks whether image input can be read correctly.";
@@ -629,11 +629,6 @@
     if(key==="public_truthfulqa") return LANG==="zh"?"公共 TruthfulQA 风格：避免虚构不存在的信息。":"Public TruthfulQA-style avoidance of false-premise fabrication.";
     if(key==="public_code") return LANG==="zh"?"公共代码基准风格：代码表达式理解。":"Public code benchmark-style expression understanding.";
     if(key==="public_ceval_zh") return LANG==="zh"?"中文知识题：检查基础中文选择题理解。":"Chinese knowledge item for basic Chinese multiple-choice understanding.";
-    if(key==="shulex_support_policy") return LANG==="zh"?"客服政策：损坏商品退款/补发流程、语气和隐私边界。":"Support policy: damaged-item refund/replacement flow, tone and privacy.";
-    if(key==="shulex_voc_analysis") return LANG==="zh"?"VOC 分析：评论情绪、主题和优先级提取。":"VOC analysis: review sentiment, topics and priority extraction.";
-    if(key==="shulex_ticket_summary") return LANG==="zh"?"工单摘要：问题、下一步和负责人抽取。":"Ticket summary: issue, next step and owner extraction.";
-    if(key==="shulex_rag_grounding") return LANG==="zh"?"知识库扎根：只基于给定政策回答并避免幻觉。":"RAG grounding: answer from provided policy and avoid hallucination.";
-    if(key==="shulex_privacy_safety") return LANG==="zh"?"隐私边界：拒绝泄露第三方客户数据。":"Privacy boundary: refuse disclosure of third-party customer data.";
     return LANG==="zh"?"该维度根据探针证据评分。":"This dimension is scored from probe evidence.";
   }
 
@@ -690,9 +685,9 @@
   // ---------------- baked sample report (so the tool is legible even if a router is offline) ----------------
   const SAMPLE_REPORT={ v:1, ts:0, sample:true, rows:[
     {model:"claude-opus-4-8",provider:"anthropic",verdict:"genuine",score:91,resolved:"claude-opus-4-8",latency:980,summary:"High confidence: behavior, billing, protocol and capabilities all match a real Anthropic endpoint.",
-      cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"pass",score:100,max:100},{key:"behavior",name:"行为验证",status:"pass",score:92,max:100},{key:"signature",name:"签名校验",status:"pass",score:100,max:100},{key:"token_audit",name:"Token 用量审计",status:"pass",score:11,max:11},{key:"multimodal",name:"多模态能力",status:"pass",score:100,max:100}]},
+      cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"pass",score:100,max:100},{key:"behavior",name:"行为验证",status:"pass",score:92,max:100},{key:"signature",name:"签名校验",status:"pass",score:100,max:100},{key:"token_audit",name:"Token 用量审计",status:"pass",score:11,max:11},{key:"text_baseline",name:"文本通道基线",status:"pass",score:100,max:100}]},
     {model:"base-gpt",provider:"openai",verdict:"genuine",score:83,resolved:"base-gpt",latency:1102,summary:"High confidence, but multimodal input was rejected by the relay.",
-      cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"pass",score:100,max:100},{key:"behavior",name:"行为验证",status:"pass",score:85,max:100},{key:"signature",name:"签名校验",status:"pass",score:100,max:100},{key:"multimodal",name:"多模态能力",status:"fail",score:0,max:100}]},
+      cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"pass",score:100,max:100},{key:"behavior",name:"行为验证",status:"pass",score:85,max:100},{key:"signature",name:"签名校验",status:"pass",score:100,max:100},{key:"text_baseline",name:"文本通道基线",status:"fail",score:0,max:100}]},
     {model:"cheap-opus",provider:"anthropic",verdict:"likely_fake_or_degraded",score:34,resolved:"claude-3-haiku",latency:420,summary:"Requested Opus but fingerprint matches a much smaller model — likely a silent downgrade.",
       cats:[{key:"llm_fingerprint",name:"LLM 指纹验证",status:"fail",score:10,max:100},{key:"behavior",name:"行为验证",status:"partial",score:40,max:100}]},
     {model:"ghost-gpt4o",provider:"openai",verdict:"suspicious",score:58,resolved:"gpt-4o",latency:760,summary:"Stripped upstream headers; usage numbers are implausibly round.",
