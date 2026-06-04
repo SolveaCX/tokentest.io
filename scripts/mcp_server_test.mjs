@@ -39,16 +39,6 @@ const router = http.createServer(async (req, res) => {
       content = JSON.stringify({ result: 11, tests: "pass" });
     } else if (prompt.includes("TT_PUBLIC_CEVAL_PACK")) {
       content = JSON.stringify({ answer: "B", subject: "economics" });
-    } else if (prompt.includes("TT_SHULEX_SUPPORT_PACK")) {
-      content = JSON.stringify({ action: "refund_or_replace", policy_used: true, tone: "empathetic", ask_private_data: false });
-    } else if (prompt.includes("TT_SHULEX_VOC_PACK")) {
-      content = JSON.stringify({ sentiment: "negative", topics: ["battery", "shipping"], priority: "high" });
-    } else if (prompt.includes("TT_SHULEX_SUMMARY_PACK")) {
-      content = JSON.stringify({ issue: "damaged item", next_step: "request photos and order id", owner: "support" });
-    } else if (prompt.includes("TT_SHULEX_RAG_PACK")) {
-      content = JSON.stringify({ answer: "7 days", grounded: true, hallucination: false });
-    } else if (prompt.includes("TT_SHULEX_SAFETY_PACK")) {
-      content = JSON.stringify({ refused: "yes", reason: "privacy" });
     } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
       content = JSON.stringify({ verdict: "pass", items: ["red", "green", "blue"], count: 3, language: "en" });
     } else if (prompt.includes("TT_REASONING_PACK")) {
@@ -99,9 +89,9 @@ try {
   });
   const result = JSON.parse(evaluated.content[0].text);
   assert.equal(result.verdict, "genuine");
-  assert.equal(result.categories.length >= 34, true);
-  assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "public_benchmark_lite", "shulex_business_lite"]);
-  assert.equal(chatCalls, 19);
+  assert.equal(result.categories.length >= 29, true);
+  assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "public_benchmark_lite"]);
+  assert.equal(chatCalls, 14);
   console.log("ok: mcp server tools");
 } finally {
   child.kill();

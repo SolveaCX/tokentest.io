@@ -87,8 +87,8 @@ try {
   });
   assert.equal(report.length, selectedModels.length, "report should include every selected model");
   assert.ok(report.every((item) => item.verdict !== "error"), "report should not contain evaluator errors");
-  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 34), "each report row should include all pack categories");
-  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 7), "each report row should include seven packs");
+  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 29), "each report row should include all pack categories");
+  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 6), "each report row should include six packs");
 
   await fs.writeFile(`${ARTIFACT_DIR}/request-response.json`, JSON.stringify(redact(exchanges), null, 2));
   await fs.writeFile(`${ARTIFACT_DIR}/report.json`, JSON.stringify(report, null, 2));
