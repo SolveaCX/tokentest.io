@@ -405,6 +405,9 @@
 	    instruction_no_extra:{en:"No extra text"},instruction_language:{en:"Language constraint"},
 	    reasoning_arithmetic:{en:"Arithmetic"},reasoning_logic:{en:"Logic"},reasoning_code:{en:"Code understanding"},
 	    safety_prompt_injection:{en:"Prompt injection resistance"},safety_secret_leakage:{en:"Secret protection"},safety_harmful_code:{en:"Harmful-code boundary"},
+	    channel_tool_use:{en:"Tool channel"},channel_vision:{en:"Vision channel"},channel_documents:{en:"Document channel"},
+	    channel_web_search:{en:"Web search channel"},channel_long_output:{en:"Long output stability"},channel_thinking:{en:"Thinking / reasoning tokens"},
+	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},
 	    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
 	    "签名校验":{en:"Signature"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
   const t = (k) => (I18N[LANG][k] ?? I18N.en[k] ?? k);
@@ -588,12 +591,12 @@
   function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
   function packLabel(key,name){
     if(name&&LANG==="zh") return name;
-    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"]}[key]||[name||key,name||key];
+    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"]}[key]||[name||key,name||key];
     return LANG==="zh"?m[0]:m[1];
   }
   function packHint(key){
-    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。"};
-    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries."};
+    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。"};
+    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence."};
     return (LANG==="zh"?zh:en)[key]||"";
   }
   function statusCopy(s){
@@ -610,6 +613,15 @@
     if(key==="signature") return LANG==="zh"?"发现响应 ID 或指纹，但缺少更强的上游签名。":"Response id or fingerprint was present, but stronger upstream signatures were not available.";
     if(key==="multimodal") return LANG==="zh"?"当前为文本评测，仅记录多模态能力为部分证据。":"This text pass records multimodal support as partial evidence.";
     if(key==="token_audit") return (d.usage&&Object.keys(d.usage).length)?(LANG==="zh"?"返回了可审计的 token 用量。":"Auditable token usage was returned."):(LANG==="zh"?"未返回 token 用量。":"Token usage was not returned.");
+    if(key==="channel_tool_use") return LANG==="zh"?"检查模型/路由器是否接受工具调用并返回 tool_calls。":"Checks whether the endpoint accepts tool calls and returns tool_calls.";
+    if(key==="channel_vision") return LANG==="zh"?"检查图片输入是否能被模型正确读取。":"Checks whether image input can be read correctly.";
+    if(key==="channel_documents") return LANG==="zh"?"检查内联文档内容是否能被模型正确抽取。":"Checks whether inline document content can be extracted correctly.";
+    if(key==="channel_web_search") return LANG==="zh"?"检查 Web Search 工具通道是否可用。":"Checks whether the web-search tool channel is available.";
+    if(key==="channel_long_output") return LANG==="zh"?"检查较长 JSON 输出是否稳定完成。":"Checks whether a longer JSON output completes reliably.";
+    if(key==="channel_thinking") return LANG==="zh"?"检查 usage 中是否暴露推理 token 证据。":"Checks whether usage exposes reasoning-token evidence.";
+    if(key==="channel_cache_tokens") return LANG==="zh"?"检查 usage 中是否暴露缓存 token 证据。":"Checks whether usage exposes cache-token evidence.";
+    if(key==="channel_message_stop") return LANG==="zh"?"检查 finish_reason 等协议结束信号。":"Checks protocol finish signals such as finish_reason.";
+    if(key==="channel_error_leakage") return LANG==="zh"?"检查错误文本是否泄漏密钥或内部堆栈。":"Checks whether error text leaks keys or internal stack traces.";
     return LANG==="zh"?"该维度根据探针证据评分。":"This dimension is scored from probe evidence.";
   }
 

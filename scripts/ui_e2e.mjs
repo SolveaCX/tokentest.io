@@ -31,10 +31,23 @@ if (!USE_REAL) {
       chatCalls += 1;
       const body = await readJson(req);
       assert.equal("temperature" in body, false);
-      const prompt = body.messages?.map((item) => item.content).join("\n") || "";
+      const prompt = body.messages?.map((item) => typeof item.content === "string" ? item.content : JSON.stringify(item.content)).join("\n") || "";
       const nonce = prompt.match(/"nonce":"([^"]+)"/)?.[1] || "missing";
       let content = JSON.stringify({ probe: "ok", answer: 42, nonce });
-      if (prompt.includes("TT_INSTRUCTION_PACK")) {
+      let toolCalls = null;
+      if (body.tools?.[0]?.function?.name === "tt_record_capability") {
+        toolCalls = [{ id: "call-tool", type: "function", function: { name: "tt_record_capability", arguments: "{\"capability\":\"tool_use\",\"status\":\"pass\"}" } }];
+        content = "";
+      } else if (body.tools?.[0]?.function?.name === "web_search") {
+        toolCalls = [{ id: "call-web", type: "function", function: { name: "web_search", arguments: "{\"query\":\"TokenTest channel capability\"}" } }];
+        content = "";
+      } else if (prompt.includes("TT_VISION_PACK")) {
+        content = JSON.stringify({ vision: "pass", color: "red" });
+      } else if (prompt.includes("TT_DOCUMENT_PACK")) {
+        content = JSON.stringify({ document: "pass", answer: "TokenTest" });
+      } else if (prompt.includes("TT_LONG_OUTPUT_PACK")) {
+        content = JSON.stringify({ marker: "TT_LONG_OUTPUT", items: Array.from({ length: 90 }, (_, i) => i + 1) });
+      } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
         content = JSON.stringify({ verdict: "pass", items: ["red", "green", "blue"], count: 3, language: "en" });
       } else if (prompt.includes("TT_REASONING_PACK")) {
         content = JSON.stringify({ arithmetic: 37, logic: "B", code: 7 });
@@ -45,8 +58,8 @@ if (!USE_REAL) {
         id: `chatcmpl-ui-${chatCalls}`,
         created: Math.floor(Date.now() / 1000),
         model: `${body.model}-20251101`,
-        choices: [{ message: { role: "assistant", content }, finish_reason: "stop" }],
-        usage: { input_tokens: 34, output_tokens: 12, total_tokens: 46 },
+        choices: [{ message: { role: "assistant", content, ...(toolCalls ? { tool_calls: toolCalls } : {}) }, finish_reason: "stop" }],
+        usage: { input_tokens: 34, output_tokens: 12, total_tokens: 46, prompt_tokens_details: { cached_tokens: 3 }, completion_tokens_details: { reasoning_tokens: 2 } },
       });
     }
     json(res, { error: "not_found" }, 404);
@@ -105,12 +118,12 @@ try {
   });
   assert.ok(report.length >= 1, "report should contain evaluated models");
   assert.ok(report.every((item) => item && typeof item.score === "number"), "each report row should have a score");
-  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 15), "each report row should have all pack categories");
-  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 4), "each report row should have four packs");
+  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 24), "each report row should have all pack categories");
+  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 5), "each report row should have five packs");
 
   if (!USE_REAL) {
     assert.equal(report.length, mockModels.length);
-    assert.equal(chatCalls, mockModels.length * 4);
+    assert.equal(chatCalls, mockModels.length * 9);
     assert.ok(report.every((item) => item.verdict === "genuine"), "mock models should be genuine");
   } else {
     const externalError = report.find((item) => isExternalQuotaOrAuth(item));
@@ -125,7 +138,7 @@ try {
   const firstDetail = page.locator("#matrixBody tr.row").first();
   await firstDetail.click();
   const detailText = await page.locator("#detin-0").innerText();
-  for (const label of ["Authenticity", "Instruction", "Reasoning", "Safety", "LLM fingerprint", "Token usage audit"]) {
+  for (const label of ["Authenticity", "Instruction", "Reasoning", "Safety", "Channel", "LLM fingerprint", "Token usage audit", "Tool channel"]) {
     assert.ok(detailText.includes(label), `detail should include ${label}`);
   }
 
