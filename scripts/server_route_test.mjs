@@ -18,10 +18,23 @@ const router = http.createServer(async (req, res) => {
     const body = await readJson(req);
     assert.equal(body.model, "claude-opus-4-8");
     assert.equal("temperature" in body, false);
-    const prompt = body.messages?.map((item) => item.content).join("\n") || "";
+    const prompt = body.messages?.map((item) => typeof item.content === "string" ? item.content : JSON.stringify(item.content)).join("\n") || "";
     const nonce = prompt.match(/"nonce":"([^"]+)"/)?.[1] || "missing";
     let content = JSON.stringify({ probe: "ok", answer: 42, nonce });
-    if (prompt.includes("TT_INSTRUCTION_PACK")) {
+    let toolCalls = null;
+    if (body.tools?.[0]?.function?.name === "tt_record_capability") {
+      toolCalls = [{ id: "call-tool", type: "function", function: { name: "tt_record_capability", arguments: "{\"capability\":\"tool_use\",\"status\":\"pass\"}" } }];
+      content = "";
+    } else if (body.tools?.[0]?.function?.name === "web_search") {
+      toolCalls = [{ id: "call-web", type: "function", function: { name: "web_search", arguments: "{\"query\":\"TokenTest channel capability\"}" } }];
+      content = "";
+    } else if (prompt.includes("TT_VISION_PACK")) {
+      content = JSON.stringify({ vision: "pass", color: "red" });
+    } else if (prompt.includes("TT_DOCUMENT_PACK")) {
+      content = JSON.stringify({ document: "pass", answer: "TokenTest" });
+    } else if (prompt.includes("TT_LONG_OUTPUT_PACK")) {
+      content = JSON.stringify({ marker: "TT_LONG_OUTPUT", items: Array.from({ length: 90 }, (_, i) => i + 1) });
+    } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
       content = JSON.stringify({ verdict: "pass", items: ["red", "green", "blue"], count: 3, language: "en" });
     } else if (prompt.includes("TT_REASONING_PACK")) {
       content = JSON.stringify({ arithmetic: 37, logic: "B", code: 7 });
@@ -33,8 +46,8 @@ const router = http.createServer(async (req, res) => {
       object: "chat.completion",
       created: Math.floor(Date.now() / 1000),
       model: "claude-opus-4-8-20251101",
-      choices: [{ index: 0, finish_reason: "stop", message: { role: "assistant", content } }],
-      usage: { input_tokens: 31, output_tokens: 12, total_tokens: 43 },
+      choices: [{ index: 0, finish_reason: "stop", message: { role: "assistant", content, ...(toolCalls ? { tool_calls: toolCalls } : {}) } }],
+      usage: { input_tokens: 31, output_tokens: 12, total_tokens: 43, prompt_tokens_details: { cached_tokens: 3 }, completion_tokens_details: { reasoning_tokens: 2 } },
     });
   }
 
@@ -72,9 +85,9 @@ try {
   assert.equal(result.verdict, "genuine");
   assert.equal(result.requested_model, "claude-opus-4-8");
   assert.equal(result.resolved_model, "claude-opus-4-8-20251101");
-  assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety"]);
-  assert.equal(result.categories.length >= 15, true);
-  assert.equal(chatCalls, 4);
+  assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability"]);
+  assert.equal(result.categories.length >= 24, true);
+  assert.equal(chatCalls, 9);
   console.log("ok: server routes use local evaluator");
 } finally {
   child.kill();
