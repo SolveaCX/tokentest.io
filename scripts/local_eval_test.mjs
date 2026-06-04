@@ -45,6 +45,26 @@ const server = http.createServer(async (req, res) => {
         content = JSON.stringify({ document: "pass", answer: "TokenTest" });
       } else if (prompt.includes("TT_LONG_OUTPUT_PACK")) {
         content = JSON.stringify({ marker: "TT_LONG_OUTPUT", items: Array.from({ length: 90 }, (_, i) => i + 1) });
+      } else if (prompt.includes("TT_PUBLIC_IFEVAL_PACK")) {
+        content = JSON.stringify({ format: "pass", language: "zh", items: ["alpha", "beta"], count: 2 });
+      } else if (prompt.includes("TT_PUBLIC_GSM8K_PACK")) {
+        content = JSON.stringify({ answer: 12 });
+      } else if (prompt.includes("TT_PUBLIC_TRUTHFULQA_PACK")) {
+        content = JSON.stringify({ answer: "unknown", should_refuse: true });
+      } else if (prompt.includes("TT_PUBLIC_CODE_PACK")) {
+        content = JSON.stringify({ result: 11, tests: "pass" });
+      } else if (prompt.includes("TT_PUBLIC_CEVAL_PACK")) {
+        content = JSON.stringify({ answer: "B", subject: "economics" });
+      } else if (prompt.includes("TT_SHULEX_SUPPORT_PACK")) {
+        content = JSON.stringify({ action: "refund_or_replace", policy_used: true, tone: "empathetic", ask_private_data: false });
+      } else if (prompt.includes("TT_SHULEX_VOC_PACK")) {
+        content = JSON.stringify({ sentiment: "negative", topics: ["battery", "shipping"], priority: "high" });
+      } else if (prompt.includes("TT_SHULEX_SUMMARY_PACK")) {
+        content = JSON.stringify({ issue: "damaged item", next_step: "request photos and order id", owner: "support" });
+      } else if (prompt.includes("TT_SHULEX_RAG_PACK")) {
+        content = JSON.stringify({ answer: "7 days", grounded: true, hallucination: false });
+      } else if (prompt.includes("TT_SHULEX_SAFETY_PACK")) {
+        content = JSON.stringify({ refused: "yes", reason: "privacy" });
       } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
         content = JSON.stringify({ verdict: "pass", items: ["red", "green", "blue"], count: 3, language: "en" });
       } else if (prompt.includes("TT_REASONING_PACK")) {
@@ -98,13 +118,15 @@ server.listen(0, "127.0.0.1", async () => {
     });
     assert.equal(single.verdict, "genuine");
     assert.equal(single.score >= 80, true);
-    assert.deepEqual(single.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability"]);
-    assert.equal(single.categories.length >= 24, true);
+    assert.deepEqual(single.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "public_benchmark_lite", "shulex_business_lite"]);
+    assert.equal(single.categories.length >= 34, true);
     assert.equal(single.pack_results.every((item) => item.score >= 80), true);
     assert.equal(single.categories.find((item) => item.key === "channel_tool_use").status, "pass");
     assert.equal(single.categories.find((item) => item.key === "channel_vision").status, "pass");
     assert.equal(single.categories.find((item) => item.key === "channel_web_search").status, "pass");
-    assert.equal(single.usage.output_tokens, 108);
+    assert.equal(single.categories.find((item) => item.key === "public_gsm8k").status, "pass");
+    assert.equal(single.categories.find((item) => item.key === "shulex_support_policy").status, "pass");
+    assert.equal(single.usage.output_tokens, 228);
 
     const haiku = await evaluateModel({
       base_url: baseUrl,
@@ -112,7 +134,7 @@ server.listen(0, "127.0.0.1", async () => {
       model: "claude-haiku-4-5-20251001",
       provider: "anthropic",
     });
-    assert.equal(haiku.usage.output_tokens, 153, "completion_tokens should be used when output_tokens is zero");
+    assert.equal(haiku.usage.output_tokens, 323, "completion_tokens should be used when output_tokens is zero");
     assert.equal(haiku.categories.find((item) => item.key === "token_audit").status, "pass");
     assert.equal(haiku.pack_results.find((item) => item.key === "instruction").categories.length >= 3, true);
 
@@ -127,7 +149,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(batch.summary.error_count, 0);
 
     const opus47 = requests.filter((item) => item.model === "claude-opus-4-7");
-    assert.equal(opus47.length, 9, "opus 4.7 should run core and channel probes");
+    assert.equal(opus47.length, 19, "opus 4.7 should run core, channel, public and business probes");
     assert.equal(opus47.every((item) => !Object.hasOwn(item, "temperature")), true, "probes must not send deprecated temperature");
 
     console.log("ok: local evaluator smoke");
