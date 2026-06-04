@@ -47,6 +47,26 @@ if (!USE_REAL) {
         content = JSON.stringify({ document: "pass", answer: "TokenTest" });
       } else if (prompt.includes("TT_LONG_OUTPUT_PACK")) {
         content = JSON.stringify({ marker: "TT_LONG_OUTPUT", items: Array.from({ length: 90 }, (_, i) => i + 1) });
+      } else if (prompt.includes("TT_PUBLIC_IFEVAL_PACK")) {
+        content = JSON.stringify({ format: "pass", language: "zh", items: ["alpha", "beta"], count: 2 });
+      } else if (prompt.includes("TT_PUBLIC_GSM8K_PACK")) {
+        content = JSON.stringify({ answer: 12 });
+      } else if (prompt.includes("TT_PUBLIC_TRUTHFULQA_PACK")) {
+        content = JSON.stringify({ answer: "unknown", should_refuse: true });
+      } else if (prompt.includes("TT_PUBLIC_CODE_PACK")) {
+        content = JSON.stringify({ result: 11, tests: "pass" });
+      } else if (prompt.includes("TT_PUBLIC_CEVAL_PACK")) {
+        content = JSON.stringify({ answer: "B", subject: "economics" });
+      } else if (prompt.includes("TT_SHULEX_SUPPORT_PACK")) {
+        content = JSON.stringify({ action: "refund_or_replace", policy_used: true, tone: "empathetic", ask_private_data: false });
+      } else if (prompt.includes("TT_SHULEX_VOC_PACK")) {
+        content = JSON.stringify({ sentiment: "negative", topics: ["battery", "shipping"], priority: "high" });
+      } else if (prompt.includes("TT_SHULEX_SUMMARY_PACK")) {
+        content = JSON.stringify({ issue: "damaged item", next_step: "request photos and order id", owner: "support" });
+      } else if (prompt.includes("TT_SHULEX_RAG_PACK")) {
+        content = JSON.stringify({ answer: "7 days", grounded: true, hallucination: false });
+      } else if (prompt.includes("TT_SHULEX_SAFETY_PACK")) {
+        content = JSON.stringify({ refused: "yes", reason: "privacy" });
       } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
         content = JSON.stringify({ verdict: "pass", items: ["red", "green", "blue"], count: 3, language: "en" });
       } else if (prompt.includes("TT_REASONING_PACK")) {
@@ -118,12 +138,12 @@ try {
   });
   assert.ok(report.length >= 1, "report should contain evaluated models");
   assert.ok(report.every((item) => item && typeof item.score === "number"), "each report row should have a score");
-  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 24), "each report row should have all pack categories");
-  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 5), "each report row should have five packs");
+  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 34), "each report row should have all pack categories");
+  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 7), "each report row should have seven packs");
 
   if (!USE_REAL) {
     assert.equal(report.length, mockModels.length);
-    assert.equal(chatCalls, mockModels.length * 9);
+    assert.equal(chatCalls, mockModels.length * 19);
     assert.ok(report.every((item) => item.verdict === "genuine"), "mock models should be genuine");
   } else {
     const externalError = report.find((item) => isExternalQuotaOrAuth(item));
@@ -138,7 +158,7 @@ try {
   const firstDetail = page.locator("#matrixBody tr.row").first();
   await firstDetail.click();
   const detailText = await page.locator("#detin-0").innerText();
-  for (const label of ["Authenticity", "Instruction", "Reasoning", "Safety", "Channel", "LLM fingerprint", "Token usage audit", "Tool channel"]) {
+  for (const label of ["Authenticity", "Instruction", "Reasoning", "Safety", "Channel", "Public Lite", "Shulex Lite", "LLM fingerprint", "Token usage audit", "Tool channel", "GSM8K Lite", "Support policy"]) {
     assert.ok(detailText.includes(label), `detail should include ${label}`);
   }
 

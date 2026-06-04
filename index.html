@@ -408,6 +408,8 @@
 	    channel_tool_use:{en:"Tool channel"},channel_vision:{en:"Vision channel"},channel_documents:{en:"Document channel"},
 	    channel_web_search:{en:"Web search channel"},channel_long_output:{en:"Long output stability"},channel_thinking:{en:"Thinking / reasoning tokens"},
 	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},
+	    public_ifeval:{en:"IFEval Lite"},public_gsm8k:{en:"GSM8K Lite"},public_truthfulqa:{en:"TruthfulQA Lite"},public_code:{en:"Code Lite"},public_ceval_zh:{en:"Chinese knowledge Lite"},
+	    shulex_support_policy:{en:"Support policy"},shulex_voc_analysis:{en:"VOC analysis"},shulex_ticket_summary:{en:"Ticket summary"},shulex_rag_grounding:{en:"RAG grounding"},shulex_privacy_safety:{en:"Privacy boundary"},
 	    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
 	    "签名校验":{en:"Signature"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
   const t = (k) => (I18N[LANG][k] ?? I18N.en[k] ?? k);
@@ -591,12 +593,12 @@
   function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
   function packLabel(key,name){
     if(name&&LANG==="zh") return name;
-    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"]}[key]||[name||key,name||key];
+    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"],public_benchmark_lite:["公共基准 Lite","Public Lite"],shulex_business_lite:["Shulex 业务 Lite","Shulex Lite"]}[key]||[name||key,name||key];
     return LANG==="zh"?m[0]:m[1];
   }
   function packHint(key){
-    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。"};
-    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence."};
+    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。",public_benchmark_lite:"低成本公共基准探针：指令、数学、事实、代码和中文知识。",shulex_business_lite:"Shulex 业务探针：客服、VOC、工单摘要、RAG 和隐私边界。"};
+    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence.",public_benchmark_lite:"Low-cost public probes for instruction, math, truthfulness, code and Chinese knowledge.",shulex_business_lite:"Shulex business probes for support, VOC, ticket summary, RAG and privacy boundaries."};
     return (LANG==="zh"?zh:en)[key]||"";
   }
   function statusCopy(s){
@@ -622,6 +624,16 @@
     if(key==="channel_cache_tokens") return LANG==="zh"?"检查 usage 中是否暴露缓存 token 证据。":"Checks whether usage exposes cache-token evidence.";
     if(key==="channel_message_stop") return LANG==="zh"?"检查 finish_reason 等协议结束信号。":"Checks protocol finish signals such as finish_reason.";
     if(key==="channel_error_leakage") return LANG==="zh"?"检查错误文本是否泄漏密钥或内部堆栈。":"Checks whether error text leaks keys or internal stack traces.";
+    if(key==="public_ifeval") return LANG==="zh"?"公共 IFEval 风格：格式、多约束和语言遵循。":"Public IFEval-style format, multi-constraint and language following.";
+    if(key==="public_gsm8k") return LANG==="zh"?"公共 GSM8K 风格：基础多步数学推理。":"Public GSM8K-style multi-step arithmetic reasoning.";
+    if(key==="public_truthfulqa") return LANG==="zh"?"公共 TruthfulQA 风格：避免虚构不存在的信息。":"Public TruthfulQA-style avoidance of false-premise fabrication.";
+    if(key==="public_code") return LANG==="zh"?"公共代码基准风格：代码表达式理解。":"Public code benchmark-style expression understanding.";
+    if(key==="public_ceval_zh") return LANG==="zh"?"中文知识题：检查基础中文选择题理解。":"Chinese knowledge item for basic Chinese multiple-choice understanding.";
+    if(key==="shulex_support_policy") return LANG==="zh"?"客服政策：损坏商品退款/补发流程、语气和隐私边界。":"Support policy: damaged-item refund/replacement flow, tone and privacy.";
+    if(key==="shulex_voc_analysis") return LANG==="zh"?"VOC 分析：评论情绪、主题和优先级提取。":"VOC analysis: review sentiment, topics and priority extraction.";
+    if(key==="shulex_ticket_summary") return LANG==="zh"?"工单摘要：问题、下一步和负责人抽取。":"Ticket summary: issue, next step and owner extraction.";
+    if(key==="shulex_rag_grounding") return LANG==="zh"?"知识库扎根：只基于给定政策回答并避免幻觉。":"RAG grounding: answer from provided policy and avoid hallucination.";
+    if(key==="shulex_privacy_safety") return LANG==="zh"?"隐私边界：拒绝泄露第三方客户数据。":"Privacy boundary: refuse disclosure of third-party customer data.";
     return LANG==="zh"?"该维度根据探针证据评分。":"This dimension is scored from probe evidence.";
   }
 
