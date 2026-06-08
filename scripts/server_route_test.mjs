@@ -18,6 +18,9 @@ const router = http.createServer(async (req, res) => {
     const body = await readJson(req);
     assert.equal(body.model, "claude-opus-4-8");
     assert.equal("temperature" in body, false);
+    if (body.max_tokens === "bad_value") {
+      return json(res, { error: { message: "max_tokens must be an integer", type: "invalid_request_error" } }, 400);
+    }
     const prompt = body.messages?.map((item) => typeof item.content === "string" ? item.content : JSON.stringify(item.content)).join("\n") || "";
     const nonce = prompt.match(/"nonce":"([^"]+)"/)?.[1] || "missing";
     let content = JSON.stringify({ probe: "ok", answer: 42, nonce });
@@ -35,21 +38,19 @@ const router = http.createServer(async (req, res) => {
     } else if (prompt.includes("TT_LONG_OUTPUT_PACK")) {
       content = JSON.stringify({ marker: "TT_LONG_OUTPUT", items: Array.from({ length: 90 }, (_, i) => i + 1) });
     } else if (prompt.includes("TT_PUBLIC_IFEVAL_PACK")) {
-      content = JSON.stringify({ format: "pass", language: "zh", items: ["alpha", "beta"], count: 2 });
+      content = JSON.stringify({ format: "pass", language: "zh-CN", codes: ["R2", "R7", "R11"], checksum: 20, decision: "review" });
     } else if (prompt.includes("TT_PUBLIC_GSM8K_PACK")) {
-      content = JSON.stringify({ answer: 12 });
+      content = JSON.stringify({ answer: 59 });
     } else if (prompt.includes("TT_PUBLIC_TRUTHFULQA_PACK")) {
       content = JSON.stringify({ answer: "unknown", should_refuse: true });
     } else if (prompt.includes("TT_PUBLIC_CODE_PACK")) {
-      content = JSON.stringify({ result: 11, tests: "pass" });
-    } else if (prompt.includes("TT_PUBLIC_CEVAL_PACK")) {
-      content = JSON.stringify({ answer: "B", subject: "economics" });
+      content = JSON.stringify({ result: 21, tests: "pass" });
     } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
-      content = JSON.stringify({ verdict: "pass", items: ["red", "green", "blue"], count: 3, language: "en" });
+      content = JSON.stringify({ verdict: "pass", locale: "zh-CN", priority_order: ["security", "billing", "latency"], checksum: 10, escalation: true });
     } else if (prompt.includes("TT_REASONING_PACK")) {
-      content = JSON.stringify({ arithmetic: 37, logic: "B", code: 7 });
+      content = JSON.stringify({ arithmetic: 29, logic: "Bo=Tue,Cy=Wed,Ana=Thu", code: 19 });
     } else if (prompt.includes("TT_SAFETY_PACK")) {
-      content = JSON.stringify({ system_prompt: "refused", secret: "refused", harmful_code: "refused" });
+      content = JSON.stringify({ public_docs: "allowed", system_prompt: "refused", secret: "refused", credential_theft: "refused" });
     }
     return json(res, {
       id: "chatcmpl-route-test",
@@ -95,9 +96,14 @@ try {
   assert.equal(result.verdict, "genuine");
   assert.equal(result.requested_model, "claude-opus-4-8");
   assert.equal(result.resolved_model, "claude-opus-4-8-20251101");
-  assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "public_benchmark_lite"]);
-  assert.equal(result.categories.length >= 29, true);
-  assert.equal(chatCalls, 14);
+  assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "performance_reliability"]);
+  assert.equal(result.categories.length >= 31, true);
+  assert.equal(result.performance.latency.sample_count, 5);
+  assert.equal(result.categories.find((item) => item.key === "latency_p95").status, "pass");
+  assert.equal(result.categories.some((item) => item.key.startsWith("public_")), false);
+  assert.equal(result.categories.find((item) => item.key === "instruction_constraints").cases.some((item) => item.key === "ifeval_constraints_case"), true);
+  assert.equal(result.categories.find((item) => item.key === "public_ceval_zh"), undefined);
+  assert.equal(chatCalls, 19);
   console.log("ok: server routes use local evaluator");
 } finally {
   child.kill();

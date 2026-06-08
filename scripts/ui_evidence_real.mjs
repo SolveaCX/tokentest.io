@@ -87,8 +87,11 @@ try {
   });
   assert.equal(report.length, selectedModels.length, "report should include every selected model");
   assert.ok(report.every((item) => item.verdict !== "error"), "report should not contain evaluator errors");
-  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 29), "each report row should include all pack categories");
-  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 6), "each report row should include six packs");
+  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 31), "each report row should include all merged pack categories and performance categories");
+  assert.ok(report.every((item) => item?.performance?.latency?.sample_count === 5), "each report row should include latency percentile samples");
+  assert.ok(report.every((item) => item.cats.every((cat) => !cat.key.startsWith("public_"))), "public probes should be case evidence, not categories");
+  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 6), "each report row should include six packs including performance");
+  assert.ok(report.every((item) => !item.packs.some((pack) => pack.key === "public_benchmark_lite")), "public benchmark lite should be merged into core packs");
 
   await fs.writeFile(`${ARTIFACT_DIR}/request-response.json`, JSON.stringify(redact(exchanges), null, 2));
   await fs.writeFile(`${ARTIFACT_DIR}/report.json`, JSON.stringify(report, null, 2));

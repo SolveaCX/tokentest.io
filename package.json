@@ -13,7 +13,9 @@
     "test:evaluator": "node scripts/local_eval_test.mjs",
     "test:server": "node scripts/server_route_test.mjs",
     "test:mcp": "node scripts/mcp_server_test.mjs",
-    "test:e2e": "node scripts/ui_e2e.mjs"
+    "test:e2e": "node scripts/ui_e2e.mjs",
+    "report:generate": "node scripts/generate_eval_report.mjs",
+    "report:generate:html": "node scripts/generate_eval_report.mjs --format html"
   },
   "dependencies": {
     "express": "^4.21.2"

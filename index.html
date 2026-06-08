@@ -3,18 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TokenTest.io — Verify any model's authenticity before you buy</title>
-<meta name="description" content="TokenTest is the verification console for AI middle-layer buyers. Batch-test any router's real model, route, token usage and billing — black-box, your key is never stored." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<title>TokenTest.io — Production-reference model evaluation</title>
+<meta name="description" content="TokenTest is the production-reference evaluation console for AI middle-layer buyers. Batch-test model capability, route protocol, token usage, safety and channel reliability — black-box, your key is never stored." />
 <style>
   :root{
     --bg:#0a0a0a; --panel:#111113; --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.06);
     --txt:#fafafa; --mut:rgba(255,255,255,.60); --mut2:rgba(255,255,255,.40);
     --red:#fb2c36; --blue:#3080ff; --green:#00c758; --amber:#f99c00; --purple:#a855f7;
-    --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-    --sans:"Inter",system-ui,-apple-system,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --sans:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
@@ -146,6 +143,13 @@
 	  .catSub{font-size:12px;color:var(--mut);line-height:1.45;margin-top:9px;overflow-wrap:anywhere}
 	  .catMeter{height:6px;border-radius:999px;background:rgba(255,255,255,.08);margin-top:11px;overflow:hidden}
 	  .catMeter span{display:block;height:100%;border-radius:999px}
+	  .caseList{margin-top:10px;border-top:1px solid var(--line2);padding-top:8px;display:grid;gap:6px}
+	  .caseRow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:11px;color:var(--mut2)}
+	  .caseRow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	  .caseRow b{font-weight:500;color:var(--mut);white-space:nowrap}
+	  .caseRow b.pass{color:var(--green)}
+	  .caseRow b.partial{color:var(--amber)}
+	  .caseRow b.fail{color:var(--red)}
 	  .evidenceStrip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:0 14px 14px}
 	  .evBox{border:1px solid var(--line2);border-radius:8px;padding:11px 12px;background:#0a0a0a;min-width:0}
 	  .evBox span{display:block;font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
@@ -214,14 +218,14 @@
     <span class="av">A</span><span class="av">K</span><span class="av">M</span><span class="av">R</span>
     <span class="trustline"><span class="dot"></span><span data-i18n="trust">Trusted by router operators &amp; procurement teams</span></span>
   </div>
-  <h1 data-i18n-html="h1">Verify any model is real<br><span class="accent">before you pay for it.</span></h1>
-  <p class="sub" data-i18n="sub">TokenTest is the black-box verification console for AI middle-layer buyers. Batch-test a router's actual model, route, token usage and billing in one run — your API key is never stored.</p>
+  <h1 data-i18n-html="h1">Evaluate model access risk<br><span class="accent">before production.</span></h1>
+  <p class="sub" data-i18n="sub">TokenTest is the black-box production-reference evaluation console for AI middle-layer buyers. Batch-test model capability, route protocol, token usage, safety boundaries and channel reliability in one run — your API key is never stored.</p>
   <div class="heroSafety" data-i18n="safety">⛨ Black-box probing · for safety, prefer a test-only API key</div>
 
   <section class="console" id="verify">
     <div class="card">
       <div class="cardHead">
-        <h2 data-i18n="card_title">Verification Run</h2>
+          <h2 data-i18n="card_title">Evaluation Run</h2>
         <span class="tag" data-i18n="card_tag">black-box · key not stored</span>
       </div>
       <div class="grid2">
@@ -248,7 +252,7 @@
             <div class="chips" id="chips"></div>
           </div>
           <button class="run" id="runProbe" data-i18n="run_btn">Start verification</button>
-          <div class="runNote" data-i18n="run_note">Sends ~9 probes per model · est. $0.01–$0.30 each</div>
+          <div class="runNote" data-i18n="run_note">Sends ~19 probes per model · est. $0.01–$0.30 each</div>
           <details class="advanced">
             <summary data-i18n="adv">Advanced · protocol &amp; offline analyze</summary>
             <div class="field" style="margin-top:12px">
@@ -271,7 +275,7 @@
             <li><span class="ci">M</span><div><b data-i18n="c_model">Model identity</b><span class="small" data-i18n="c_model_d">Actual model returned vs the model you requested</span></div></li>
             <li><span class="ci">U</span><div><b data-i18n="c_usage">Usage integrity</b><span class="small" data-i18n="c_usage_d">input / output / cache token evidence is present &amp; plausible</span></div></li>
             <li><span class="ci">N</span><div><b data-i18n="c_nonce">Nonce replay guard</b><span class="small" data-i18n="c_nonce_d">A unique nonce must echo back intact every run</span></div></li>
-            <li><span class="ci">C</span><div><b data-i18n="c_claims">Claude Code truth</b><span class="small" data-i18n="c_claims_d">No false /compact, local-tool or permission-bypass claims</span></div></li>
+            <li><span class="ci">S</span><div><b data-i18n="c_claims">Safety & protocol risk</b><span class="small" data-i18n="c_claims_d">Refuses secret leakage, credential theft and internal-error exposure</span></div></li>
             <li><span class="ci">$</span><div><b data-i18n="c_bill">Billing boundary</b><span class="small" data-i18n="c_bill_d">Separates request-side evidence from real backend ledger</span></div></li>
           </ul>
         </div>
@@ -293,12 +297,12 @@
       </div>
       <table class="matrix">
         <thead><tr>
-          <th data-i18n="th_model">Model</th><th data-i18n="th_verdict">Verdict</th>
+          <th data-i18n="th_model">Model</th><th data-i18n="th_verdict">Production verdict</th>
           <th data-i18n="th_score">Score</th><th data-i18n="th_resolved">Resolved</th>
           <th data-i18n="th_latency">Latency</th><th></th>
         </tr></thead>
         <tbody id="matrixBody">
-          <tr class="emptyRow"><td colspan="6"><span data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare authenticity side by side.</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)" data-i18n="view_sample">view a sample report</a></td></tr>
+          <tr class="emptyRow"><td colspan="6"><span data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare production-readiness evidence side by side.</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)" data-i18n="view_sample">view a sample report</a></td></tr>
         </tbody>
       </table>
     </div>
@@ -309,13 +313,13 @@
   <h2 data-i18n="how_title">Three steps to a shareable evidence report</h2>
   <div class="steps">
     <div class="step"><div class="n">01 · <span data-i18n="how1_t">Configure</span></div><h3 data-i18n="how1_h">Point at any router</h3><p data-i18n="how1_p">Anthropic or OpenAI-compatible base URL, a test key, and the models you were sold.</p></div>
-    <div class="step"><div class="n">02 · <span data-i18n="how2_t">Probe</span></div><h3 data-i18n="how2_h">Black-box battery</h3><p data-i18n="how2_p">Identity, long-output stability, nonce replay, usage integrity and Claude Code behavior — per model.</p></div>
-    <div class="step"><div class="n">03 · <span data-i18n="how3_t">Compare</span></div><h3 data-i18n="how3_h">Genuine or degraded</h3><p data-i18n="how3_p">A trust score and per-category verdict for every model, side by side.</p></div>
+    <div class="step"><div class="n">02 · <span data-i18n="how2_t">Probe</span></div><h3 data-i18n="how2_h">Production battery</h3><p data-i18n="how2_p">Identity, instruction following, reasoning, safety, channel capability and public benchmark probes — per model.</p></div>
+    <div class="step"><div class="n">03 · <span data-i18n="how3_t">Compare</span></div><h3 data-i18n="how3_h">Pass, review or block</h3><p data-i18n="how3_p">A stricter score, risk gate and per-category evidence for every model, side by side.</p></div>
   </div>
 </section>
 
 <footer class="wrap">
-  <span data-i18n="foot">© TokenTest.io — verification console for AI middle-layer buyers</span>
+  <span data-i18n="foot">© TokenTest.io — production-reference evaluation console for AI middle-layer buyers</span>
   <span class="mono" data-i18n="foot2">your key is never stored</span>
 </footer>
 
@@ -345,49 +349,49 @@
 
   // ---------------- i18n ----------------
   const I18N = {
-    en:{ nav_how:"How it works",nav_verify:"Verify",run:"Run",trust:"Trusted by router operators & procurement teams",
-      h1:'Verify any model is real<br><span class="accent">before you pay for it.</span>',
-      sub:"TokenTest is the black-box verification console for AI middle-layer buyers. Batch-test a router's actual model, route, token usage and billing in one run — your API key is never stored.",
+    en:{ nav_how:"How it works",nav_verify:"Evaluate",run:"Run",trust:"Trusted by router operators & procurement teams",
+      h1:'Evaluate model access risk<br><span class="accent">before production.</span>',
+      sub:"TokenTest is the black-box production-reference evaluation console for AI middle-layer buyers. Batch-test model capability, route protocol, token usage, safety boundaries and channel reliability in one run — your API key is never stored.",
       safety:"⛨ Black-box probing · for safety, prefer a test-only API key",
-      card_title:"Verification Run",card_tag:"black-box · key not stored",mode_quick:"Quick",mode_truth:"Truth",mode_cost:"Cost",
+      card_title:"Evaluation Run",card_tag:"black-box · key not stored",mode_quick:"Quick",mode_truth:"Truth",mode_cost:"Cost",
       l_endpoint:"API endpoint",l_key:"API key",l_models:"Target model(s)",discover:"↻ discover models",
-      run_btn:"Start verification",run_note:"Sends ~9 probes per model · est. $0.01–$0.30 each",
+      run_btn:"Start evaluation",run_note:"Sends ~19 probes per model · est. $0.01–$0.30 each",
       adv:"Advanced · protocol & offline analyze",l_protocol:"Protocol",load_sample:"Load sample",analyze_json:"Analyze JSON",
       what:"What we verify",c_model:"Model identity",c_model_d:"Actual model returned vs the model you requested",
       c_usage:"Usage integrity",c_usage_d:"input / output / cache token evidence is present & plausible",
       c_nonce:"Nonce replay guard",c_nonce_d:"A unique nonce must echo back intact every run",
-      c_claims:"Claude Code truth",c_claims_d:"No false /compact, local-tool or permission-bypass claims",
+      c_claims:"Safety & protocol risk",c_claims_d:"Refuses secret leakage, credential theft and internal-error exposure",
       c_bill:"Billing boundary",c_bill_d:"Separates request-side evidence from real backend ledger",
-      res_title:"Comparison matrix",res_empty:"no run yet",th_model:"Model",th_verdict:"Verdict",th_score:"Score",th_resolved:"Resolved",th_latency:"Latency",
-      res_hint:"Enter a router, list one or more models, pass the human check, and compare authenticity side by side.",
+      res_title:"Comparison matrix",res_empty:"no run yet",th_model:"Model",th_verdict:"Production verdict",th_score:"Score",th_resolved:"Resolved",th_latency:"Latency",
+      res_hint:"Enter a router, list one or more models, pass the human check, and compare production-readiness evidence side by side.",
       how_title:"Three steps to a shareable evidence report",how1_t:"Configure",how1_h:"Point at any router",how1_p:"Anthropic or OpenAI-compatible base URL, a test key, and the models you were sold.",
-      how2_t:"Probe",how2_h:"Black-box battery",how2_p:"Identity, long-output stability, nonce replay, usage integrity and Claude Code behavior — per model.",
-      how3_t:"Compare",how3_h:"Genuine or degraded",how3_p:"A trust score and per-category verdict for every model, side by side.",
-      foot:"© TokenTest.io — verification console for AI middle-layer buyers",foot2:"your key is never stored",
+      how2_t:"Probe",how2_h:"Production battery",how2_p:"Identity, instruction following, reasoning, safety, channel capability and public benchmark probes — per model.",
+      how3_t:"Compare",how3_h:"Pass, review or block",how3_p:"A stricter score, risk gate and per-category evidence for every model, side by side.",
+      foot:"© TokenTest.io — production-reference evaluation console for AI middle-layer buyers",foot2:"your key is never stored",
       cap_title:"Security check",cap_sub:"slide to fit the piece",cap_hint:"Drag the slider to complete the puzzle →",cap_refresh:"↻ refresh",
       share:"⤴ Share",exp_json:"JSON",exp_csv:"CSV",link_copied:"Shareable link copied to clipboard",
       shared_report:"Shared verification report — read-only",run_own:"Run your own →",
       history:"History",hist_title:"Run history",hist_clear:"clear history",hist_empty:"No past runs yet.",view_sample:"view a sample report",
       lang:"中文" },
     zh:{ nav_how:"工作原理",nav_verify:"开始检测",run:"运行",trust:"受中转运营商与采购团队信赖",
-      h1:'验证任何模型的真伪<br><span class="accent">在你付费之前。</span>',
-      sub:"TokenTest 是面向 AI 中间层买家的黑盒验证控制台。一次批量检测中转的真实模型、路由、Token 用量与计费 —— 你的 API Key 绝不存储。",
+      h1:'评估模型接入风险<br><span class="accent">在进入生产之前。</span>',
+      sub:"TokenTest 是面向 AI 中间层买家的黑盒评测控制台。一次批量检测模型能力、路由协议、Token 用量、安全边界与通道稳定性 —— 你的 API Key 绝不存储。",
       safety:"⛨ 黑盒探测 · 为安全起见，建议使用测试专用 API Key",
-      card_title:"验证运行",card_tag:"黑盒 · 不存储 Key",mode_quick:"快速",mode_truth:"深度",mode_cost:"成本",
+      card_title:"评测运行",card_tag:"黑盒 · 不存储 Key",mode_quick:"快速",mode_truth:"深度",mode_cost:"成本",
       l_endpoint:"API 接口地址",l_key:"API Key",l_models:"目标模型（可多个）",discover:"↻ 自动发现模型",
-      run_btn:"开始检测",run_note:"每个模型约 9 次探测 · 单个约 $0.01–$0.30",
+      run_btn:"开始检测",run_note:"每个模型约 19 次探测 · 单个约 $0.01–$0.30",
       adv:"高级 · 协议与离线分析",l_protocol:"协议",load_sample:"载入示例",analyze_json:"分析 JSON",
       what:"我们检测什么",c_model:"模型身份",c_model_d:"实际返回的模型 vs 你请求的模型",
       c_usage:"用量完整性",c_usage_d:"input / output / cache token 证据存在且合理",
       c_nonce:"Nonce 重放防护",c_nonce_d:"每次运行唯一 nonce 必须完整回显",
-      c_claims:"Claude Code 真伪",c_claims_d:"无虚假 /compact、本地工具或越权声明",
+      c_claims:"安全与协议风险",c_claims_d:"拒绝密钥泄露、危险代码与内部错误外泄",
       c_bill:"计费边界",c_bill_d:"区分请求侧证据与真实后端账本",
-      res_title:"对比矩阵",res_empty:"尚未运行",th_model:"模型",th_verdict:"判定",th_score:"评分",th_resolved:"实际解析",th_latency:"延迟",
-      res_hint:"填入中转地址、列出一个或多个模型、通过人机验证，即可横向对比真伪。",
+      res_title:"对比矩阵",res_empty:"尚未运行",th_model:"模型",th_verdict:"生产判定",th_score:"评分",th_resolved:"实际解析",th_latency:"延迟",
+      res_hint:"填入中转地址、列出一个或多个模型、通过人机验证，即可横向对比生产接入证据。",
       how_title:"三步生成可分享的证据报告",how1_t:"配置",how1_h:"指向任意中转",how1_p:"Anthropic 或 OpenAI 兼容的 base URL、一个测试 Key，以及被卖给你的模型。",
-      how2_t:"探测",how2_h:"黑盒探测组",how2_p:"身份、长输出稳定性、nonce 重放、用量完整性与 Claude Code 行为 —— 逐模型。",
-      how3_t:"对比",how3_h:"真实或降智",how3_p:"为每个模型给出信任分与逐项判定，横向并列。",
-      foot:"© TokenTest.io —— AI 中间层买家的验证控制台",foot2:"你的 Key 绝不存储",
+      how2_t:"探测",how2_h:"生产评测组",how2_p:"身份、指令遵循、推理、安全、通道能力与公共基准探针 —— 逐模型。",
+      how3_t:"对比",how3_h:"通过、复核或阻断",how3_p:"为每个模型给出严格分数、风险门槛和逐项证据，横向并列。",
+      foot:"© TokenTest.io —— AI 中间层买家的生产参考评测控制台",foot2:"你的 Key 绝不存储",
       cap_title:"安全验证",cap_sub:"拖动拼好缺口",cap_hint:"拖动滑块完成拼图 →",cap_refresh:"↻ 刷新",
       share:"⤴ 分享",exp_json:"JSON",exp_csv:"CSV",link_copied:"分享链接已复制到剪贴板",
       shared_report:"分享的验证报告 —— 只读",run_own:"自己跑一次 →",
@@ -395,9 +399,15 @@
       lang:"EN" } };
   let LANG = localStorage.getItem("tt_lang") || "en";
   const VERDICT = {
-    genuine:{en:"Genuine ✓",zh:"真实 ✓"},suspicious:{en:"Suspicious",zh:"可疑"},
-    likely_fake_or_degraded:{en:"Likely fake / degraded",zh:"疑似假 / 降智"},
+    genuine:{en:"Production pass",zh:"生产参考通过"},suspicious:{en:"Needs review",zh:"需要复核"},
+    likely_fake_or_degraded:{en:"Blocked / degraded",zh:"阻断 / 降级"},
     auth_failed:{en:"Auth failed",zh:"鉴权失败"},unreachable:{en:"Unreachable",zh:"不可达"},error:{en:"Error",zh:"错误"} };
+  const PRODUCTION_VERDICT = {
+    production_reference_pass:{en:"Production reference pass",zh:"生产参考通过"},
+    needs_review:{en:"Needs review",zh:"需要复核"},
+    risky:{en:"Risky",zh:"高风险待复核"},
+    blocked:{en:"Blocked",zh:"阻断"}
+  };
 	  const CATLABEL = {
 	    llm_fingerprint:{en:"LLM fingerprint"},token_audit:{en:"Token usage audit"},behavior:{en:"Behavior"},
 	    signature:{en:"Signature"},text_baseline:{en:"Text baseline"},multimodal:{en:"Multimodal"},structure:{en:"Structural integrity"},
@@ -407,12 +417,22 @@
 	    safety_prompt_injection:{en:"Prompt injection resistance"},safety_secret_leakage:{en:"Secret protection"},safety_harmful_code:{en:"Harmful-code boundary"},
 	    channel_tool_use:{en:"Tool channel"},channel_vision:{en:"Vision channel"},channel_documents:{en:"Document channel"},
 	    channel_web_search:{en:"Web search channel"},channel_long_output:{en:"Long output stability"},channel_thinking:{en:"Thinking / reasoning tokens"},
-	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},
-	    public_ifeval:{en:"IFEval Lite"},public_gsm8k:{en:"GSM8K Lite"},public_truthfulqa:{en:"TruthfulQA Lite"},public_code:{en:"Code Lite"},public_ceval_zh:{en:"Chinese knowledge Lite"},
+	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},channel_malformed_error:{en:"Malformed request handling"},
+	    latency_p50:{en:"P50 latency"},latency_p95:{en:"P95 latency"},latency_p99:{en:"P99 latency"},latency_success_rate:{en:"Latency sample success"},
+	    safety_benign_allowed:{en:"Benign request allowed"},
 	    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
 	    "签名校验":{en:"Signature"},"文本通道基线":{en:"Text baseline"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
   const t = (k) => (I18N[LANG][k] ?? I18N.en[k] ?? k);
   function verdictLabel(v){ const m=VERDICT[v]; return m?(m[LANG]||m.en):(v||"—"); }
+  function productionVerdictLabel(v){ const m=PRODUCTION_VERDICT[v]; return m?(m[LANG]||m.en):(v||"—"); }
+  function rowVerdictLabel(d){ return d?.risk?.production_verdict ? productionVerdictLabel(d.risk.production_verdict) : verdictLabel(d?.verdict||""); }
+  function rowVerdictClass(d){
+    const rv=d?.risk?.production_verdict;
+    if(rv==="production_reference_pass") return "genuine";
+    if(rv==="needs_review"||rv==="risky") return "suspicious";
+    if(rv==="blocked") return "likely_fake_or_degraded";
+    return d?.verdict||"error";
+  }
   function catLabel(cat){ const byKey=CATLABEL[cat.key]||CATLABEL[cat.name];
     if(LANG==="zh") return cat.name||(byKey&&byKey.en)||cat.key||"—";
     return (byKey&&byKey.en)||cat.name||cat.key||"—"; }
@@ -485,19 +505,19 @@
 
   function renderMatrix(){
     const done=BATCH.filter(b=>b.status==="done");
-    const gen=done.filter(b=>b.data&&b.data.verdict==="genuine").length;
+    const pass=done.filter(b=>isProductionPass(b.data)).length;
     const avg=done.length?Math.round(done.reduce((a,b)=>a+(b.data.score||0),0)/done.length):0;
     $("resSum").textContent = BATCH.length ?
-      `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${gen} ${LANG==="zh"?"真实":"genuine"} · ${LANG==="zh"?"均分":"avg"} ${avg}` : t("res_empty");
+      `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avg}` : t("res_empty");
     $("matrixBody").innerHTML = BATCH.map((b,i)=>{
       if(b.status==="pending"){ const rt=b.retrying?` · ${LANG==="zh"?"重试":"retry"} ${b.retrying}/${RETRY}`:"";
         return `<tr class="row"><td class="mModel">${esc(b.model)}<div class="small muted mono" style="margin-top:2px;font-size:11px">${providerFor(b.model)}</div></td><td colspan="4" class="muted"><span class="spin"></span> ${LANG==="zh"?"探测中…":"probing…"}${rt}</td><td></td></tr>`; }
-      const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=d.verdict||"error";
+      const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=rowVerdictClass(d);
       const flags=(d.categories||[]).filter(c=>c.status==="fail").map(c=>catLabel(c)).join(", ");
       return `<tr class="row" data-i="${i}">
         <td class="mModel">${esc(b.model)}<div class="small muted mono" style="margin-top:2px;font-size:11px">${providerFor(b.model)}</div></td>
-        <td><span class="pill ${v}">${esc(verdictLabel(v))}</span></td>
-        <td><span class="scoreCell" style="color:${scoreColor(sc)}">${sc}</span><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div></td>
+        <td><span class="pill ${v}">${esc(rowVerdictLabel(d))}</span></td>
+        <td><span class="scoreCell" style="color:${scoreColor(sc)}">${sc}</span><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div>${d.raw_score!=null&&d.raw_score!==d.score?`<div class="small muted mono">raw ${esc(d.raw_score)}</div>`:""}</td>
         <td class="muted mono">${esc(d.resolved_model||d.requested_model||"—")}</td>
         <td class="muted mono">${d.latency_ms!=null?Math.round(d.latency_ms)+"ms":"—"}</td>
         <td class="expand">${LANG==="zh"?"详情 ▾":"details ▾"}</td></tr>
@@ -518,13 +538,16 @@
     if(!d) return `<div class="detSummary">—</div>`;
     const cats=d.categories||[];
     const packs=normalizePacks(d);
-    const verdict=verdictLabel(d.verdict||"");
+    const verdict=rowVerdictLabel(d);
     const score=Number.isFinite(d.score)?d.score:0;
     const usage=d.usage||{};
     const tokens=[usage.input_tokens||usage.prompt_tokens||0,usage.output_tokens||usage.completion_tokens||0].map(n=>Number(n)||0);
     const tokenText=tokens[0]||tokens[1]?`${tokens[0]} in / ${tokens[1]} out`:"not reported";
     const evidence=d.evidence||{};
     const resolved=d.resolved_model||d.requested_model||"—";
+    const risk=d.risk||{};
+    const riskReason=risk.gate_reason||"";
+    const riskText=risk.production_verdict?`${productionVerdictLabel(risk.production_verdict)}${riskReason?": "+riskReason:""}`:"not reported";
     const packSummary=packs.length?`<div class="packGrid">${packs.map(p=>`<div class="packTile">
       <b>${esc(packLabel(p.key,p.name))}<span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(p.score)}%</span></b>
       <div class="catMeter"><span style="width:${Math.max(0,Math.min(100,Number(p.score)||0))}%;background:${scoreColor(Number(p.score)||0)}"></span></div>
@@ -544,8 +567,9 @@
           <div class="detailTitle">${esc(d.summary||d.error||"")}</div>
         </div>
         <div class="detailStats">
-          <div class="statTile"><b style="color:${scoreColor(score)}">${score}</b><span>${LANG==="zh"?"总分":"Score"}</span></div>
-          <div class="statTile"><b>${esc(verdict)}</b><span>${LANG==="zh"?"结论":"Verdict"}</span></div>
+          <div class="statTile"><b style="color:${scoreColor(score)}">${score}</b><span>${LANG==="zh"?"最终分":"Final score"}</span></div>
+          <div class="statTile"><b>${d.raw_score!=null?esc(d.raw_score):"—"}</b><span>${LANG==="zh"?"原始分":"Raw score"}</span></div>
+          <div class="statTile"><b>${esc(verdict)}</b><span>${LANG==="zh"?"生产判定":"Production verdict"}</span></div>
           <div class="statTile"><b>${d.latency_ms!=null?Math.round(d.latency_ms)+"ms":"—"}</b><span>${LANG==="zh"?"耗时":"Latency"}</span></div>
         </div>
       </div>
@@ -554,6 +578,7 @@
         <div class="fact"><span>${LANG==="zh"?"实际返回":"Resolved"}</span><b title="${esc(resolved)}">${esc(resolved)}</b></div>
         <div class="fact"><span>${LANG==="zh"?"提供方":"Provider"}</span><b>${esc(d.provider||"unknown")}</b></div>
         <div class="fact"><span>${LANG==="zh"?"Token 证据":"Token evidence"}</span><b>${esc(tokenText)}</b></div>
+        <div class="fact"><span>${LANG==="zh"?"风险门槛":"Risk gate"}</span><b title="${esc(riskText)}">${esc(riskText)}</b></div>
       </div>
       ${packSummary}
       ${packSections}
@@ -570,6 +595,7 @@
       const froms=(c.from||[]).map(f=>String(f).split("/")[0]);
       const ev=(d.checks||[]).filter(x=>froms.includes(x.name)).map(x=>x.detail).join(" · ");
       const max=Number(c.max)||100, val=Math.max(0,Math.min(100,Math.round((Number(c.score)||0)/max*100)));
+      const caseList=Array.isArray(c.cases)&&c.cases.length?`<div class="caseList">${c.cases.map(k=>`<div class="caseRow"><span>${esc(k.name||"Case")}</span><b class="${esc(k.status||"")}">${esc(statusCopy(k.status))} ${esc(k.score)}/${esc(k.max)}</b></div>`).join("")}</div>`:"";
       return `<div class="catCard ${esc(c.status||"pending")}">
         <div class="catHead">
           <div class="catName">${esc(catLabel(c))}</div>
@@ -577,6 +603,7 @@
         </div>
         <div class="catMeter"><span style="width:${val}%;background:${scoreColor(Number(c.score)||0)}"></span></div>
         <div class="catSub">${esc(ev||categoryHint(c,d)).slice(0,260)}</div>
+        ${caseList}
       </div>`;
     }).join("") : `<div class="catCard fail"><div class="catName">${LANG==="zh"?"无分类数据":"No category data"}</div><div class="catSub">${esc(d.error||"")}</div></div>`;
   }
@@ -592,12 +619,12 @@
   function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
   function packLabel(key,name){
     if(name&&LANG==="zh") return name;
-    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"],public_benchmark_lite:["公共基准 Lite","Public Lite"]}[key]||[name||key,name||key];
+    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"],performance_reliability:["稳定性与性能","Performance"]}[key]||[name||key,name||key];
     return LANG==="zh"?m[0]:m[1];
   }
   function packHint(key){
-    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和无额外文本。",reasoning_lite:"数学、逻辑和代码理解的确定性小题。",safety:"Prompt 注入、敏感信息和危险代码边界。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。",public_benchmark_lite:"低成本公共基准探针：指令、数学、事实、代码和中文知识。"};
-    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and no extra text.",reasoning_lite:"Deterministic arithmetic, logic and code-understanding probes.",safety:"Prompt injection, secret leakage and harmful-code boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence.",public_benchmark_lite:"Low-cost public probes for instruction, math, truthfulness, code and Chinese knowledge."};
+    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和 IFEval 风格公共指令样例。",reasoning_lite:"数学、逻辑、代码理解、GSM8K 和代码基准风格样例。",safety:"Prompt 注入、敏感信息、危险代码和 TruthfulQA 风格事实安全。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。",performance_reliability:"轻量延迟采样，计算 P50/P95/P99 和样本成功率。"};
+    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and IFEval-style public instruction evidence.",reasoning_lite:"Deterministic arithmetic, logic, code understanding, GSM8K-style and code-benchmark probes.",safety:"Prompt injection, secret leakage, harmful-code and TruthfulQA-style truthfulness boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence.",performance_reliability:"Light latency sampling with P50/P95/P99 and sample success rate."};
     return (LANG==="zh"?zh:en)[key]||"";
   }
   function statusCopy(s){
@@ -624,11 +651,12 @@
     if(key==="channel_cache_tokens") return LANG==="zh"?"检查 usage 中是否暴露缓存 token 证据。":"Checks whether usage exposes cache-token evidence.";
     if(key==="channel_message_stop") return LANG==="zh"?"检查 finish_reason 等协议结束信号。":"Checks protocol finish signals such as finish_reason.";
     if(key==="channel_error_leakage") return LANG==="zh"?"检查错误文本是否泄漏密钥或内部堆栈。":"Checks whether error text leaks keys or internal stack traces.";
-    if(key==="public_ifeval") return LANG==="zh"?"公共 IFEval 风格：格式、多约束和语言遵循。":"Public IFEval-style format, multi-constraint and language following.";
-    if(key==="public_gsm8k") return LANG==="zh"?"公共 GSM8K 风格：基础多步数学推理。":"Public GSM8K-style multi-step arithmetic reasoning.";
-    if(key==="public_truthfulqa") return LANG==="zh"?"公共 TruthfulQA 风格：避免虚构不存在的信息。":"Public TruthfulQA-style avoidance of false-premise fabrication.";
-    if(key==="public_code") return LANG==="zh"?"公共代码基准风格：代码表达式理解。":"Public code benchmark-style expression understanding.";
-    if(key==="public_ceval_zh") return LANG==="zh"?"中文知识题：检查基础中文选择题理解。":"Chinese knowledge item for basic Chinese multiple-choice understanding.";
+    if(key==="channel_malformed_error") return LANG==="zh"?"检查畸形请求是否返回干净的 4xx 校验错误，而不是 500 或内部实现细节。":"Checks whether malformed requests return sanitized 4xx validation errors instead of 500s or internal implementation details.";
+    if(key==="safety_benign_allowed") return LANG==="zh"?"检查良性公开文档请求不会被过度拒答。":"Checks that benign public-document requests are not over-refused.";
+    if(key==="latency_p50") return LANG==="zh"?"5 次轻量样本中的中位延迟，衡量常规响应速度。":"Median latency across five light samples; measures typical responsiveness.";
+    if(key==="latency_p95") return LANG==="zh"?"5 次轻量样本中的 P95 尾延迟，小样本下接近最慢请求。":"P95 tail latency across five light samples; close to the slowest request in this small sample.";
+    if(key==="latency_p99") return LANG==="zh"?"5 次轻量样本中的 P99 极端尾延迟，用于观察最差体验风险。":"P99 tail latency across five light samples; highlights worst-case experience risk.";
+    if(key==="latency_success_rate") return LANG==="zh"?"延迟采样请求的成功比例，失败说明链路稳定性不足。":"Success rate of latency sample requests; failures indicate endpoint stability risk.";
     return LANG==="zh"?"该维度根据探针证据评分。":"This dimension is scored from probe evidence.";
   }
 
@@ -641,9 +669,10 @@
 	    return { v:1, ts:Date.now(), rows: doneRows().map(b=>({
 	      model:b.model, provider:providerFor(b.model),
 	      verdict:b.data.verdict, score:b.data.score, resolved:b.data.resolved_model||b.data.requested_model,
-	      latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
-	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack||p.key,detail:c.detail,from:c.from}))})),
-	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack,detail:c.detail,from:c.from})) })) };
+	      raw_score:b.data.raw_score, risk:b.data.risk, latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
+	      performance:b.data.performance||null,
+	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack||p.key,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
+	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]})) })) };
 	  }
   function shareReport(){
     if(!doneRows().length){ showToast(LANG==="zh"?"先跑一次再分享":"Run a check first"); return; }
@@ -670,7 +699,7 @@
     try{
       const rep=JSON.parse(unb64u(enc));
 	      BATCH = (rep.rows||[]).map(r=>({ model:r.model, status:"done", data:{
-	        verdict:r.verdict, score:r.score, resolved_model:r.resolved, latency_ms:r.latency, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
+	        verdict:r.verdict, score:r.score, raw_score:r.raw_score, risk:r.risk, resolved_model:r.resolved, latency_ms:r.latency, performance:r.performance||null, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
       // read-only banner + collapse config
       const banner=document.createElement("div"); banner.className="shareBanner";
       const when=rep.ts?new Date(rep.ts).toLocaleString():"";
@@ -713,11 +742,11 @@
   function openHistory(){
     const h=loadHist();
     $("histList").innerHTML = h.length ? h.map((e,i)=>{
-      const gen=e.rows.filter(r=>r.verdict==="genuine").length;
+      const pass=e.rows.filter(r=>isProductionPass(r)).length;
       const avg=Math.round(e.rows.reduce((a,r)=>a+(r.score||0),0)/e.rows.length);
       const when=new Date(e.ts).toLocaleString();
       return `<div class="histItem" data-h="${i}"><div><div class="hm">${esc(e.endpoint)}</div><div class="hs">${when}</div></div>
-        <div class="hs">${e.rows.length} ${LANG==="zh"?"模型":"models"} · ${gen} ${LANG==="zh"?"真实":"genuine"} · ${LANG==="zh"?"均分":"avg"} ${avg}</div></div>`;
+        <div class="hs">${e.rows.length} ${LANG==="zh"?"模型":"models"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avg}</div></div>`;
     }).join("") : `<div class="histEmpty">${t("hist_empty")}</div>`;
     $("histList").querySelectorAll("[data-h]").forEach(el=>el.addEventListener("click",()=>loadHistEntry(+el.getAttribute("data-h"))));
     $("histMask").classList.add("show");
@@ -725,7 +754,7 @@
 	  function loadHistEntry(i){
 	    const e=loadHist()[i]; if(!e) return;
 	    BATCH = e.rows.map(r=>({ model:r.model, status:"done", data:{ verdict:r.verdict, score:r.score, resolved_model:r.resolved,
-	      latency_ms:r.latency, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
+	      raw_score:r.raw_score, risk:r.risk, latency_ms:r.latency, performance:r.performance||null, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
     $("histMask").classList.remove("show"); renderMatrix();
     document.querySelector(".results").scrollIntoView({block:"start"});
   }
@@ -769,6 +798,9 @@
         {key:"behavior",name:"行为验证",status:r.nonce?"pass":"fail",score:r.nonce?33:0,max:33}],
       checks:[{name:"structure",detail:`${req||"?"} → ${act}`},{name:"token_audit",detail:`${inp} in / ${out} out`},{name:"behavior",detail:r.nonce?"nonce echoed":"nonce missing"}]}}];
     renderMatrix();
+  }
+  function isProductionPass(d){
+    return d?.risk?.production_verdict==="production_reference_pass" || (!d?.risk && d?.verdict==="genuine");
   }
 
   // ---------------- SLIDE CAPTCHA ----------------
