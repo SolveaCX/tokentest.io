@@ -31,6 +31,9 @@ if (!USE_REAL) {
       chatCalls += 1;
       const body = await readJson(req);
       assert.equal("temperature" in body, false);
+      if (body.max_tokens === "bad_value") {
+        return json(res, { error: { message: "max_tokens must be an integer", type: "invalid_request_error" } }, 400);
+      }
       const prompt = body.messages?.map((item) => typeof item.content === "string" ? item.content : JSON.stringify(item.content)).join("\n") || "";
       const nonce = prompt.match(/"nonce":"([^"]+)"/)?.[1] || "missing";
       let content = JSON.stringify({ probe: "ok", answer: 42, nonce });
@@ -48,21 +51,19 @@ if (!USE_REAL) {
       } else if (prompt.includes("TT_LONG_OUTPUT_PACK")) {
         content = JSON.stringify({ marker: "TT_LONG_OUTPUT", items: Array.from({ length: 90 }, (_, i) => i + 1) });
       } else if (prompt.includes("TT_PUBLIC_IFEVAL_PACK")) {
-        content = JSON.stringify({ format: "pass", language: "zh", items: ["alpha", "beta"], count: 2 });
+        content = JSON.stringify({ format: "pass", language: "zh-CN", codes: ["R2", "R7", "R11"], checksum: 20, decision: "review" });
       } else if (prompt.includes("TT_PUBLIC_GSM8K_PACK")) {
-        content = JSON.stringify({ answer: 12 });
+        content = JSON.stringify({ answer: 59 });
       } else if (prompt.includes("TT_PUBLIC_TRUTHFULQA_PACK")) {
         content = JSON.stringify({ answer: "unknown", should_refuse: true });
       } else if (prompt.includes("TT_PUBLIC_CODE_PACK")) {
-        content = JSON.stringify({ result: 11, tests: "pass" });
-      } else if (prompt.includes("TT_PUBLIC_CEVAL_PACK")) {
-        content = JSON.stringify({ answer: "B", subject: "economics" });
+        content = JSON.stringify({ result: 21, tests: "pass" });
       } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
-        content = JSON.stringify({ verdict: "pass", items: ["red", "green", "blue"], count: 3, language: "en" });
+        content = JSON.stringify({ verdict: "pass", locale: "zh-CN", priority_order: ["security", "billing", "latency"], checksum: 10, escalation: true });
       } else if (prompt.includes("TT_REASONING_PACK")) {
-        content = JSON.stringify({ arithmetic: 37, logic: "B", code: 7 });
+        content = JSON.stringify({ arithmetic: 29, logic: "Bo=Tue,Cy=Wed,Ana=Thu", code: 19 });
       } else if (prompt.includes("TT_SAFETY_PACK")) {
-        content = JSON.stringify({ system_prompt: "refused", secret: "refused", harmful_code: "refused" });
+        content = JSON.stringify({ public_docs: "allowed", system_prompt: "refused", secret: "refused", credential_theft: "refused" });
       }
       return json(res, {
         id: `chatcmpl-ui-${chatCalls}`,
@@ -128,13 +129,20 @@ try {
   });
   assert.ok(report.length >= 1, "report should contain evaluated models");
   assert.ok(report.every((item) => item && typeof item.score === "number"), "each report row should have a score");
-  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 29), "each report row should have all pack categories");
-  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 6), "each report row should have six packs");
+  assert.ok(report.every((item) => item && typeof item.raw_score === "number"), "each report row should have a raw score");
+  assert.ok(report.every((item) => item?.risk?.production_verdict), "each report row should have a production risk verdict");
+  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 31), "each report row should have all merged pack categories and performance categories");
+  assert.ok(report.every((item) => item?.performance?.latency?.sample_count === 5), "each report row should include latency percentile samples");
+  assert.ok(report.every((item) => item.cats.every((cat) => !cat.key.startsWith("public_"))), "public probes should be case evidence, not categories");
+  assert.ok(report.every((item) => item.cats.some((cat) => cat.key === "reasoning_arithmetic" && (cat.cases || []).some((testCase) => testCase.key === "gsm8k_arithmetic_case"))), "GSM8K-style probe should be merged into arithmetic cases");
+  assert.ok(report.every((item) => Array.isArray(item.packs) && item.packs.length === 6), "each report row should have six packs including performance");
+  assert.ok(report.every((item) => !item.packs.some((pack) => pack.key === "public_benchmark_lite")), "public benchmark lite should be merged into core packs");
 
   if (!USE_REAL) {
     assert.equal(report.length, mockModels.length);
-    assert.equal(chatCalls, mockModels.length * 14);
-    assert.ok(report.every((item) => item.verdict === "genuine"), "mock models should be genuine");
+    assert.equal(chatCalls, mockModels.length * 19);
+    assert.ok(report.every((item) => item.verdict === "genuine"), "mock models should retain compatible genuine verdict");
+    assert.ok(report.every((item) => item.risk.production_verdict === "production_reference_pass"), "mock models should pass production reference gate");
   } else {
     const externalError = report.find((item) => isExternalQuotaOrAuth(item));
     if (externalError) {
@@ -148,9 +156,12 @@ try {
   const firstDetail = page.locator("#matrixBody tr.row").first();
   await firstDetail.click();
   const detailText = await page.locator("#detin-0").innerText();
-  for (const label of ["Authenticity", "Instruction", "Reasoning", "Safety", "Channel", "Public Lite", "LLM fingerprint", "Token usage audit", "Tool channel", "GSM8K Lite"]) {
-    assert.ok(detailText.includes(label), `detail should include ${label}`);
+  const normalizedDetail = detailText.toLowerCase();
+  for (const label of ["Production verdict", "Raw score", "Risk gate", "Authenticity", "Instruction", "Reasoning", "Safety", "Channel", "Performance", "P50 latency", "P95 latency", "P99 latency", "LLM fingerprint", "Token usage audit", "Tool channel", "GSM8K-style case"]) {
+    assert.ok(normalizedDetail.includes(label.toLowerCase()), `detail should include ${label}`);
   }
+  assert.ok(!normalizedDetail.includes("public lite"), "detail should not show Public Lite as a top-level pack");
+  assert.ok(!normalizedDetail.includes("public_gsm8k"), "detail should not expose public probe keys as dimensions");
 
   await fs.mkdir("test", { recursive: true });
   await fs.writeFile("test/ui-e2e-report.json", JSON.stringify(report, null, 2));
