@@ -252,7 +252,7 @@
             <div class="chips" id="chips"></div>
           </div>
           <button class="run" id="runProbe" data-i18n="run_btn">Start verification</button>
-          <div class="runNote" data-i18n="run_note">Sends ~19 probes per model · est. $0.01–$0.30 each</div>
+          <div class="runNote" data-i18n="run_note">Sends ~30 probes per model · est. $0.01–$0.30 each</div>
           <details class="advanced">
             <summary data-i18n="adv">Advanced · protocol &amp; offline analyze</summary>
             <div class="field" style="margin-top:12px">
@@ -355,7 +355,7 @@
       safety:"⛨ Black-box probing · for safety, prefer a test-only API key",
       card_title:"Evaluation Run",card_tag:"black-box · key not stored",mode_quick:"Quick",mode_truth:"Truth",mode_cost:"Cost",
       l_endpoint:"API endpoint",l_key:"API key",l_models:"Target model(s)",discover:"↻ discover models",
-      run_btn:"Start evaluation",run_note:"Sends ~19 probes per model · est. $0.01–$0.30 each",
+      run_btn:"Start evaluation",run_note:"Sends ~30 probes per model · est. $0.01–$0.30 each",
       adv:"Advanced · protocol & offline analyze",l_protocol:"Protocol",load_sample:"Load sample",analyze_json:"Analyze JSON",
       what:"What we verify",c_model:"Model identity",c_model_d:"Actual model returned vs the model you requested",
       c_usage:"Usage integrity",c_usage_d:"input / output / cache token evidence is present & plausible",
@@ -379,7 +379,7 @@
       safety:"⛨ 黑盒探测 · 为安全起见，建议使用测试专用 API Key",
       card_title:"评测运行",card_tag:"黑盒 · 不存储 Key",mode_quick:"快速",mode_truth:"深度",mode_cost:"成本",
       l_endpoint:"API 接口地址",l_key:"API Key",l_models:"目标模型（可多个）",discover:"↻ 自动发现模型",
-      run_btn:"开始检测",run_note:"每个模型约 19 次探测 · 单个约 $0.01–$0.30",
+      run_btn:"开始检测",run_note:"每个模型约 30 次探测 · 单个约 $0.01–$0.30",
       adv:"高级 · 协议与离线分析",l_protocol:"协议",load_sample:"载入示例",analyze_json:"分析 JSON",
       what:"我们检测什么",c_model:"模型身份",c_model_d:"实际返回的模型 vs 你请求的模型",
       c_usage:"用量完整性",c_usage_d:"input / output / cache token 证据存在且合理",
@@ -409,16 +409,18 @@
     blocked:{en:"Blocked",zh:"阻断"}
   };
 	  const CATLABEL = {
-	    llm_fingerprint:{en:"LLM fingerprint"},token_audit:{en:"Token usage audit"},behavior:{en:"Behavior"},
+	    llm_fingerprint:{en:"LLM fingerprint"},model_registry:{en:"Model registry consistency"},token_audit:{en:"Token usage audit"},behavior:{en:"Behavior"},
+	    nonce_replay:{en:"Nonce replay guard"},header_provenance:{en:"Header provenance"},auth_compatibility:{en:"Auth compatibility"},
 	    signature:{en:"Signature"},text_baseline:{en:"Text baseline"},multimodal:{en:"Multimodal"},structure:{en:"Structural integrity"},
 	    instruction_json:{en:"Structured output"},instruction_constraints:{en:"Constraint following"},
 	    instruction_no_extra:{en:"No extra text"},instruction_language:{en:"Language constraint"},
 	    reasoning_arithmetic:{en:"Arithmetic"},reasoning_logic:{en:"Logic"},reasoning_code:{en:"Code understanding"},
 	    safety_prompt_injection:{en:"Prompt injection resistance"},safety_secret_leakage:{en:"Secret protection"},safety_harmful_code:{en:"Harmful-code boundary"},
 	    channel_tool_use:{en:"Tool channel"},channel_vision:{en:"Vision channel"},channel_documents:{en:"Document channel"},
-	    channel_web_search:{en:"Web search channel"},channel_long_output:{en:"Long output stability"},channel_thinking:{en:"Thinking / reasoning tokens"},
-	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},channel_malformed_error:{en:"Malformed request handling"},
-	    latency_p50:{en:"P50 latency"},latency_p95:{en:"P95 latency"},latency_p99:{en:"P99 latency"},latency_success_rate:{en:"Latency sample success"},
+	    channel_web_search:{en:"Web search channel"},channel_long_output:{en:"Long output stability"},channel_stream_sse:{en:"Stream SSE channel"},channel_stream_delta:{en:"Stream delta granularity"},channel_thinking:{en:"Thinking / reasoning tokens"},
+	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},error_response_shape:{en:"Error response shape"},channel_malformed_error:{en:"Malformed request handling"},
+	    token_total_consistency:{en:"Token total consistency"},token_input_monotonicity:{en:"Input token monotonicity"},token_output_reasonableness:{en:"Output token reasonableness"},token_stop_limit:{en:"Stop/token limit linkage"},token_stream_usage:{en:"Stream usage consistency"},token_cache_behavior:{en:"Cache token double-call"},token_no_cache_sanity:{en:"No-cache usage sanity"},
+	    latency_p50:{en:"P50 latency"},latency_p95:{en:"P95 latency"},latency_p99:{en:"P99 latency"},latency_ttft:{en:"TTFT latency"},latency_success_rate:{en:"Latency sample success"},
 	    safety_benign_allowed:{en:"Benign request allowed"},
 	    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
 	    "签名校验":{en:"Signature"},"文本通道基线":{en:"Text baseline"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
@@ -619,12 +621,12 @@
   function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
   function packLabel(key,name){
     if(name&&LANG==="zh") return name;
-    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"],performance_reliability:["稳定性与性能","Performance"]}[key]||[name||key,name||key];
+    const m={authenticity:["真实性","Authenticity"],instruction:["指令遵循","Instruction"],reasoning_lite:["轻量推理","Reasoning"],safety:["安全鲁棒性","Safety"],channel_capability:["通道能力","Channel"],token_integrity:["Token 计量可信度","Token Integrity"],performance_reliability:["稳定性与性能","Performance"]}[key]||[name||key,name||key];
     return LANG==="zh"?m[0]:m[1];
   }
   function packHint(key){
-    const zh={authenticity:"模型身份、接口结构、nonce、usage 与签名证据。",instruction:"JSON 格式、多约束、语言和 IFEval 风格公共指令样例。",reasoning_lite:"数学、逻辑、代码理解、GSM8K 和代码基准风格样例。",safety:"Prompt 注入、敏感信息、危险代码和 TruthfulQA 风格事实安全。",channel_capability:"工具、视觉、文档、Web Search、长输出和协议 usage 证据。",performance_reliability:"轻量延迟采样，计算 P50/P95/P99 和样本成功率。"};
-    const en={authenticity:"Model identity, protocol structure, nonce, usage and signature evidence.",instruction:"JSON format, multi-constraint following, language and IFEval-style public instruction evidence.",reasoning_lite:"Deterministic arithmetic, logic, code understanding, GSM8K-style and code-benchmark probes.",safety:"Prompt injection, secret leakage, harmful-code and TruthfulQA-style truthfulness boundaries.",channel_capability:"Tool, vision, document, web search, long-output and protocol usage evidence.",performance_reliability:"Light latency sampling with P50/P95/P99 and sample success rate."};
+    const zh={authenticity:"模型身份、接口结构、模型列表、nonce、header 与鉴权证据。",instruction:"JSON 格式、多约束、语言和 IFEval 风格公共指令样例。",reasoning_lite:"数学、逻辑、代码理解、GSM8K 和代码基准风格样例。",safety:"Prompt 注入、敏感信息、危险代码和 TruthfulQA 风格事实安全。",channel_capability:"工具、视觉、文档、Web Search、长输出、流式 SSE 和错误响应 shape。",token_integrity:"usage 存在性、总量一致性、输入单调性、输出比例、截断联动、stream usage 和 cache 证据。",performance_reliability:"轻量延迟采样，计算 P50/P95/P99、TTFT 和样本成功率。"};
+    const en={authenticity:"Model identity, protocol structure, model registry, nonce, headers and auth evidence.",instruction:"JSON format, multi-constraint following, language and IFEval-style public instruction evidence.",reasoning_lite:"Deterministic arithmetic, logic, code understanding, GSM8K-style and code-benchmark probes.",safety:"Prompt injection, secret leakage, harmful-code and TruthfulQA-style truthfulness boundaries.",channel_capability:"Tool, vision, document, web search, long output, streaming SSE and error response shape.",token_integrity:"Usage presence, total consistency, input monotonicity, output ratio, stop-limit linkage, stream usage and cache evidence.",performance_reliability:"Light latency sampling with P50/P95/P99, TTFT and sample success rate."};
     return (LANG==="zh"?zh:en)[key]||"";
   }
   function statusCopy(s){
@@ -636,8 +638,12 @@
     const detail=c.detail||"";
     if(detail) return detail;
     if(key==="llm_fingerprint") return LANG==="zh"?"请求模型与返回模型一致。":"Requested model matches the resolved model.";
+    if(key==="model_registry") return LANG==="zh"?"检查请求模型是否出现在 /models 或兼容 alias 列表中。":"Checks whether the requested model appears in /models or a compatible alias list.";
     if(key==="structure") return LANG==="zh"?"响应结构包含可解析的 id、choices 和 message。":"Response includes parseable id, choices and message fields.";
     if(key==="behavior") return LANG==="zh"?"模型按要求返回了探针 JSON。":"The model followed the probe and returned the expected JSON.";
+    if(key==="nonce_replay") return LANG==="zh"?"连续三次不同 nonce 探针必须返回当前 nonce，用于发现静态响应或缓存重放。":"Three distinct nonce probes must echo the current nonce to catch static responses or replay.";
+    if(key==="header_provenance") return LANG==="zh"?"检查 /models 响应头是否泄露私网地址、debug、堆栈或 key。":"Checks /models response headers for private hosts, debug markers, stacks or key leakage.";
+    if(key==="auth_compatibility") return LANG==="zh"?"检查缺失/错误 Bearer key 是否被 401/403 拒绝，且不回显 key。":"Checks missing/wrong Bearer keys are rejected with 401/403 and no key echo.";
     if(key==="signature") return LANG==="zh"?"发现响应 ID 或指纹，但缺少更强的上游签名。":"Response id or fingerprint was present, but stronger upstream signatures were not available.";
     if(key==="text_baseline") return LANG==="zh"?"当前真实性包记录文本接口基线；视觉和文档能力在通道能力包里单独评分。":"This authenticity pack records the text endpoint baseline; vision and document capability are scored in the channel pack.";
     if(key==="multimodal") return LANG==="zh"?"旧报告字段：多模态能力现在请看通道能力里的视觉/文档维度。":"Legacy report field: multimodal capability is now represented by vision/document checks in the channel pack.";
@@ -647,15 +653,26 @@
     if(key==="channel_documents") return LANG==="zh"?"检查内联文档内容是否能被模型正确抽取。":"Checks whether inline document content can be extracted correctly.";
     if(key==="channel_web_search") return LANG==="zh"?"检查 Web Search 工具通道是否可用。":"Checks whether the web-search tool channel is available.";
     if(key==="channel_long_output") return LANG==="zh"?"检查较长 JSON 输出是否稳定完成。":"Checks whether a longer JSON output completes reliably.";
+    if(key==="channel_stream_sse") return LANG==="zh"?"检查 stream=true 是否返回标准 SSE chunk、文本 delta 和最终 DONE。":"Checks whether stream=true returns standard SSE chunks, text deltas and final DONE.";
+    if(key==="channel_stream_delta") return LANG==="zh"?"检查流式文本 delta 的粒度是否和 output token 数量相称。":"Checks whether streaming text delta granularity is plausible versus output tokens.";
     if(key==="channel_thinking") return LANG==="zh"?"检查 usage 中是否暴露推理 token 证据。":"Checks whether usage exposes reasoning-token evidence.";
     if(key==="channel_cache_tokens") return LANG==="zh"?"检查 usage 中是否暴露缓存 token 证据。":"Checks whether usage exposes cache-token evidence.";
     if(key==="channel_message_stop") return LANG==="zh"?"检查 finish_reason 等协议结束信号。":"Checks protocol finish signals such as finish_reason.";
     if(key==="channel_error_leakage") return LANG==="zh"?"检查错误文本是否泄漏密钥或内部堆栈。":"Checks whether error text leaks keys or internal stack traces.";
+    if(key==="error_response_shape") return LANG==="zh"?"检查无效参数是否返回协议正确的 4xx JSON error object，而不是 500、HTML 或内部实现细节。":"Checks invalid parameters return protocol-correct 4xx JSON error objects, not 500s, HTML or internals.";
     if(key==="channel_malformed_error") return LANG==="zh"?"检查畸形请求是否返回干净的 4xx 校验错误，而不是 500 或内部实现细节。":"Checks whether malformed requests return sanitized 4xx validation errors instead of 500s or internal implementation details.";
+    if(key==="token_total_consistency") return LANG==="zh"?"检查 input + output 是否与 total token 基本一致。":"Checks whether input + output is consistent with total tokens.";
+    if(key==="token_input_monotonicity") return LANG==="zh"?"短 prompt 和长 prompt 应体现明显递增的 input token 计量。":"Short and long prompts should produce clearly increasing input token counts.";
+    if(key==="token_output_reasonableness") return LANG==="zh"?"用可见输出字符数与 output token 的比例检查输出计量是否离谱。":"Uses visible output characters versus output tokens to catch implausible output metering.";
+    if(key==="token_stop_limit") return LANG==="zh"?"小 max_tokens 截断请求应在 finish_reason 或 usage 上体现上限。":"A small max_tokens truncation request should be reflected in finish_reason or usage.";
+    if(key==="token_stream_usage") return LANG==="zh"?"检查 stream 响应里的 usage 是否存在且总量一致。":"Checks streaming usage exists and is internally consistent.";
+    if(key==="token_cache_behavior") return LANG==="zh"?"两次相同 cache_control 请求应暴露 cache creation/read token 证据；缺失则只能部分证明。":"Two identical cache_control requests should expose cache creation/read token evidence; absence is partial evidence.";
+    if(key==="token_no_cache_sanity") return LANG==="zh"?"普通无 cache 请求不应冒出 cache read/create token。":"Ordinary no-cache requests should not report cache read/create tokens.";
     if(key==="safety_benign_allowed") return LANG==="zh"?"检查良性公开文档请求不会被过度拒答。":"Checks that benign public-document requests are not over-refused.";
     if(key==="latency_p50") return LANG==="zh"?"5 次轻量样本中的中位延迟，衡量常规响应速度。":"Median latency across five light samples; measures typical responsiveness.";
     if(key==="latency_p95") return LANG==="zh"?"5 次轻量样本中的 P95 尾延迟，小样本下接近最慢请求。":"P95 tail latency across five light samples; close to the slowest request in this small sample.";
     if(key==="latency_p99") return LANG==="zh"?"5 次轻量样本中的 P99 极端尾延迟，用于观察最差体验风险。":"P99 tail latency across five light samples; highlights worst-case experience risk.";
+    if(key==="latency_ttft") return LANG==="zh"?"流式请求首个文本 chunk 的耗时，衡量首包体验。":"Time to first streaming text chunk; measures first-token experience.";
     if(key==="latency_success_rate") return LANG==="zh"?"延迟采样请求的成功比例，失败说明链路稳定性不足。":"Success rate of latency sample requests; failures indicate endpoint stability risk.";
     return LANG==="zh"?"该维度根据探针证据评分。":"This dimension is scored from probe evidence.";
   }

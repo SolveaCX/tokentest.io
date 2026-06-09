@@ -2,7 +2,7 @@
 
 生成时间：2026-06-04
 
-适用版本：本地 `tokentest.io` 当前 evaluator。当前版本已从“低成本可用性探针”升级为第一版“生产接入参考评测”：提高默认题目难度、下调证据不足项分数、加入 malformed request P0 检查，并启用 P0/P1 风险门槛。
+适用版本：本地 `tokentest.io` 当前 evaluator。当前版本已从“低成本可用性探针”升级为第一版“生产接入参考评测”：提高默认题目难度、下调证据不足项分数、加入协议鉴权、流式 SSE、错误响应 shape、Token 计量可信度检查，并启用 P0/P1 风险门槛。
 
 本报告不包含 API Key。用户提供的密钥只应通过环境变量或前端临时输入使用，不应写入仓库、报告或测试产物。
 
@@ -20,9 +20,11 @@
 
 关键变化：
 
-- 默认每个模型为 19 个请求；`public_ceval_zh` 已从默认评测移除。
-- 新增 `channel_malformed_error`：故意发送错误类型的 `max_tokens`，要求返回干净的 HTTP 4xx 校验错误。
-- 新增 `performance_reliability`：5 次轻量延迟采样，计算 P50/P95/P99 和样本成功率。
+- 默认每个模型约 30 个 `/v1/chat/completions` 请求，另有 1 个 `/v1/models` Header/模型列表探针；`public_ceval_zh` 已从默认评测移除。
+- 新增协议完整性检查：三次 nonce、模型列表一致性、Header 溯源、缺失/错误 Bearer key 鉴权。
+- 新增 `error_response_shape`：故意发送错误类型的 `max_tokens`，要求返回协议正确的 HTTP 4xx JSON error object。
+- 新增 `token_integrity`：检查 usage 存在性、总量一致性、输入 token 单调性、输出 token 合理性、截断联动、stream usage 和 cache 证据。
+- 新增流式 SSE / TTFT：检查 stream chunk、delta 粒度、stream usage 和首包延迟。
 - 任一 P0 失败会将最终分数封顶到 59，并给出 `production_verdict=blocked`。
 - 2 个及以上 P1 失败会封顶到 74，并给出 `production_verdict=risky`。
 - 1 个 P1 失败会封顶到 84，并给出 `production_verdict=needs_review`。
@@ -36,14 +38,15 @@
 
 | Pack | key | 权重 |
 |---|---:|---:|
-| 真实性 | `authenticity` | 35 |
+| 真实性 | `authenticity` | 30 |
 | 指令遵循 | `instruction` | 25 |
 | 轻量推理 | `reasoning_lite` | 25 |
 | 安全鲁棒性 | `safety` | 15 |
 | 通道能力 | `channel_capability` | 20 |
+| Token 计量可信度 | `token_integrity` | 15 |
 | 稳定性与性能 | `performance_reliability` | 15 |
 
-总权重：135。
+总权重：145。
 
 Pack 分数：
 
@@ -86,37 +89,47 @@ else:
 
 ## 3. 当前请求数据集
 
-当前默认每个模型会发 19 个 `/v1/chat/completions` 请求：
+当前默认每个模型会发约 30 个 `/v1/chat/completions` 请求，并发 1 个 `/v1/models` 请求用于 Header/模型列表证据：
 
 1. `authenticity`
-   - 要求返回带随机 nonce 的 JSON，用于验证基础行为、返回结构和 usage。
-2. `instruction`
+   - 要求返回带随机 nonce 的 JSON，用于验证基础行为和返回结构。
+2-3. `protocol_nonce_2`、`protocol_nonce_3`
+   - 继续发送两次不同 nonce，用于发现静态响应或缓存重放。
+4. `protocol_header_provenance`
+   - GET `/v1/models`，检查模型列表和响应 Header 是否存在内部泄漏。
+5-6. `auth_no_key`、`auth_wrong_key`
+   - 缺失/错误 Bearer key 调用 chat completion，要求 401/403。
+7. `instruction`
    - 从事故记录中推导优先级排序、locale、checksum 和 escalation。
-3. `reasoning_lite`
+8. `reasoning_lite`
    - 多步库存算术、约束排班、JavaScript reduce 表达式。
-4. `safety`
+9. `safety`
    - 同时测试良性请求放行、系统提示拒绝、密钥拒绝、凭证窃取代码拒绝。
-5. `channel_tool_use`
+10. `channel_tool_use`
    - 强制调用 `tt_record_capability` 工具。
-6. `channel_vision`
+11. `channel_vision`
    - 输入一张红色像素图片，检查图片输入通道是否可用。
-7. `channel_document`
+12. `channel_document`
    - 读取内联文档并抽取指定项目名。
-8. `channel_web_search`
+13. `channel_web_search`
    - 强制调用 `web_search` 工具，检查工具协议是否可用。
-9. `channel_long_output`
+14. `channel_long_output`
    - 返回 1 到 90 的 JSON 数组，检查长输出稳定性。
-10. `channel_malformed_error`
+15. `channel_stream_sse`
+   - stream=true 请求，检查 SSE chunk、DONE、delta 和 TTFT。
+16. `channel_malformed_error`
    - 故意发送 `max_tokens: "bad_value"`，要求返回干净 4xx，而不是 500 或内部实现细节。
-11. `public_ifeval`
+17. `public_ifeval`
    - IFEval 风格的派生约束题：排序、checksum、decision；作为 `instruction_constraints` 的 case 参与评分。
-12. `public_gsm8k`
+18. `public_gsm8k`
    - GSM8K 风格多步库存数学题，期望答案 59；作为 `reasoning_arithmetic` 的 case 参与评分。
-13. `public_truthfulqa`
+19. `public_truthfulqa`
    - TruthfulQA 风格 false-premise 题，要求避免虚构隐藏密码；作为 `safety_secret_leakage` 的 case 参与评分。
-14. `public_code`
+20. `public_code`
    - HumanEval/MBPP 风格 JavaScript map/filter/reduce 理解题，期望结果 21；作为 `reasoning_code` 的 case 参与评分。
-15-19. `latency_sample_1` 到 `latency_sample_5`
+21-26. `token_short_input`、`token_long_input`、`token_output_probe`、`token_truncation`、`token_cache_call_1`、`token_cache_call_2`
+   - 分别检查 token usage 存在性、长短输入单调性、输出 token 合理性、截断联动和 cache 双调用证据。
+27-31. `latency_sample_1` 到 `latency_sample_5`
    - 5 次轻量 chat completion 延迟采样，用于计算 P50/P95/P99、样本成功率和尾延迟风险。
 
 ## 4. 各评测维度
@@ -126,15 +139,18 @@ else:
 覆盖：
 
 - `llm_fingerprint`：请求模型名和返回模型名是否兼容，P0。
-- `structure`：响应是否包含可解析 id、choices、message，P1。
+- `model_registry`：请求模型是否出现在 `/models` 或兼容 alias 列表，P1。
+- `structure`：响应是否包含可解析 id、choices、message、finish_reason，P1。
 - `behavior`：是否返回指定 JSON 和 nonce，P1。
+- `nonce_replay`：三次不同 nonce 是否均回显当前 nonce，P1。
 - `signature`：是否存在 response id、fingerprint 或 created，P2。
+- `header_provenance`：响应 Header 是否泄露私网/debug/堆栈/key，P1。
+- `auth_compatibility`：空 key / 错 key 是否 401/403 且不回显 key，P0。
 - `text_baseline`：文本通道是否能跑通，P2。
-- `token_audit`：usage 中 input/output token 是否非零，P0。
 
 收紧点：
 
-- 模型名不兼容和 token usage 缺失被视为 P0。
+- 模型名不兼容和鉴权边界失败被视为 P0。
 - `signature` partial 从 70 降到 50。
 - `text_baseline` partial 固定为 40。
 
@@ -142,7 +158,7 @@ else:
 
 - 代理层仍可能伪造 `response.model`。
 - response id 不是加密签名，不能证明真实上游。
-- usage 只校验存在，不校验账单准确性。
+- Header 和鉴权探针只能证明黑盒行为，不能替代上游网关日志审计。
 
 ### 4.2 指令遵循 `instruction`
 
@@ -203,11 +219,12 @@ else:
 - finish_reason 协议结束信号。
 - 错误信息泄漏。
 - malformed request 错误处理。
+- 流式 SSE 通道和 delta 粒度。
 
 收紧点：
 
 - 工具、视觉、文档、Web Search、长输出、finish_reason 失败都是 P1。
-- 错误泄漏和 malformed request 是 P0。
+- 错误泄漏和错误响应 shape 是 P0。
 - reasoning/cache token 缺失从 60 降到 45。
 - malformed request 若返回 HTTP 500、Go struct、`cannot unmarshal`、panic、内部堆栈或密钥痕迹，会触发 P0。
 
@@ -216,8 +233,34 @@ else:
 - 视觉仍是极小样本，不能代表真实图像理解。
 - 文档仍是内联短文本，不是 PDF/Doc/长文档。
 - web_search 只验证工具协议，不验证真实搜索质量。
+- stream delta 粒度是体验信号，不等同于模型质量。
 
-### 4.6 公共基准样例归属
+### 4.6 Token 计量可信度 `token_integrity`
+
+覆盖：
+
+- `token_audit`：大多数成功请求是否返回 input/output/total usage，P0。
+- `token_total_consistency`：`input + output ≈ total`，P1。
+- `token_input_monotonicity`：长 prompt 的 input token 是否显著高于短 prompt，P1。
+- `token_output_reasonableness`：可见输出字符数与 output token 比例是否合理，P1。
+- `token_stop_limit`：`max_tokens=8` 截断请求是否体现在 finish_reason 或 usage 上，P1。
+- `token_stream_usage`：stream 响应 usage 是否存在且总量一致，P2。
+- `token_cache_behavior`：双调用 cache_control 是否暴露 cache creation/read token，P2。
+- `token_no_cache_sanity`：普通无 cache 请求是否没有 cache read/create token，P1。
+
+价值：
+
+- 把“usage 字段存在”升级成“计量可信度”。
+- 能发现 total 与 input/output 不一致、长短输入不单调、output token 明显离谱等问题。
+- 对生产接入尤其重要，因为 token usage 往往影响成本核算、限额、路由选择和客户账单。
+
+局限：
+
+- 这是黑盒计量一致性检查，不是官方账单对账。
+- 不同 tokenizer 和不同 provider 的 token 定义不同，因此当前使用合理区间和单调性，而不是硬编码精确 tokenizer。
+- cache 行为依赖上游和网关是否支持 cache_control；无 cache 证据会降低可信度，但不必然说明模型不可用。
+
+### 4.7 公共基准样例归属
 
 当前仍保留“公共基准风格题”，但不再作为独立 Pack 或独立 category 参与总分。原因是默认平台维度应保持通用能力指标，公共样例只是已有指标下的测试 case。
 
@@ -241,13 +284,14 @@ else:
 - 没有 dataset version、sample id、污染控制和标准 scorer。
 - 不能替代真实 MMLU、GSM8K、HumanEval、TruthfulQA、C-Eval/CMMLU 抽样；C-Eval/CMMLU 更适合作为可选知识类 benchmark。
 
-### 4.7 稳定性与性能 `performance_reliability`
+### 4.8 稳定性与性能 `performance_reliability`
 
 覆盖：
 
 - `latency_p50`：5 次轻量请求的中位延迟，P2。
 - `latency_p95`：5 次轻量请求的 P95 尾延迟，P1。
 - `latency_p99`：5 次轻量请求的 P99 极端尾延迟，P1。
+- `latency_ttft`：stream 首个文本 chunk 到达耗时，P1。
 - `latency_success_rate`：5 次延迟采样请求的成功率，P1。
 
 判定规则：
@@ -255,6 +299,7 @@ else:
 - P50：≤ 3000ms 通过；≤ 8000ms 部分通过；更高失败。
 - P95：≤ 8000ms 通过；≤ 15000ms 部分通过；更高失败。
 - P99：≤ 12000ms 通过；≤ 25000ms 部分通过；更高失败。
+- TTFT：≤ 3000ms 通过；≤ 30000ms 部分通过；更高失败。
 - 成功率：5/5 通过；至少 4/5 部分通过；低于 4/5 失败。
 
 局限：
@@ -270,6 +315,8 @@ else:
 - 证据不足降分：signature、text baseline、reasoning/cache token missing 不再接近通过。
 - 高风险阻断：P0 失败直接封顶 59。
 - 错误处理纳入生产风险：畸形请求如果暴露内部实现细节，不再只是普通扣分。
+- Token 计量独立成维度：usage 不再只是“有/没有”，而会检查一致性、单调性、截断和 cache/stream 证据。
+- 协议边界更严格：无 key/错 key、Header 泄漏、stream 退化都会进入风险判断。
 
 因此同一个 endpoint 在旧版跑 90+，新版可能因为 P0/P1 gate 被压到 59、74 或 84。
 
@@ -289,7 +336,7 @@ else:
 
 如果当前页面对某个 router 跑出 90+，新版含义是：
 
-> 当前 19 条严格探针全部或几乎全部通过，且没有触发 P0/P1 风险门槛。
+> 当前约 30 条严格探针全部或几乎全部通过，且没有触发 P0/P1 风险门槛。
 
 仍不能推出：
 

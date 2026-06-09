@@ -14,8 +14,12 @@
     "test:server": "node scripts/server_route_test.mjs",
     "test:mcp": "node scripts/mcp_server_test.mjs",
     "test:e2e": "node scripts/ui_e2e.mjs",
+    "test:trace-report": "node scripts/trace_report_test.mjs",
+    "test:readable-report": "node scripts/readable_report_test.mjs",
     "report:generate": "node scripts/generate_eval_report.mjs",
-    "report:generate:html": "node scripts/generate_eval_report.mjs --format html"
+    "report:generate:html": "node scripts/generate_eval_report.mjs --format html",
+    "report:trace": "node scripts/generate_case_trace_report.mjs",
+    "report:readable": "node scripts/generate_readable_eval_report.mjs"
   },
   "dependencies": {
     "express": "^4.21.2"
