@@ -2,6 +2,7 @@
 // Pure-SVG puzzle generation (no native image deps) so Railway/Nixpacks deploys clean.
 import express from "express";
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverModels, evaluateModel } from "./lib/evaluator.js";
@@ -12,6 +13,11 @@ app.use(express.json({ limit: "256kb" }));
 
 const PORT = process.env.PORT || 8080;
 const SECRET = process.env.CAPTCHA_SECRET || crypto.randomBytes(32).toString("hex");
+const EVAL_TRACE_DIR = process.env.EVAL_TRACE_DIR || path.join(__dirname, "data", "eval-runs");
+const EVAL_TRACE_RETENTION_DAYS = positiveInt(process.env.EVAL_TRACE_RETENTION_DAYS, 14);
+const EVAL_TRACE_RAW = process.env.EVAL_TRACE_RAW == null
+  ? (!process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== "production")
+  : /^(1|true|yes|on)$/i.test(String(process.env.EVAL_TRACE_RAW));
 
 // ---- puzzle geometry ----
 const W = 340, H = 180, SIZE = 48, R = 9; // board + piece size + tab radius
@@ -165,7 +171,13 @@ app.post("/api/check", async (req, res) => {
   if (!tokenValid(token)) return res.status(401).json({ verdict: "error", score: 0, error: "captcha_required", summary: "Human verification required." });
   if (!base_url || !api_key || !model) return res.status(400).json({ verdict: "error", score: 0, error: "missing_fields" });
   try {
-    res.json(await evaluateModel({ base_url, api_key, model, provider, deep: !!deep }));
+    const result = await evaluateModel({ base_url, api_key, model, provider, deep: !!deep, trace_raw: EVAL_TRACE_RAW });
+    try {
+      result.trace = await saveEvalRunTrace({ base_url, model, provider, deep: !!deep, result });
+    } catch (traceError) {
+      result.trace = { error: String(traceError?.message || traceError) };
+    }
+    res.json(result);
   } catch (e) {
     res.status(502).json({ verdict: "error", score: 0, error: String(e), summary: "Local evaluator failed." });
   }
@@ -184,6 +196,75 @@ app.post("/api/models", async (req, res) => {
 });
 
 app.get("/healthz", (_req, res) => res.json({ ok: true, challenges: challenges.size }));
+
+function positiveInt(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? Math.floor(number) : fallback;
+}
+
+async function saveEvalRunTrace({ base_url, model, provider, deep, result }) {
+  await cleanupEvalRunTraces();
+  const id = crypto.randomUUID();
+  const generatedAt = new Date();
+  const day = generatedAt.toISOString().slice(0, 10);
+  const dir = path.join(EVAL_TRACE_DIR, day);
+  await fs.mkdir(dir, { recursive: true });
+  const file = path.join(dir, `${generatedAt.toISOString().replace(/[:.]/g, "-")}-${safeName(model)}-${id}.json`);
+  const payload = {
+    id,
+    generated_at: generatedAt.toISOString(),
+    raw_trace: EVAL_TRACE_RAW,
+    retention_days: EVAL_TRACE_RETENTION_DAYS,
+    base_url,
+    model,
+    provider: provider || null,
+    deep: !!deep,
+    result,
+  };
+  await fs.writeFile(file, JSON.stringify(payload, null, 2), "utf8");
+  return {
+    id,
+    raw_trace: EVAL_TRACE_RAW,
+    retention_days: EVAL_TRACE_RETENTION_DAYS,
+    file,
+  };
+}
+
+async function cleanupEvalRunTraces() {
+  const cutoff = Date.now() - EVAL_TRACE_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const files = await listFiles(EVAL_TRACE_DIR).catch(() => []);
+  for (const file of files) {
+    try {
+      const stat = await fs.stat(file);
+      if (stat.mtimeMs < cutoff) await fs.unlink(file);
+    } catch {}
+  }
+  await removeEmptyDirs(EVAL_TRACE_DIR).catch(() => {});
+}
+
+async function listFiles(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const out = [];
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...await listFiles(full));
+    else if (entry.isFile()) out.push(full);
+  }
+  return out;
+}
+
+async function removeEmptyDirs(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) await removeEmptyDirs(path.join(dir, entry.name));
+  }
+  const after = await fs.readdir(dir);
+  if (!after.length && dir !== EVAL_TRACE_DIR) await fs.rmdir(dir);
+}
+
+function safeName(value) {
+  return String(value || "model").replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "model";
+}
 
 // ---- static (cleanUrls so /blockrun resolves to blockrun.html) ----
 app.use(express.static(__dirname, { extensions: ["html"] }));

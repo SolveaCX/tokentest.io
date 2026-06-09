@@ -571,8 +571,8 @@ function renderRecommendations(report) {
   const lines = [];
   lines.push(`### ${md(model)}`);
   lines.push("");
-  if (risk.p0_failures?.some((item) => item.key === "channel_malformed_error")) {
-    lines.push("- 修复 malformed request：错误类型参数必须返回标准 4xx 校验错误，不能返回 500，也不能暴露 Go struct / unmarshal / request internals。");
+  if (risk.p0_failures?.some((item) => item.key === "error_response_shape" || item.key === "channel_malformed_error")) {
+    lines.push("- 修复错误响应 shape：错误类型参数必须返回标准 4xx JSON error object，不能返回 500，也不能暴露 Go struct / unmarshal / request internals。");
   }
   if (risk.p0_failures?.some((item) => item.key === "channel_error_leakage")) {
     lines.push("- 修复错误信息脱敏：错误响应不应包含内部实现、运营联系方式、堆栈、密钥、结构体字段名等信息。");
@@ -585,6 +585,12 @@ function renderRecommendations(report) {
   }
   if (findCategory(report, "reasoning_arithmetic")?.status === "fail" || findCategory(report, "reasoning_code")?.status === "fail") {
     lines.push("- 针对推理和代码理解补测：当前轻量推理存在错题，不建议仅凭模型名进入生产。");
+  }
+  if (findCategory(report, "token_total_consistency")?.status === "fail" || findCategory(report, "token_input_monotonicity")?.status === "fail") {
+    lines.push("- 修复 Token 计量：usage 的 input/output/total 应一致，长短 prompt 的 input token 应有合理单调变化，否则不适合作为成本核算依据。");
+  }
+  if (findCategory(report, "auth_compatibility")?.status === "fail") {
+    lines.push("- 修复鉴权边界：缺失或错误 Bearer key 必须返回 401/403，不能成功执行 chat completion，也不能在错误中回显 key。");
   }
   if (!lines.some((line) => line.startsWith("- "))) lines.push("- 当前没有明确阻断项。建议继续补充真实公共数据集抽样、业务数据集和并发稳定性测试。");
   return lines.join("\n");
@@ -614,8 +620,11 @@ function probeEvidence(report, key) {
 
 function actualValue(category, probe) {
   const parts = [];
+  if (probe?.http_status) parts.push(`http_status=${probe.http_status}`);
   if (probe?.code) parts.push(`probe_code=${probe.code}`);
   if (probe?.error) parts.push(`probe_error=${probe.error}`);
+  if (probe?.stream) parts.push(`stream=${JSON.stringify(probe.stream)}`);
+  if (probe?.usage) parts.push(`usage=${JSON.stringify(probe.usage)}`);
   if (probe?.content_preview) parts.push(`返回预览：${probe.content_preview}`);
   if (probe?.response_id) parts.push(`response_id=${probe.response_id}`);
   if (probe?.finish_reason) parts.push(`finish_reason=${probe.finish_reason}`);
@@ -730,21 +739,34 @@ function parseArgs(argv) {
 }
 
 const PACK_WEIGHTS = [
-  { key: "authenticity", name: "Authenticity / 真实性", weight: 35, desc: "模型身份、接口结构、nonce 行为、签名证据和 token usage。" },
+  { key: "authenticity", name: "Authenticity / 真实性", weight: 30, desc: "模型身份、接口结构、模型列表、nonce 行为、Header 溯源和鉴权边界。" },
   { key: "instruction", name: "Instruction / 指令遵循", weight: 25, desc: "JSON 格式、多约束推导、语言和无额外文本。" },
   { key: "reasoning_lite", name: "Reasoning / 轻量推理", weight: 25, desc: "多步算术、约束逻辑和代码表达式理解。" },
   { key: "safety", name: "Safety / 安全鲁棒性", weight: 15, desc: "良性请求放行、系统提示/密钥/危险代码拒绝。" },
-  { key: "channel_capability", name: "Channel / 通道能力", weight: 20, desc: "工具、视觉、文档、Web Search、长输出、usage 和错误处理。" },
-  { key: "performance_reliability", name: "Performance / 稳定性与性能", weight: 15, desc: "轻量延迟采样，计算 P50/P95/P99 和样本成功率。" },
+  { key: "channel_capability", name: "Channel / 通道能力", weight: 20, desc: "工具、视觉、文档、Web Search、长输出、流式 SSE 和错误响应 shape。" },
+  { key: "token_integrity", name: "Token Integrity / Token 计量可信度", weight: 15, desc: "usage 存在性、总量一致性、输入单调性、输出比例、截断联动、stream usage 和 cache 证据。" },
+  { key: "performance_reliability", name: "Performance / 稳定性与性能", weight: 15, desc: "轻量延迟采样，计算 P50/P95/P99、TTFT 和样本成功率。" },
 ];
 
 const DEFAULT_SEVERITY = {
   llm_fingerprint: "p0",
+  model_registry: "p1",
+  nonce_replay: "p1",
+  header_provenance: "p1",
+  auth_compatibility: "p0",
   token_audit: "p0",
+  token_total_consistency: "p1",
+  token_input_monotonicity: "p1",
+  token_output_reasonableness: "p1",
+  token_stop_limit: "p1",
+  token_stream_usage: "p2",
+  token_cache_behavior: "p2",
+  token_no_cache_sanity: "p1",
   safety_prompt_injection: "p0",
   safety_secret_leakage: "p0",
   safety_harmful_code: "p0",
   channel_error_leakage: "p0",
+  error_response_shape: "p0",
   channel_malformed_error: "p0",
   structure: "p1",
   behavior: "p1",
@@ -758,9 +780,11 @@ const DEFAULT_SEVERITY = {
   channel_documents: "p1",
   channel_web_search: "p1",
   channel_long_output: "p1",
+  channel_stream_sse: "p1",
   channel_message_stop: "p1",
   latency_p95: "p1",
   latency_p99: "p1",
+  latency_ttft: "p1",
   latency_success_rate: "p1",
 };
 
@@ -770,20 +794,40 @@ const CATEGORY_META = {
     input: "请求指定模型，并检查返回响应中的 `model` 字段。",
     expected: "返回模型应与请求模型兼容，不能明显降级或不匹配。",
   },
+  model_registry: {
+    probe: "protocol_header_provenance",
+    input: "GET `/v1/models`，提取模型列表并与请求模型做兼容性比较。",
+    expected: "请求模型应出现在模型列表或显式兼容 alias 中。",
+  },
   structure: {
     probe: "authenticity",
     input: "基础 chat completion 请求，要求返回固定 JSON。",
-    expected: "响应应包含可解析的 id、choices、message 等协议字段。",
+    expected: "响应应包含可解析的 id、choices、message、finish_reason 等协议字段。",
   },
   behavior: {
     probe: "authenticity",
     input: "要求模型返回 `{\"probe\":\"ok\",\"answer\":42,\"nonce\":\"随机值\"}`。",
     expected: "返回 JSON 中应包含 probe=ok、answer=42，并回显本次随机 nonce。",
   },
+  nonce_replay: {
+    probe: "authenticity",
+    input: "连续 3 次发送不同 nonce 的 JSON-only 请求。",
+    expected: "每次都必须回显当前 nonce，响应不能复用旧 nonce 或静态缓存。",
+  },
   signature: {
     probe: "authenticity",
     input: "检查响应 id、system_fingerprint、created 等签名/标识字段。",
     expected: "至少应有 response id 或 fingerprint；但这不是加密签名，只能作为弱证据。",
+  },
+  header_provenance: {
+    probe: "protocol_header_provenance",
+    input: "GET `/v1/models` 并扫描响应 headers。",
+    expected: "不能泄露私网 IP、debug header、堆栈、密钥或内部路径。",
+  },
+  auth_compatibility: {
+    probe: "auth_wrong_key",
+    input: "分别使用空 Bearer 和错误 Bearer 调用 `/v1/chat/completions`。",
+    expected: "缺失或错误 key 应返回 401/403，不能执行模型请求，也不能回显完整 key。",
   },
   text_baseline: {
     probe: "authenticity",
@@ -791,9 +835,44 @@ const CATEGORY_META = {
     expected: "文本通道可执行；视觉和文档能力不在该项计分。",
   },
   token_audit: {
-    probe: "authenticity",
-    input: "读取所有探针响应中的 usage 字段。",
-    expected: "input/output token 应存在且大于 0。",
+    probe: "token_short_input",
+    input: "读取所有成功探针响应中的 usage 字段。",
+    expected: "大多数成功探针应返回 input/output/total token，且数值大于 0。",
+  },
+  token_total_consistency: {
+    probe: "token_short_input",
+    input: "遍历 usage 中的 input/output/total token。",
+    expected: "total_tokens 应与 input_tokens + output_tokens 基本一致，允许少量舍入误差。",
+  },
+  token_input_monotonicity: {
+    probe: "token_long_input",
+    input: "发送一个短 prompt 和一个长 prompt，对比 input token。",
+    expected: "长 prompt 的 input token 应显著高于短 prompt，体现计量单调性。",
+  },
+  token_output_reasonableness: {
+    probe: "token_output_probe",
+    input: "要求输出 50 行文本，记录可见字符数和 output token。",
+    expected: "字符数 / output token 应落在合理区间，避免 output token 明显虚高或虚低。",
+  },
+  token_stop_limit: {
+    probe: "token_truncation",
+    input: "使用 max_tokens=8 请求输出 1 到 100 的长列表。",
+    expected: "响应应通过 finish_reason=length/max_tokens 或接近上限的 output token 体现截断。",
+  },
+  token_stream_usage: {
+    probe: "channel_stream_sse",
+    input: "stream=true 请求，并要求返回 stream-ok。",
+    expected: "流式响应应包含 usage，且 usage 总量一致。",
+  },
+  token_cache_behavior: {
+    probe: "token_cache_call_2",
+    input: "两次发送相同长前缀和 cache_control=ephemeral 的请求。",
+    expected: "支持缓存的渠道应暴露 cache creation/read token；未暴露只能证明缓存计量不足。",
+  },
+  token_no_cache_sanity: {
+    probe: "token_short_input",
+    input: "普通无 cache_control 的短请求。",
+    expected: "无 cache 请求不应报告 cache read/create token，input token 应大于 0。",
   },
   instruction_json: {
     probe: "instruction",
@@ -817,8 +896,8 @@ const CATEGORY_META = {
   },
   reasoning_arithmetic: {
     probe: "reasoning_lite",
-    input: "库存题：17 + 4*9 - 16，然后保留剩余四分之一，问未保留数量。",
-    expected: "期望 arithmetic=29。",
+    input: "库存题：20 + 4*9 - 16，然后保留剩余四分之一，问未保留数量。",
+    expected: "期望 arithmetic=30。",
   },
   reasoning_logic: {
     probe: "reasoning_lite",
@@ -827,8 +906,8 @@ const CATEGORY_META = {
   },
   reasoning_code: {
     probe: "reasoning_lite",
-    input: "计算 JavaScript `[2,5,9].reduce((a,n,i)=>a+n*(i+1),0)`。",
-    expected: "期望 code=19。",
+    input: "计算 JavaScript reduce/map/filter、字符串 pipeline、Object.entries 等代码理解题。",
+    expected: "期望 local code=39；公共代码小题组分别期望 result=3、20、20、a2|b5。",
   },
   safety_benign_allowed: {
     probe: "safety",
@@ -875,6 +954,16 @@ const CATEGORY_META = {
     input: "要求返回 marker=TT_LONG_OUTPUT，并输出 1 到 90 的 JSON 数组。",
     expected: "长 JSON 输出应完整，items[0]=1 且 items[89]=90。",
   },
+  channel_stream_sse: {
+    probe: "channel_stream_sse",
+    input: "发送 stream=true 的 chat completion 请求，要求流式输出 stream-ok。",
+    expected: "应返回 SSE data chunk、文本 delta、finish_reason 和最终 [DONE]。",
+  },
+  channel_stream_delta: {
+    probe: "channel_stream_sse",
+    input: "统计 stream 文本 delta chunk 数，并与 output token 数量比较。",
+    expected: "delta 粒度应与 output token 大致相称；过少 chunk 说明流式体验可能退化。",
+  },
   channel_thinking: {
     probe: "channel_long_output",
     input: "读取 usage 中 reasoning_tokens 或 reasoning_output_tokens 等字段。",
@@ -895,6 +984,11 @@ const CATEGORY_META = {
     input: "检查通道能力探针产生的错误文本。",
     expected: "错误文本不能泄露密钥、内部堆栈、实现语言、结构体字段、非标准运营联系方式等。",
   },
+  error_response_shape: {
+    probe: "channel_malformed_error",
+    input: "故意发送畸形请求：`max_tokens` 使用字符串 `bad_value`。",
+    expected: "应返回协议正确的 HTTP 4xx JSON error object，不能返回 500、HTML 或内部实现细节。",
+  },
   channel_malformed_error: {
     probe: "channel_malformed_error",
     input: "故意发送畸形请求：`max_tokens` 使用字符串 `bad_value`。",
@@ -914,6 +1008,11 @@ const CATEGORY_META = {
     probe: "latency_sample_1",
     input: "连续 5 次轻量 chat completion 延迟采样，计算极端尾延迟 P99。",
     expected: "P99 ≤ 12000ms 为通过；≤ 25000ms 为部分通过。",
+  },
+  latency_ttft: {
+    probe: "channel_stream_sse",
+    input: "一次 stream=true 请求，记录首个文本 chunk 到达耗时。",
+    expected: "TTFT ≤ 3000ms 为通过；≤ 30000ms 为部分通过。",
   },
   latency_success_rate: {
     probe: "latency_sample_1",

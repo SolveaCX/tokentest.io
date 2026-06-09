@@ -4,3 +4,7 @@ npm-debug.log*
 .env
 .DS_Store
 test/
+data/
+report*.html
+research/*case-trace*.html
+research/archive/*case-trace*.html
