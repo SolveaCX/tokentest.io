@@ -25,42 +25,59 @@
   nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);background:rgba(10,10,10,.72);border-bottom:1px solid var(--line2)}
   .navIn{display:flex;align-items:center;justify-content:space-between;height:60px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
+  .brandText{white-space:nowrap}
   .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;font-family:var(--mono);font-weight:600;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--red),#b3121b);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
   .navLinks{display:flex;gap:26px;font-size:14px}
   .navLinks a{color:var(--mut)} .navLinks a:hover{color:var(--txt)}
   .navRight{display:flex;align-items:center;gap:14px}
+  .manualBtn{font-size:13px;color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:5px 10px;background:rgba(255,255,255,.04)}
+  .manualBtn:hover{border-color:var(--blue);color:#fff}
   .langBtn{font-size:13px;color:var(--mut);background:none;border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer;font-family:var(--mono)}
   .langBtn:hover{color:var(--txt)}
-  @media(max-width:760px){.navLinks{display:none}}
+  @media(max-width:760px){.navLinks{display:none}.manualBtn{font-size:12px;padding:5px 8px}}
 
-  .hero{padding:70px 0 26px;text-align:center}
-  .avatars{display:flex;justify-content:center;align-items:center;margin-bottom:22px;flex-wrap:wrap}
+  .hero{position:relative;padding:46px 0 20px;text-align:center}
+  .heroMain{max-width:800px;margin:0 auto}
+  .avatars{display:flex;justify-content:center;align-items:center;margin-bottom:16px;flex-wrap:wrap}
   .avatars .av{width:34px;height:34px;border-radius:50%;border:2px solid var(--bg);margin-left:-9px;background:#222;display:grid;place-items:center;font-size:12px;font-family:var(--mono);color:#fff}
   .avatars .av:first-child{margin-left:0}
   .trustline{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:6px 14px;margin-left:14px}
   .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  h1{font-size:clamp(32px,5.2vw,56px);line-height:1.05;letter-spacing:-.03em;margin:0 0 18px;font-weight:700}
+  h1{font-size:clamp(32px,4.8vw,52px);line-height:1.02;letter-spacing:-.02em;margin:0 0 14px;font-weight:700}
   h1 .accent{background:linear-gradient(90deg,var(--red),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{max-width:640px;margin:0 auto;font-size:18px;color:var(--mut)}
-  .heroSafety{margin-top:18px;font-size:13px;color:var(--mut2);font-family:var(--mono)}
+  html[lang="zh"] h1{font-size:clamp(34px,4.4vw,50px);line-height:.98;letter-spacing:0;margin-bottom:12px}
+  .sub{max-width:760px;margin:0 auto;font-size:16px;line-height:1.55;color:var(--mut)}
+  html[lang="zh"] .sub{max-width:700px;font-size:15px;line-height:1.45}
+  .heroSafety{margin-top:12px;font-size:12px;color:var(--mut2);font-family:var(--mono)}
+  .flatkeyStrip{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:0 0 10px;color:var(--mut2);font-size:12.5px;line-height:1.35;text-align:right}
+  .flatkeyStrip a{color:var(--blue);font-family:var(--mono)}
+  .flatkeyStrip a:hover{text-decoration:underline}
+  @media(max-width:620px){.hero{padding-top:34px}.avatars{margin-bottom:12px}h1{font-size:clamp(30px,10vw,42px);line-height:1.04}.sub{font-size:14px;line-height:1.5}.flatkeyStrip{justify-content:flex-start;text-align:left;font-size:12px}}
 
-  .console{margin:34px auto 0;max-width:960px}
+  .console{margin-top:34px;margin-left:50%;width:min(1440px,calc(100vw - 176px));max-width:none;transform:translateX(-50%);text-align:left}
+  @media(max-width:1280px){.console{width:min(1080px,calc(100vw - 72px))}}
+  @media(max-width:760px){.console{width:calc(100vw - 24px)}}
   .card{background:linear-gradient(180deg,var(--panel),#0c0c0d);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -40px rgba(0,0,0,.9)}
-  .cardHead{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line2)}
+  .cardHead{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line2);gap:14px}
   .cardHead h2{font-size:15px;margin:0;font-weight:600;letter-spacing:-.01em}
   .cardHead .tag{font-family:var(--mono);font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
-  .grid2{display:grid;grid-template-columns:1.1fr .9fr}
-  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
-  .pad{padding:22px} .pad+.pad{border-left:1px solid var(--line2)}
-  @media(max-width:820px){.pad+.pad{border-left:none;border-top:1px solid var(--line2)}}
+  .evalGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,420px);gap:16px;align-items:stretch}
+  .evalPanel{min-width:0;height:100%}
+  .verifyPanel{display:flex;flex-direction:column}
+  .verifyPanel .pad{flex:1;display:flex;min-height:0}
+  .evalPanel .cardHead{min-height:58px}
+  .verifyPanel .cardHead{justify-content:flex-start}
+  @media(max-width:980px){.evalGrid{grid-template-columns:1fr}.verifyPanel{order:2}}
+  .pad{padding:22px;text-align:left}
 
-  label{display:block;font-size:12px;color:var(--mut);margin:0 0 7px;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+  label{display:block;font-size:12px;color:var(--mut);margin:0 0 7px;text-align:left;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
   .field{margin-bottom:16px}
   input,select,textarea{width:100%;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;color:var(--txt);font-family:var(--mono);font-size:14px;padding:12px 13px;outline:none;transition:.15s}
   input:focus,select:focus,textarea:focus{border-color:rgba(251,44,54,.55);box-shadow:0 0 0 3px rgba(251,44,54,.12)}
   input::placeholder,textarea::placeholder{color:var(--mut2)}
   textarea#models{min-height:64px;resize:vertical;line-height:1.7}
-  .modelHead{display:flex;justify-content:space-between;align-items:center}
+  .modelHead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .modelHead label{margin-bottom:0}
   .discover{background:none;border:0;color:var(--blue);font-size:12px;font-family:var(--mono);cursor:pointer;text-transform:none;letter-spacing:0;padding:0}
   .discover:hover{text-decoration:underline}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -69,18 +86,21 @@
   .modes{display:inline-flex;gap:2px;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:16px}
   .modes button{background:transparent;border:0;color:var(--mut);font-family:var(--mono);font-size:13px;padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s}
   .modes button.active{background:rgba(255,255,255,.08);color:var(--txt)}
+  .pad>.modes{display:flex;width:max-content;margin-left:auto;margin-right:auto}
   .run{width:100%;margin-top:4px;background:var(--red);color:#fff;border:0;border-radius:11px;font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:.15s;box-shadow:0 8px 28px -10px rgba(251,44,54,.7)}
   .run:hover{filter:brightness(1.07)} .run:disabled{opacity:.6;cursor:default}
   .runNote{text-align:center;font-size:12px;color:var(--mut2);margin-top:10px;font-family:var(--mono)}
 
-  .checks{list-style:none;margin:0;padding:0}
-  .checks li{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line2);align-items:flex-start}
+  .checks{list-style:none;margin:0;padding:0;text-align:left;display:grid;grid-template-rows:repeat(5,1fr);width:100%;min-height:0}
+  .checks li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:14px;padding:14px 0;border-bottom:1px solid var(--line2);align-items:center}
   .checks li:last-child{border-bottom:0}
   .ci{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:12px;background:rgba(251,44,54,.14);color:var(--red);font-family:var(--mono)}
-  .checks b{font-size:13.5px;font-weight:600} .checks .small{display:block;color:var(--mut2);margin-top:2px}
+  .checks li>div{min-width:0;text-align:left}
+  .checks b{display:block;font-size:13.5px;font-weight:600;line-height:1.35;text-align:left}
+  .checks .small{display:block;color:var(--mut2);margin-top:3px;line-height:1.45;text-align:left}
 
-  /* batch matrix */
-  .results{margin-top:26px}
+  /* result reports */
+  .results{margin-top:26px;overflow:visible;min-width:0}
   .resHead{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line2);gap:12px;flex-wrap:wrap}
   .resHead h3{margin:0;font-size:15px}
   .resHead .sum{font-family:var(--mono);font-size:12px;color:var(--mut)}
@@ -92,11 +112,6 @@
   .histItem:hover{background:rgba(255,255,255,.03)}
   .histItem .hm{font-family:var(--mono);font-size:13px} .histItem .hs{font-family:var(--mono);font-size:12px;color:var(--mut)}
   .histEmpty{color:var(--mut);text-align:center;padding:24px;font-size:13px}
-  .matrix{width:100%;border-collapse:collapse;font-size:13.5px}
-  .matrix th{text-align:left;color:var(--mut2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:12px 22px;border-bottom:1px solid var(--line2)}
-  .matrix td{padding:13px 22px;border-bottom:1px solid var(--line2);vertical-align:middle}
-  .matrix tr.row{cursor:pointer;transition:.12s} .matrix tr.row:hover{background:rgba(255,255,255,.025)}
-  .matrix tr:last-child td{border-bottom:0}
   .mModel{font-family:var(--mono);font-weight:500}
   .scoreCell{font-family:var(--mono);font-weight:600;font-size:15px}
   .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden;width:70px}
@@ -112,28 +127,76 @@
 	  .detail{background:#080808}
 	  .detail td{padding:0}
 	  .detailIn{padding:16px 22px 22px}
-	  .detailPanel{border:1px solid var(--line2);border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));overflow:hidden;max-width:calc(100vw - 48px);margin:0 auto}
-	  .detailTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start;padding:16px 18px;border-bottom:1px solid var(--line2)}
+	  .detailPanel{border:1px solid var(--line2);border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));overflow:visible;width:100%;max-width:100%;min-width:0;margin:0}
+	  .detailTop{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:start;padding:14px 16px;border-bottom:1px solid var(--line2)}
 	  .detailKicker{font-family:var(--mono);font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
 	  .detailTitle{font-size:14px;color:var(--txt);font-weight:500;line-height:1.55;overflow-wrap:anywhere}
-	  .detailStats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+	  .detailStats{display:none}
 	  .statTile{min-width:88px;border:1px solid var(--line2);border-radius:8px;padding:8px 10px;background:rgba(0,0,0,.22)}
 	  .statTile b{display:block;font-family:var(--mono);font-size:16px;color:var(--txt);line-height:1.1}
 	  .statTile span{display:block;margin-top:4px;font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em}
-	  .detailFacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line2);border-bottom:1px solid var(--line2)}
-	  .fact{background:#0a0a0a;padding:11px 14px;min-width:0}
-	  .fact span{display:block;font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
-	  .fact b{display:block;font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 	  .catGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px}
-	  .packGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:14px 14px 0}
+	  .packGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;padding:14px 14px 0}
 	  .packTile{border:1px solid var(--line2);border-radius:8px;padding:12px;background:rgba(0,0,0,.22)}
-	  .packTile b{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+	  .packTile b{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;font-size:13px;line-height:1.35;min-height:36px}
 	  .packTile span{display:block;font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:7px}
+	  .packTile .dimWeight{color:var(--mut2)}
 	  .packSection{padding:14px;border-top:1px solid var(--line2)}
 	  .packSection+.packSection{padding-top:0;border-top:0}
 	  .packHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 	  .packHead h4{margin:0;font-size:13px}
 	  .packHead p{margin:3px 0 0;color:var(--mut2);font-size:12px}
+	  .detailSectionTitle{margin:16px 14px 8px;font-size:15px;letter-spacing:-.01em}
+	  .dimSection{margin:14px;border:1px solid var(--line2);border-radius:8px;background:rgba(0,0,0,.18);overflow:hidden;min-width:0}
+	  .dimSection+.dimSection{margin-top:10px}
+	  .dimSection summary{list-style:none;cursor:pointer;color:inherit;font-family:var(--sans)}
+	  .dimSection summary::-webkit-details-marker{display:none}
+	  .dimSummary{display:block;padding:14px 16px;border-bottom:1px solid var(--line2)}
+	  .dimSection:not([open]) .dimSummary{border-bottom:0}
+	  .dimSummary h4{margin:0;font-size:14px;text-align:left}
+	  .dimSummary p{margin:6px 0 0;color:var(--mut2);font-size:12px;max-width:none;text-align:left}
+	  .dimMeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-start;padding:0 14px 12px}
+	  .dimMini{border:1px solid var(--line2);border-radius:8px;padding:7px 9px;background:#0a0a0a;min-width:76px;text-align:right}
+	  .dimMini span{display:block;color:var(--mut2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+	  .dimMini b{display:block;font-family:var(--mono);font-size:13px;font-weight:600;margin-top:2px}
+	  .dimTableWrap{display:block;width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;border-top:0;background:#090909;-webkit-overflow-scrolling:touch}
+	  .dimTable{width:100%;min-width:1180px;border-collapse:collapse;table-layout:fixed;font-size:12.5px}
+	  .dimTable th{background:#101012;color:var(--mut2);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:500;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line2);white-space:normal}
+	  .dimTable td{padding:11px 10px;border-bottom:1px solid var(--line2);vertical-align:top;color:var(--mut);overflow-wrap:anywhere;word-break:break-word}
+	  .dimTable tr:last-child td{border-bottom:0}
+	  .dimTable th:nth-child(1),.dimTable td:nth-child(1){width:190px}
+	  .dimTable th:nth-child(2),.dimTable td:nth-child(2){width:82px}
+	  .dimTable th:nth-child(3),.dimTable td:nth-child(3){width:92px}
+	  .dimTable th:nth-child(4),.dimTable td:nth-child(4){width:112px}
+	  .dimTable th:nth-child(5),.dimTable td:nth-child(5){width:220px}
+	  .dimTable th:nth-child(6),.dimTable td:nth-child(6){width:260px}
+	  .dimTable th:nth-child(7),.dimTable td:nth-child(7){width:320px}
+	  .dimItemName{display:block;color:var(--txt);font-weight:600;line-height:1.4}
+	  .dimItemKey{display:block;font-family:var(--mono);font-size:11px;color:var(--mut2);margin-top:5px}
+	  .dimScoreText{font-family:var(--mono);color:var(--txt);font-weight:600}
+	  .dimScoreBar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:7px}
+	  .dimScoreBar span{display:block;height:100%;border-radius:999px}
+	  .dimMethod,.dimStandard,.dimEvidence{line-height:1.55}
+	  .dimEvidence details{margin-top:7px}
+	  .dimEvidence summary{font-size:11px;color:var(--blue)}
+	  .dimFullText{margin-top:7px;max-height:150px;overflow:auto;white-space:pre-wrap;color:var(--mut);font-size:11.5px;line-height:1.5}
+	  .dimCaseList{display:grid;gap:6px;margin-top:8px}
+	  .dimCase{border:1px solid var(--line2);border-radius:7px;padding:7px 8px;background:rgba(255,255,255,.025)}
+	  .dimCase b{display:block;color:var(--txt);font-size:11.5px;margin-bottom:3px}
+	  .dimCase span{font-family:var(--mono);font-size:11px;color:var(--mut2)}
+	  .dimMobileList{display:none}
+	  .dimMobileCard{border:1px solid var(--line2);border-radius:8px;background:#090909;padding:11px;min-width:0}
+	  .dimMobileHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line2);padding-bottom:8px;margin-bottom:9px}
+	  .dimMobileTitle{font-size:13px;font-weight:600;color:var(--txt);overflow-wrap:anywhere}
+	  .dimMobileKey{display:block;font-family:var(--mono);font-size:11px;color:var(--mut2);margin-top:4px}
+	  .dimMobileStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:9px}
+	  .dimMobileStat{border:1px solid var(--line2);border-radius:7px;padding:7px 8px;background:rgba(255,255,255,.018);min-width:0}
+	  .dimMobileStat span{display:block;font-size:10px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em}
+	  .dimMobileStat b{display:block;margin-top:3px;font-family:var(--mono);font-size:12px;color:var(--txt)}
+	  .dimMobileField{border-top:1px solid var(--line2);padding-top:7px;margin-top:7px;color:var(--mut);font-size:12.5px;line-height:1.55}
+	  .dimMobileField span{display:block;font-size:10px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+	  .dimMobileField details{margin-top:2px}
+	  .dimMobileField summary{font-size:12px;color:var(--blue)}
 	  .catCard{border:1px solid var(--line2);border-radius:8px;background:rgba(0,0,0,.22);padding:12px;min-height:124px}
 	  .catCard.pass{border-color:rgba(0,199,88,.18)}
 	  .catCard.partial{border-color:rgba(249,156,0,.20)}
@@ -157,11 +220,31 @@
 	  .rawBox{border-top:1px solid var(--line2);padding:12px 14px;background:rgba(0,0,0,.18)}
 	  pre{background:#0c0c0d;border:1px solid var(--line2);border-radius:8px;padding:13px;overflow:auto;font-family:var(--mono);font-size:11.5px;color:var(--mut);max-height:240px;margin:10px 0 0;text-align:left}
 	  details summary{cursor:pointer;color:var(--mut);font-size:12px;font-family:var(--mono)}
-	  .emptyRow td{color:var(--mut);padding:26px 22px;text-align:center}
-	  @media(max-width:900px){.detailTop{grid-template-columns:1fr}.detailStats{justify-content:flex-start}.detailFacts{grid-template-columns:repeat(2,minmax(0,1fr))}.catGrid{grid-template-columns:1fr}.packGrid{grid-template-columns:1fr 1fr}.evidenceStrip{grid-template-columns:1fr}}
-	  @media(max-width:620px){.catGrid,.detailFacts{grid-template-columns:1fr}.detailIn{padding:12px}}
+  .emptyRow td{color:var(--mut);padding:26px 22px;text-align:center}
+	  .reportList{display:grid;gap:16px;padding:16px;background:#080808;border-radius:0 0 18px 18px;min-width:0}
+	  .reportEmpty{padding:30px 18px;text-align:center;color:var(--mut);font-size:13px;border:1px dashed var(--line2);border-radius:10px;background:rgba(255,255,255,.018)}
+	  .modelReport{border:1px solid var(--line2);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));overflow:visible;min-width:0}
+	  .modelReport.collapsed .modelReportHead{border-bottom:0}
+	  .modelReportHeaderButton{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+	  .modelReportHeaderButton:focus-visible{outline:2px solid rgba(48,128,255,.8);outline-offset:2px;border-radius:12px}
+	  .modelReportHead{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(120px,.45fr) minmax(140px,.55fr) minmax(260px,1.6fr);gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line2)}
+	  .modelReportHead.pending{grid-template-columns:minmax(180px,1fr) minmax(180px,2fr)}
+	  .reportMetric{min-width:0}
+	  .reportMetric span{display:block;font-size:10.5px;color:var(--mut2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+	  .reportMetric b{display:block;font-family:var(--mono);font-size:14px;color:var(--txt);font-weight:600;overflow-wrap:anywhere}
+	  .reportMetric .bar{width:100%;max-width:150px}
+	  .modelReportBody{padding:14px;min-width:0}
+	  @media(max-width:900px){.console{width:min(760px,calc(100vw - 24px))}.modelReportHead{grid-template-columns:1fr 1fr}.modelReportHead.pending{grid-template-columns:1fr}.detailTop{grid-template-columns:1fr}.detailStats{justify-content:flex-start}.catGrid{grid-template-columns:1fr}.packGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.dimSummary{display:block}.dimMeta{justify-content:flex-start}.evidenceStrip{grid-template-columns:1fr}}
+	  @media(max-width:760px){
+	    .dimMobileList{display:none}
+	  }
+	  @media(max-width:620px){.reportList{padding:10px}.modelReportHead{grid-template-columns:1fr;padding:12px}.modelReportBody{padding:10px}.catGrid{grid-template-columns:1fr}.packGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.detailIn{padding:12px}.dimSection{margin:10px}.detailSectionTitle{margin-left:10px;margin-right:10px}}
+	  @media(max-width:420px){.packGrid{grid-template-columns:1fr}}
 
-  .advanced{margin-top:14px} .advanced summary{font-size:12px}
+  .advanced{margin-top:14px;text-align:center}
+  .advanced summary{display:inline-block;font-size:12px}
+  .advanced[open]{text-align:left}
+  .advanced[open] summary{display:block;text-align:center}
   .twoBtn{display:flex;gap:8px;margin-top:10px}
   .sbtn{flex:1;background:#0a0a0a;border:1px solid var(--line);color:var(--mut);border-radius:9px;padding:9px;font-size:13px;font-family:var(--mono);cursor:pointer}
   .sbtn:hover{color:var(--txt)}
@@ -186,13 +269,6 @@
   .capMsg.good{color:var(--green)} .capMsg.err{color:var(--red)}
   .capRefresh{background:none;border:0;color:var(--mut);font-size:12px;font-family:var(--mono);cursor:pointer;margin-top:2px}
 
-  .how{padding:60px 0 20px}
-  .how h2{font-size:26px;letter-spacing:-.02em;text-align:center;margin:0 0 30px}
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  @media(max-width:720px){.steps{grid-template-columns:1fr}}
-  .step{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:20px}
-  .step .n{font-family:var(--mono);color:var(--red);font-size:13px;margin-bottom:8px}
-  .step h3{margin:0 0 6px;font-size:15px} .step p{margin:0;color:var(--mut);font-size:14px}
   footer{border-top:1px solid var(--line2);margin-top:56px;padding:28px 0;color:var(--mut2);font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;background:#161618;border:1px solid var(--line);border-radius:10px;padding:11px 18px;font-size:13px;font-family:var(--mono);transition:.25s;z-index:120;pointer-events:none;max-width:90vw}
@@ -201,34 +277,39 @@
 </head>
 <body>
 <nav><div class="wrap navIn">
-  <a class="brand" href="/"><span class="mark">TT</span> TokenTest<span class="muted">.io</span></a>
+  <a class="brand" href="/"><span class="mark">TT</span><span class="brandText">TokenTest<span class="muted">.io</span></span></a>
   <div class="navLinks">
-    <a href="#how" data-i18n="nav_how">How it works</a>
     <a href="#verify" data-i18n="nav_verify">Verify</a>
-    <a href="https://github.com/mguozhen/tokentest.io" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/SolveaCX/tokentest.io" target="_blank" rel="noopener">GitHub</a>
   </div>
   <div class="navRight">
+    <a class="manualBtn" href="/manual.html" data-i18n="nav_manual">Manual</a>
     <button class="langBtn" id="langBtn">中文</button>
     <button class="run" id="runTop" style="width:auto;padding:8px 18px;font-size:14px;box-shadow:none" data-i18n="run">Run</button>
   </div>
 </div></nav>
 
 <header class="hero wrap">
-  <div class="avatars">
-    <span class="av">A</span><span class="av">K</span><span class="av">M</span><span class="av">R</span>
-    <span class="trustline"><span class="dot"></span><span data-i18n="trust">Trusted by router operators &amp; procurement teams</span></span>
+  <div class="heroMain">
+    <div class="avatars">
+      <span class="av">A</span><span class="av">K</span><span class="av">M</span><span class="av">R</span>
+      <span class="trustline"><span class="dot"></span><span data-i18n="trust">Trusted by router operators &amp; procurement teams</span></span>
+    </div>
+    <h1 data-i18n-html="h1">Evaluate model access risk<br><span class="accent">before production.</span></h1>
+    <p class="sub" data-i18n="sub">TokenTest is the black-box production-reference evaluation console for AI middle-layer buyers. Batch-test model capability, route protocol, token usage, safety boundaries and channel reliability in one run — your API key is never stored.</p>
+    <div class="heroSafety" data-i18n="safety">⛨ Black-box probing · for safety, prefer a test-only API key</div>
   </div>
-  <h1 data-i18n-html="h1">Evaluate model access risk<br><span class="accent">before production.</span></h1>
-  <p class="sub" data-i18n="sub">TokenTest is the black-box production-reference evaluation console for AI middle-layer buyers. Batch-test model capability, route protocol, token usage, safety boundaries and channel reliability in one run — your API key is never stored.</p>
-  <div class="heroSafety" data-i18n="safety">⛨ Black-box probing · for safety, prefer a test-only API key</div>
-
   <section class="console" id="verify">
-    <div class="card">
-      <div class="cardHead">
+    <div class="flatkeyStrip">
+      <span data-i18n="flatkey_bar">Found a model worth using? Buy and connect it on FlatKey.</span>
+      <a href="https://flatkey.ai/" target="_blank" rel="noopener">FlatKey →</a>
+    </div>
+    <div class="evalGrid">
+      <div class="card evalPanel runPanel">
+        <div class="cardHead">
           <h2 data-i18n="card_title">Evaluation Run</h2>
-        <span class="tag" data-i18n="card_tag">black-box · key not stored</span>
-      </div>
-      <div class="grid2">
+          <span class="tag" data-i18n="card_tag">black-box · key not stored</span>
+        </div>
         <div class="pad">
           <div class="modes" role="tablist">
             <button class="active" data-mode="quick" data-i18n="mode_quick">Quick</button>
@@ -248,7 +329,7 @@
               <label data-i18n="l_models">Target model(s)</label>
               <button class="discover" id="discoverBtn" data-i18n="discover">↻ discover models</button>
             </div>
-            <textarea id="models" spellcheck="false" placeholder="claude-opus-4-8, gpt-4o, ...">claude-opus-4-8</textarea>
+            <textarea id="models" spellcheck="false" placeholder="click discover models, or paste model ids separated by commas"></textarea>
             <div class="chips" id="chips"></div>
           </div>
           <button class="run" id="runProbe" data-i18n="run_btn">Start verification</button>
@@ -269,8 +350,12 @@
             </div>
           </details>
         </div>
+      </div>
+      <div class="card evalPanel verifyPanel">
+        <div class="cardHead">
+          <h2 data-i18n="what">What we verify</h2>
+        </div>
         <div class="pad">
-          <label data-i18n="what">What we verify</label>
           <ul class="checks">
             <li><span class="ci">M</span><div><b data-i18n="c_model">Model identity</b><span class="small" data-i18n="c_model_d">Actual model returned vs the model you requested</span></div></li>
             <li><span class="ci">U</span><div><b data-i18n="c_usage">Usage integrity</b><span class="small" data-i18n="c_usage_d">input / output / cache token evidence is present &amp; plausible</span></div></li>
@@ -284,39 +369,22 @@
 
     <div class="card results">
       <div class="resHead">
-        <h3 data-i18n="res_title">Comparison matrix</h3>
+        <h3 data-i18n="res_title">Evaluation reports</h3>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div class="actBtns" id="actBtns" style="display:none">
-            <button class="actBtn" id="btnShare" data-i18n="share">Share</button>
             <button class="actBtn" id="btnJson" data-i18n="exp_json">JSON</button>
             <button class="actBtn" id="btnCsv" data-i18n="exp_csv">CSV</button>
+            <button class="actBtn" id="btnHtml" data-i18n="exp_html">HTML</button>
           </div>
-          <button class="actBtn" id="btnHistory" style="display:none">🕘 <span data-i18n="history">History</span></button>
           <span class="sum" id="resSum" data-i18n="res_empty">no run yet</span>
         </div>
       </div>
-      <table class="matrix">
-        <thead><tr>
-          <th data-i18n="th_model">Model</th><th data-i18n="th_verdict">Production verdict</th>
-          <th data-i18n="th_score">Score</th><th data-i18n="th_resolved">Resolved</th>
-          <th data-i18n="th_latency">Latency</th><th></th>
-        </tr></thead>
-        <tbody id="matrixBody">
-          <tr class="emptyRow"><td colspan="6"><span data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare production-readiness evidence side by side.</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)" data-i18n="view_sample">view a sample report</a></td></tr>
-        </tbody>
-      </table>
+      <div class="reportList" id="reportList">
+        <div class="reportEmpty"><span data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare production-readiness evidence side by side.</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)" data-i18n="view_sample">view a sample report</a></div>
+      </div>
     </div>
   </section>
 </header>
-
-<section class="how wrap" id="how">
-  <h2 data-i18n="how_title">Three steps to a shareable evidence report</h2>
-  <div class="steps">
-    <div class="step"><div class="n">01 · <span data-i18n="how1_t">Configure</span></div><h3 data-i18n="how1_h">Point at any router</h3><p data-i18n="how1_p">Anthropic or OpenAI-compatible base URL, a test key, and the models you were sold.</p></div>
-    <div class="step"><div class="n">02 · <span data-i18n="how2_t">Probe</span></div><h3 data-i18n="how2_h">Production battery</h3><p data-i18n="how2_p">Identity, instruction following, reasoning, safety, channel capability and public benchmark probes — per model.</p></div>
-    <div class="step"><div class="n">03 · <span data-i18n="how3_t">Compare</span></div><h3 data-i18n="how3_h">Pass, review or block</h3><p data-i18n="how3_p">A stricter score, risk gate and per-category evidence for every model, side by side.</p></div>
-  </div>
-</section>
 
 <footer class="wrap">
   <span data-i18n="foot">© TokenTest.io — production-reference evaluation console for AI middle-layer buyers</span>
@@ -334,14 +402,6 @@
   </div>
 </div>
 
-<div class="mask" id="histMask">
-  <div class="cap" style="width:460px">
-    <div class="capHead"><b data-i18n="hist_title">Run history</b><span></span><button class="capX" id="histClose" aria-label="Close">×</button></div>
-    <div id="histList" style="max-height:50vh;overflow:auto"></div>
-    <div style="text-align:center;margin-top:10px"><button class="capRefresh" id="histClear" data-i18n="hist_clear">clear history</button></div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -349,10 +409,12 @@
 
   // ---------------- i18n ----------------
   const I18N = {
-    en:{ nav_how:"How it works",nav_verify:"Evaluate",run:"Run",trust:"Trusted by router operators & procurement teams",
+    en:{ nav_verify:"Evaluate",nav_manual:"Manual",run:"Run",trust:"Trusted by router operators & procurement teams",
       h1:'Evaluate model access risk<br><span class="accent">before production.</span>',
       sub:"TokenTest is the black-box production-reference evaluation console for AI middle-layer buyers. Batch-test model capability, route protocol, token usage, safety boundaries and channel reliability in one run — your API key is never stored.",
       safety:"⛨ Black-box probing · for safety, prefer a test-only API key",
+      flatkey_bar:"Found a model worth using? Buy and connect it on FlatKey.",
+      flatkey_k:"Need a production router behind the test?",flatkey_h:"Use FlatKey to unify model keys, routing and channel governance.",flatkey_p:"Test with TokenTest, then operate the winning channels with FlatKey.",
       card_title:"Evaluation Run",card_tag:"black-box · key not stored",mode_quick:"Quick",mode_truth:"Truth",mode_cost:"Cost",
       l_endpoint:"API endpoint",l_key:"API key",l_models:"Target model(s)",discover:"↻ discover models",
       run_btn:"Start evaluation",run_note:"Sends ~30 probes per model · est. $0.01–$0.30 each",
@@ -362,21 +424,20 @@
       c_nonce:"Nonce replay guard",c_nonce_d:"A unique nonce must echo back intact every run",
       c_claims:"Safety & protocol risk",c_claims_d:"Refuses secret leakage, credential theft and internal-error exposure",
       c_bill:"Billing boundary",c_bill_d:"Separates request-side evidence from real backend ledger",
-      res_title:"Comparison matrix",res_empty:"no run yet",th_model:"Model",th_verdict:"Production verdict",th_score:"Score",th_resolved:"Resolved",th_latency:"Latency",
+      res_title:"Evaluation reports",res_empty:"no run yet",th_model:"Model",th_verdict:"Production verdict",th_score:"Score",th_resolved:"Resolved",th_latency:"Latency",
       res_hint:"Enter a router, list one or more models, pass the human check, and compare production-readiness evidence side by side.",
-      how_title:"Three steps to a shareable evidence report",how1_t:"Configure",how1_h:"Point at any router",how1_p:"Anthropic or OpenAI-compatible base URL, a test key, and the models you were sold.",
-      how2_t:"Probe",how2_h:"Production battery",how2_p:"Identity, instruction following, reasoning, safety, channel capability and public benchmark probes — per model.",
-      how3_t:"Compare",how3_h:"Pass, review or block",how3_p:"A stricter score, risk gate and per-category evidence for every model, side by side.",
       foot:"© TokenTest.io — production-reference evaluation console for AI middle-layer buyers",foot2:"your key is never stored",
       cap_title:"Security check",cap_sub:"slide to fit the piece",cap_hint:"Drag the slider to complete the puzzle →",cap_refresh:"↻ refresh",
-      share:"⤴ Share",exp_json:"JSON",exp_csv:"CSV",link_copied:"Shareable link copied to clipboard",
+      share:"⤴ Share",exp_json:"JSON",exp_csv:"CSV",exp_html:"HTML",link_copied:"Shareable link copied to clipboard",
       shared_report:"Shared verification report — read-only",run_own:"Run your own →",
       history:"History",hist_title:"Run history",hist_clear:"clear history",hist_empty:"No past runs yet.",view_sample:"view a sample report",
       lang:"中文" },
-    zh:{ nav_how:"工作原理",nav_verify:"开始检测",run:"运行",trust:"受中转运营商与采购团队信赖",
-      h1:'评估模型接入风险<br><span class="accent">在进入生产之前。</span>',
-      sub:"TokenTest 是面向 AI 中间层买家的黑盒评测控制台。一次批量检测模型能力、路由协议、Token 用量、安全边界与通道稳定性 —— 你的 API Key 绝不存储。",
+    zh:{ nav_verify:"开始检测",nav_manual:"产品手册",run:"运行",trust:"受中转运营商与采购团队信赖",
+      h1:'生产前评估<span class="accent">模型接入风险</span>',
+      sub:"TokenTest 用黑盒探测批量评估模型能力、协议完整性、Token 用量、安全边界与通道稳定性，API Key 不会被存储。",
       safety:"⛨ 黑盒探测 · 为安全起见，建议使用测试专用 API Key",
+      flatkey_bar:"评测出合适模型后，去 FlatKey 选购并接入生产。",
+      flatkey_k:"测完模型，下一步怎么稳定接入？",flatkey_h:"用 FlatKey 统一管理模型 Key、路由和渠道治理。",flatkey_p:"TokenTest 负责选型评测，FlatKey 负责把胜出的通道稳定跑起来。",
       card_title:"评测运行",card_tag:"黑盒 · 不存储 Key",mode_quick:"快速",mode_truth:"深度",mode_cost:"成本",
       l_endpoint:"API 接口地址",l_key:"API Key",l_models:"目标模型（可多个）",discover:"↻ 自动发现模型",
       run_btn:"开始检测",run_note:"每个模型约 30 次探测 · 单个约 $0.01–$0.30",
@@ -386,14 +447,11 @@
       c_nonce:"Nonce 重放防护",c_nonce_d:"每次运行唯一 nonce 必须完整回显",
       c_claims:"安全与协议风险",c_claims_d:"拒绝密钥泄露、危险代码与内部错误外泄",
       c_bill:"计费边界",c_bill_d:"区分请求侧证据与真实后端账本",
-      res_title:"对比矩阵",res_empty:"尚未运行",th_model:"模型",th_verdict:"生产判定",th_score:"评分",th_resolved:"实际解析",th_latency:"延迟",
+      res_title:"评测报告",res_empty:"尚未运行",th_model:"模型",th_verdict:"生产判定",th_score:"评分",th_resolved:"实际解析",th_latency:"延迟",
       res_hint:"填入中转地址、列出一个或多个模型、通过人机验证，即可横向对比生产接入证据。",
-      how_title:"三步生成可分享的证据报告",how1_t:"配置",how1_h:"指向任意中转",how1_p:"Anthropic 或 OpenAI 兼容的 base URL、一个测试 Key，以及被卖给你的模型。",
-      how2_t:"探测",how2_h:"生产评测组",how2_p:"身份、指令遵循、推理、安全、通道能力与公共基准探针 —— 逐模型。",
-      how3_t:"对比",how3_h:"通过、复核或阻断",how3_p:"为每个模型给出严格分数、风险门槛和逐项证据，横向并列。",
       foot:"© TokenTest.io —— AI 中间层买家的生产参考评测控制台",foot2:"你的 Key 绝不存储",
       cap_title:"安全验证",cap_sub:"拖动拼好缺口",cap_hint:"拖动滑块完成拼图 →",cap_refresh:"↻ 刷新",
-      share:"⤴ 分享",exp_json:"JSON",exp_csv:"CSV",link_copied:"分享链接已复制到剪贴板",
+      share:"⤴ 分享",exp_json:"JSON",exp_csv:"CSV",exp_html:"HTML",link_copied:"分享链接已复制到剪贴板",
       shared_report:"分享的验证报告 —— 只读",run_own:"自己跑一次 →",
       history:"历史",hist_title:"运行历史",hist_clear:"清空历史",hist_empty:"暂无历史运行。",view_sample:"查看示例报告",
       lang:"EN" } };
@@ -466,6 +524,7 @@
 
   // ---------------- batch run ----------------
   let BATCH = []; // [{model, status:"pending"|done, data, retrying}]
+  const REPORT_OPEN = new Set();
   const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
   const RETRY=2; // extra attempts on transient upstream errors
   async function checkModel(token, model, onStatus){
@@ -490,6 +549,7 @@
     if(!models.length){ showToast(LANG==="zh"?"请至少填一个模型":"List at least one model"); return; }
     ensureToken(async(token)=>{
       if(!token){ showToast(LANG==="zh"?"需要先通过人机验证":"Human check required"); return; }
+      REPORT_OPEN.clear();
       BATCH = models.map(m=>({model:m,status:"pending",data:null})); renderMatrix();
       $("runProbe").disabled=true; $("runTop").disabled=true;
       for(let i=0;i<BATCH.length;i++){
@@ -500,7 +560,6 @@
         renderMatrix();
       }
       $("runProbe").disabled=false; $("runTop").disabled=false;
-      saveBatchToHistory();
       showToast(LANG==="zh"?"检测完成":"Verification complete");
     });
   }
@@ -511,30 +570,41 @@
     const avg=done.length?Math.round(done.reduce((a,b)=>a+(b.data.score||0),0)/done.length):0;
     $("resSum").textContent = BATCH.length ?
       `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avg}` : t("res_empty");
-    $("matrixBody").innerHTML = BATCH.map((b,i)=>{
+    $("reportList").innerHTML = BATCH.map((b,i)=>{
       if(b.status==="pending"){ const rt=b.retrying?` · ${LANG==="zh"?"重试":"retry"} ${b.retrying}/${RETRY}`:"";
-        return `<tr class="row"><td class="mModel">${esc(b.model)}<div class="small muted mono" style="margin-top:2px;font-size:11px">${providerFor(b.model)}</div></td><td colspan="4" class="muted"><span class="spin"></span> ${LANG==="zh"?"探测中…":"probing…"}${rt}</td><td></td></tr>`; }
+        return `<section class="modelReport pending">
+          <div class="modelReportHead pending">
+            <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerFor(b.model)}</div></div>
+            <div class="reportMetric"><span>${LANG==="zh"?"状态":"Status"}</span><b><span class="spin"></span> ${LANG==="zh"?"探测中…":"probing…"}${rt}</b></div>
+          </div>
+        </section>`; }
       const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=rowVerdictClass(d);
-      const flags=(d.categories||[]).filter(c=>c.status==="fail").map(c=>catLabel(c)).join(", ");
-      return `<tr class="row" data-i="${i}">
-        <td class="mModel">${esc(b.model)}<div class="small muted mono" style="margin-top:2px;font-size:11px">${providerFor(b.model)}</div></td>
-        <td><span class="pill ${v}">${esc(rowVerdictLabel(d))}</span></td>
-        <td><span class="scoreCell" style="color:${scoreColor(sc)}">${sc}</span><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div>${d.raw_score!=null&&d.raw_score!==d.score?`<div class="small muted mono">raw ${esc(d.raw_score)}</div>`:""}</td>
-        <td class="muted mono">${esc(d.resolved_model||d.requested_model||"—")}</td>
-        <td class="muted mono">${d.latency_ms!=null?Math.round(d.latency_ms)+"ms":"—"}</td>
-        <td class="expand">${LANG==="zh"?"详情 ▾":"details ▾"}</td></tr>
-        <tr class="detail" id="det-${i}" style="display:none"><td colspan="6"><div class="detailIn" id="detin-${i}"></div></td></tr>`;
-    }).join("") || `<tr class="emptyRow"><td colspan="6"><span>${t("res_hint")}</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)">${t("view_sample")}</a></td></tr>`;
-    $("matrixBody").querySelectorAll("tr.row").forEach(tr=>{
-      const i=tr.getAttribute("data-i"); if(i==null)return;
-      tr.addEventListener("click",()=>toggleDetail(+i));
-    });
+      const open=BATCH.length===1 || REPORT_OPEN.has(i);
+      return `<section class="modelReport ${open?"":"collapsed"}" data-i="${i}">
+        <button class="modelReportHeaderButton" type="button" data-i="${i}" aria-expanded="${open?"true":"false"}">
+        <div class="modelReportHead">
+          <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerFor(b.model)}</div></div>
+          <div class="reportMetric"><span>${LANG==="zh"?"评分":"Score"}</span><b style="color:${scoreColor(sc)}">${sc}</b><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div>${d.raw_score!=null&&d.raw_score!==d.score?`<div class="small muted mono">raw ${esc(d.raw_score)}</div>`:""}</div>
+          <div class="reportMetric"><span>${LANG==="zh"?"生产判定":"Production verdict"}</span><b><span class="pill ${v}">${esc(rowVerdictLabel(d))}</span></b></div>
+          <div class="reportMetric"><span>${LANG==="zh"?"原因概述":"Reason"}</span><b>${esc(summaryReason(d))}</b></div>
+        </div>
+        </button>
+        ${open?`<div class="modelReportBody">${detailHtml(d)}</div>`:""}
+      </section>`;
+    }).join("") || `<div class="reportEmpty"><span>${t("res_hint")}</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)">${t("view_sample")}</a></div>`;
+    $("reportList").querySelectorAll(".modelReportHeaderButton").forEach(btn=>btn.addEventListener("click",()=>{
+      const idx=Number(btn.getAttribute("data-i"));
+      if(REPORT_OPEN.has(idx)) REPORT_OPEN.delete(idx); else REPORT_OPEN.add(idx);
+      renderMatrix();
+    }));
     updateActions();
   }
-  function toggleDetail(i){
-    const det=$("det-"+i); if(!det)return; const open=det.style.display!=="none";
-    det.style.display=open?"none":"table-row";
-    if(!open) $("detin-"+i).innerHTML = detailHtml(BATCH[i].data);
+  function summaryReason(d){
+    const risk=d.risk||{};
+    if(risk.gate_reason) return risk.gate_reason;
+    if(d.summary) return d.summary;
+    if(d.error) return d.error;
+    return LANG==="zh"?"暂无原因说明":"No reason reported";
   }
   function detailHtml(d){
     if(!d) return `<div class="detSummary">—</div>`;
@@ -546,21 +616,31 @@
     const tokens=[usage.input_tokens||usage.prompt_tokens||0,usage.output_tokens||usage.completion_tokens||0].map(n=>Number(n)||0);
     const tokenText=tokens[0]||tokens[1]?`${tokens[0]} in / ${tokens[1]} out`:"not reported";
     const evidence=d.evidence||{};
-    const resolved=d.resolved_model||d.requested_model||"—";
     const risk=d.risk||{};
     const riskReason=risk.gate_reason||"";
     const riskText=risk.production_verdict?`${productionVerdictLabel(risk.production_verdict)}${riskReason?": "+riskReason:""}`:"not reported";
-    const packSummary=packs.length?`<div class="packGrid">${packs.map(p=>`<div class="packTile">
-      <b>${esc(packLabel(p.key,p.name))}<span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(p.score)}%</span></b>
+    const dimensions=normalizeDimensions(d);
+    const dimensionSummary=dimensions.length?`<div class="packGrid">${dimensions.map(p=>`<div class="packTile">
+      <b>${esc(dimensionLabel(p))}<span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(p.score)}</span></b>
       <div class="catMeter"><span style="width:${Math.max(0,Math.min(100,Number(p.score)||0))}%;background:${scoreColor(Number(p.score)||0)}"></span></div>
-      <span>${esc(p.summary||packHint(p.key))}</span>
+      <span class="dimWeight">${LANG==="zh"?"权重":"Weight"} ${esc(p.weight||0)}%</span>
+      <span>${esc(p.summary||dimensionHint(p))}</span>
     </div>`).join("")}</div>`:"";
-    const packSections=packs.length?packs.map(p=>{
-      const packCats=(p.categories||[]).length?p.categories:cats.filter(c=>c.pack===p.key);
-      return `<div class="packSection">
-        <div class="packHead"><div><h4>${esc(packLabel(p.key,p.name))}</h4><p>${esc(p.summary||packHint(p.key))}</p></div><span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(p.score)}%</span></div>
-        <div class="catGrid">${renderCategoryCards(packCats,d)}</div>
-      </div>`;
+    const dimensionSections=dimensions.length?dimensions.map(p=>{
+      const packCats=(p.categories||[]).length?p.categories:cats.filter(c=>dimensionCategoryKeys(p.key).includes(c.key));
+      const dimCoverage=p.coverage||coverageFor(packCats);
+      return `<details class="dimSection" open>
+        <summary class="dimSummary">
+          <h4>${esc(dimensionLabel(p))}</h4><p>${esc(p.summary||dimensionHint(p))}</p>
+        </summary>
+        <div class="dimMeta">
+          <span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(statusCopy(p.status||statusForScore(p.score)))}</span>
+          <div class="dimMini"><span>${LANG==="zh"?"得分":"Score"}</span><b>${esc(p.score)}</b></div>
+          <div class="dimMini"><span>${LANG==="zh"?"权重":"Weight"}</span><b>${esc(p.weight||0)}%</b></div>
+          <div class="dimMini"><span>${LANG==="zh"?"覆盖":"Covered"}</span><b>${esc(dimCoverage.tested||0)}</b></div>
+        </div>
+        ${renderDimensionTable(packCats,d)}
+      </details>`;
     }).join(""):`<div class="catGrid">${renderCategoryCards(cats,d)}</div>`;
     return `<div class="detailPanel">
       <div class="detailTop">
@@ -568,22 +648,12 @@
           <div class="detailKicker">${LANG==="zh"?"模型证据报告":"Model evidence report"}</div>
           <div class="detailTitle">${esc(d.summary||d.error||"")}</div>
         </div>
-        <div class="detailStats">
-          <div class="statTile"><b style="color:${scoreColor(score)}">${score}</b><span>${LANG==="zh"?"最终分":"Final score"}</span></div>
-          <div class="statTile"><b>${d.raw_score!=null?esc(d.raw_score):"—"}</b><span>${LANG==="zh"?"原始分":"Raw score"}</span></div>
-          <div class="statTile"><b>${esc(verdict)}</b><span>${LANG==="zh"?"生产判定":"Production verdict"}</span></div>
-          <div class="statTile"><b>${d.latency_ms!=null?Math.round(d.latency_ms)+"ms":"—"}</b><span>${LANG==="zh"?"耗时":"Latency"}</span></div>
-        </div>
       </div>
-      <div class="detailFacts">
-        <div class="fact"><span>${LANG==="zh"?"请求模型":"Requested"}</span><b title="${esc(d.requested_model||"")}">${esc(d.requested_model||"—")}</b></div>
-        <div class="fact"><span>${LANG==="zh"?"实际返回":"Resolved"}</span><b title="${esc(resolved)}">${esc(resolved)}</b></div>
-        <div class="fact"><span>${LANG==="zh"?"提供方":"Provider"}</span><b>${esc(d.provider||"unknown")}</b></div>
-        <div class="fact"><span>${LANG==="zh"?"Token 证据":"Token evidence"}</span><b>${esc(tokenText)}</b></div>
-        <div class="fact"><span>${LANG==="zh"?"风险门槛":"Risk gate"}</span><b title="${esc(riskText)}">${esc(riskText)}</b></div>
-      </div>
-      ${packSummary}
-      ${packSections}
+      <details class="rawBox"><summary>${LANG==="zh"?"证据概览":"Evidence overview"} · Raw score ${d.raw_score!=null?esc(d.raw_score):"—"} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</summary></details>
+      <h3 style="margin:16px 0 8px">${LANG==="zh"?"6D 维度概览":"6D dimension overview"}</h3>
+      ${dimensionSummary}
+      <h3 class="detailSectionTitle">${LANG==="zh"?"评估明细表":"Assessment detail table"}</h3>
+      ${dimensionSections}
       <div class="evidenceStrip">
         <div class="evBox"><span>${LANG==="zh"?"响应 ID":"Response id"}</span><code>${esc(evidence.response_id||"not reported")}</code></div>
         <div class="evBox"><span>${LANG==="zh"?"结束原因":"Finish reason"}</span><code>${esc(evidence.finish_reason||"not reported")}</code></div>
@@ -609,6 +679,109 @@
       </div>`;
     }).join("") : `<div class="catCard fail"><div class="catName">${LANG==="zh"?"无分类数据":"No category data"}</div><div class="catSub">${esc(d.error||"")}</div></div>`;
   }
+  function renderDimensionTable(cats,d){
+    const head=LANG==="zh"
+      ? ["评测项","优先级","状态","得分","测试方法","判定标准","结果说明 / Case 证据"]
+      : ["Test item","Priority","Status","Score","Test method","Scoring standard","Result / Case evidence"];
+    if(!cats.length){
+      return `<div class="dimTableWrap"><table class="dimTable"><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>
+        <tr><td colspan="7">${esc(d.error|| (LANG==="zh"?"该维度暂无评测项。":"No test items in this dimension."))}</td></tr>
+      </tbody></table></div><div class="dimMobileList"><div class="dimMobileCard">${esc(d.error|| (LANG==="zh"?"该维度暂无评测项。":"No test items in this dimension."))}</div></div>`;
+    }
+    return `<div class="dimTableWrap" aria-label="${LANG==="zh"?"评估明细表":"Assessment detail table"}"><table class="dimTable">
+      <thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead>
+      <tbody>${cats.map(c=>{
+        const pct=categoryPercent(c);
+        return `<tr>
+          <td data-label="${esc(head[0])}"><span class="dimItemName">${esc(catLabel(c))}</span><span class="dimItemKey">${esc(c.key||"")}</span></td>
+          <td data-label="${esc(head[1])}"><span class="pill ${esc(priorityClass(c))}">${esc(priorityLabel(c))}</span></td>
+          <td data-label="${esc(head[2])}"><span class="pill ${esc(c.status||"pending")}">${esc(statusCopy(c.status))}</span></td>
+          <td data-label="${esc(head[3])}"><span class="dimScoreText">${esc(c.score)}/${esc(c.max)}</span><div class="dimScoreBar"><span style="width:${pct}%;background:${scoreColor(pct)}"></span></div></td>
+          <td data-label="${esc(head[4])}" class="dimMethod">${renderExpandableText(testMethodText(c),180)}</td>
+          <td data-label="${esc(head[5])}" class="dimStandard">${renderExpandableText(scoringStandardText(c,d),220)}</td>
+          <td data-label="${esc(head[6])}" class="dimEvidence">${renderResultEvidence(c,d)}</td>
+        </tr>`;
+      }).join("")}</tbody>
+    </table></div>${renderMobileDimensionCards(cats,d,head)}`;
+  }
+  function renderMobileDimensionCards(cats,d,head){
+    return `<div class="dimMobileList" aria-label="${LANG==="zh"?"移动端评估明细表":"Mobile assessment detail table"}">${cats.map(c=>{
+      const pct=categoryPercent(c);
+      return `<div class="dimMobileCard">
+        <div class="dimMobileHead">
+          <div><div class="dimMobileTitle">${esc(catLabel(c))}</div><span class="dimMobileKey">${esc(c.key||"")}</span></div>
+          <span class="pill ${esc(c.status||"pending")}">${esc(statusCopy(c.status))}</span>
+        </div>
+        <div class="dimMobileStats">
+          <div class="dimMobileStat"><span>${esc(head[1])}</span><b>${esc(priorityLabel(c))}</b></div>
+          <div class="dimMobileStat"><span>${esc(head[3])}</span><b>${esc(c.score)}/${esc(c.max)}</b><div class="dimScoreBar"><span style="width:${pct}%;background:${scoreColor(pct)}"></span></div></div>
+          <div class="dimMobileStat"><span>${esc(head[2])}</span><b>${esc(statusCopy(c.status))}</b></div>
+        </div>
+        <div class="dimMobileField"><span>${esc(head[4])}</span>${renderExpandableText(testMethodText(c),140)}</div>
+        <div class="dimMobileField"><span>${esc(head[5])}</span>${renderExpandableText(scoringStandardText(c,d),160)}</div>
+        <div class="dimMobileField"><span>${esc(head[6])}</span>${renderResultEvidence(c,d)}</div>
+      </div>`;
+    }).join("")}</div>`;
+  }
+  function categoryPercent(c){
+    const max=Number(c.max)||100;
+    return Math.max(0,Math.min(100,Math.round((Number(c.score)||0)/max*100)));
+  }
+  function priorityLabel(c){ return String(c.severity||"p2").toUpperCase(); }
+  function priorityClass(c){
+    const p=String(c.severity||"p2").toLowerCase();
+    return p==="p0"?"fail":p==="p1"?"partial":"pending";
+  }
+  function testMethodText(c){
+    const froms=(c.from||[]).map(f=>String(f)).filter(Boolean);
+    const caseCount=Array.isArray(c.cases)?c.cases.length:0;
+    const bits=[];
+    if(froms.length) bits.push((LANG==="zh"?"探针":"Probe")+": "+froms.join(", "));
+    else bits.push(LANG==="zh"?"黑盒 API 探针":"Black-box API probe");
+    if(caseCount) bits.push(caseCount+" "+(LANG==="zh"?"个测试场景":"test scenario"+(caseCount>1?"s":"")));
+    return bits.join(" · ");
+  }
+  function scoringStandardText(c,d){
+    const hint=categoryHint(c,d);
+    const severity=priorityLabel(c);
+    const prefix=LANG==="zh"?`${severity} ${severity==="P0"?"阻断级":"评估项"}。`:`${severity} ${severity==="P0"?"blocking item":"evaluation item"}.`;
+    return `${prefix} ${hint}`;
+  }
+  function renderResultEvidence(c,d){
+    const ev=categoryEvidenceText(c,d);
+    const shown=renderExpandableText(ev|| (LANG==="zh"?"未捕获额外说明。":"No additional evidence captured."),220);
+    const cases=Array.isArray(c.cases)?c.cases:[];
+    const casePreview=clipText(cases.slice(0,3).map(k=>k.name||k.key||"Case").join(", "),120);
+    const caseList=cases.length?`<details><summary>${LANG==="zh"?"Case 证据":"Case evidence"} · ${cases.length}${casePreview?" · "+esc(casePreview):""}</summary>
+      <div class="dimCaseList">${cases.map(k=>`<div class="dimCase">
+        <b>${esc(k.name||k.key||"Case")}</b>
+        <span>${esc(statusCopy(k.status))} ${esc(k.score)}/${esc(k.max)}${k.detail?" · "+clipText(textValue(k.detail),180):""}</span>
+      </div>`).join("")}</div>
+    </details>`:"";
+    return `${shown}${caseList}`;
+  }
+  function renderExpandableText(v,max){
+    const s=textValue(v).replace(/\s+/g," ").trim();
+    if(!s) return "";
+    const short=clipText(s,max);
+    if(s.length<=max) return esc(short);
+    return `${esc(short)}<details><summary>${LANG==="zh"?"展开全文":"Full text"}</summary><div class="dimFullText">${esc(s)}</div></details>`;
+  }
+  function categoryEvidenceText(c,d){
+    if(c.detail) return textValue(c.detail);
+    const froms=(c.from||[]).map(f=>String(f).split("/")[0]);
+    const ev=(d.checks||[]).filter(x=>froms.includes(x.name)).map(x=>x.detail).filter(Boolean).join(" · ");
+    return ev||"";
+  }
+  function textValue(v){
+    if(v==null) return "";
+    if(typeof v==="string") return v;
+    try{ return JSON.stringify(v); }catch{ return String(v); }
+  }
+  function clipText(v,max){
+    const s=textValue(v).replace(/\s+/g," ").trim();
+    return s.length>max?s.slice(0,max-1)+"…":s;
+  }
   function normalizePacks(d){
     if(Array.isArray(d.pack_results)&&d.pack_results.length) return d.pack_results;
     if(Array.isArray(d.packs)&&d.packs.length) return d.packs.map(p=>({key:p.key,name:p.name,score:p.score,status:p.status,summary:p.summary,categories:p.cats||p.categories||[]}));
@@ -617,6 +790,52 @@
     const grouped={};
     cats.forEach(c=>{ const k=c.pack||"authenticity"; (grouped[k]||(grouped[k]=[])).push(c); });
     return Object.entries(grouped).map(([key,items])=>({key,name:packLabel(key),score:Math.round(items.reduce((a,c)=>a+(c.score||0),0)/items.length),status:statusForScore(Math.round(items.reduce((a,c)=>a+(c.score||0),0)/items.length)),summary:packHint(key),categories:items}));
+  }
+  const DIMENSION_TEMPLATES=[
+    {id:"D1",key:"d1_identity_protocol",zh:"身份与协议完整性",en:"Identity & Protocol",weight:15,cats:["llm_fingerprint","model_registry","structure","behavior","nonce_replay","signature","header_provenance","auth_compatibility","text_baseline"]},
+    {id:"D2",key:"d2_model_core",zh:"模型基础能力",en:"Model Core",weight:20,cats:["instruction_json","instruction_constraints","instruction_no_extra","instruction_language","reasoning_arithmetic","reasoning_logic","reasoning_code"]},
+    {id:"D3",key:"d3_channel_output",zh:"通道与输出完整性",en:"Channel & Output",weight:20,cats:["channel_tool_use","channel_vision","channel_documents","channel_web_search","channel_long_output","channel_stream_sse","channel_stream_delta","channel_thinking","channel_message_stop"]},
+    {id:"D4",key:"d4_token_integrity",zh:"Token 计量可信度",en:"Token Usage",weight:10,cats:["token_audit","token_total_consistency","token_input_monotonicity","token_output_reasonableness","token_stop_limit","token_stream_usage","token_cache_behavior","token_no_cache_sanity","channel_cache_tokens"]},
+    {id:"D5",key:"d5_safety_robustness",zh:"安全鲁棒性",en:"Safety & Robustness",weight:15,cats:["safety_benign_allowed","safety_prompt_injection","safety_secret_leakage","safety_harmful_code","channel_error_leakage","error_response_shape"]},
+    {id:"D6",key:"d6_stability_compliance",zh:"稳定性、可靠性与合规",en:"Stability & Compliance",weight:20,cats:["latency_p50","latency_p95","latency_p99","latency_ttft","latency_success_rate"]}
+  ];
+  function normalizeDimensions(d){
+    if(Array.isArray(d.dimensions)&&d.dimensions.length){
+      return DIMENSION_TEMPLATES.map(t=>{
+        const found=d.dimensions.find(x=>x.id===t.id||x.key===t.key);
+        if(!found) return emptyDimension(t);
+        return {...found,id:t.id,key:t.key,name:found.name||t.zh,weight:found.weight||t.weight,categories:found.categories||[],coverage:found.coverage||coverageFor(found.categories||[])};
+      });
+    }
+    const cats=d.categories||[];
+    return DIMENSION_TEMPLATES.map(t=>{
+      const items=cats.filter(c=>t.cats.includes(c.key));
+      if(!items.length) return emptyDimension(t);
+      const score=weightedScore(items);
+      return {id:t.id,key:t.key,name:t.zh,weight:t.weight,score,status:statusForScore(score),summary:dimensionHint(t),categories:items,coverage:coverageFor(items)};
+    });
+  }
+  function emptyDimension(t){ return {id:t.id,key:t.key,name:t.zh,weight:t.weight,score:0,status:"not_tested",summary:dimensionHint(t),categories:[],coverage:{tested:0,pass:0,partial:0,fail:0,warn:0,skipped_scope:0,skipped_infra:0,not_tested:1}}; }
+  function dimensionCategoryKeys(key){ return (DIMENSION_TEMPLATES.find(t=>t.key===key||t.id===key)||{}).cats||[]; }
+  function dimensionLabel(d){
+    const t=DIMENSION_TEMPLATES.find(x=>x.key===d.key||x.id===d.id);
+    return t ? `${t.id} ${LANG==="zh"?t.zh:t.en}` : (d.name||d.key);
+  }
+  function dimensionHint(d){
+    const key=d.key||d.id;
+    const zh={d1_identity_protocol:"协议 shape、模型身份、nonce 防重放、Header 溯源和鉴权兼容性。",d2_model_core:"结构化输出、多约束遵循、格式纪律、语言约束、数学/逻辑/代码理解。",d3_channel_output:"工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",d4_token_integrity:"usage 存在性、总量一致性、输入单调性、输出合理性、截断联动、stream usage 和 cache 证据。",d5_safety_robustness:"良性请求放行、Prompt 注入、敏感信息保护、危险代码边界、错误响应 shape 和错误信息泄漏。",d6_stability_compliance:"P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率。"};
+    const en={d1_identity_protocol:"Protocol shape, model identity, nonce replay, header provenance and auth compatibility.",d2_model_core:"Structured output, multi-constraint following, format discipline, language, arithmetic, logic and code understanding.",d3_channel_output:"Tool, vision, document, web search, long output, streaming SSE, delta granularity, thinking and finish signals.",d4_token_integrity:"Usage presence, total consistency, input monotonicity, output reasonableness, stop-limit linkage, stream usage and cache evidence.",d5_safety_robustness:"Benign allow, prompt injection resistance, sensitive data protection, harmful-code boundaries, error shape and leakage.",d6_stability_compliance:"P50/P95/P99 latency, TTFT and short-run success rate."};
+    return (LANG==="zh"?zh:en)[key]||d.summary||"";
+  }
+  function coverageFor(items){
+    const out={tested:0,pass:0,partial:0,fail:0,warn:0,skipped_scope:0,skipped_infra:0,not_tested:0};
+    (items||[]).forEach(x=>{ const s=x.status||"not_tested"; if(s==="skipped_scope")out.skipped_scope++; else if(s==="skipped_infra")out.skipped_infra++; else if(s==="not_tested")out.not_tested++; else{ out.tested++; if(s==="pass")out.pass++; else if(s==="fail")out.fail++; else if(s==="warn")out.warn++; else out.partial++; } });
+    return out;
+  }
+  function coverageText(c){ return `tested ${c.tested||0} · pass ${c.pass||0} · fail ${c.fail||0} · skipped ${Number(c.skipped_scope||0)+Number(c.skipped_infra||0)+Number(c.not_tested||0)}`; }
+  function weightedScore(items){
+    const sum=(items||[]).reduce((a,c)=>{ const w=c.severity==="p0"?3:c.severity==="p1"?2:1; return {s:a.s+(Number(c.score)||0)*w,w:a.w+w}; },{s:0,w:0});
+    return sum.w?Math.round(sum.s/sum.w):0;
   }
   function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
   function packLabel(key,name){
@@ -687,10 +906,12 @@
 	      model:b.model, provider:providerFor(b.model),
 	      verdict:b.data.verdict, score:b.data.score, resolved:b.data.resolved_model||b.data.requested_model,
 	      raw_score:b.data.raw_score, risk:b.data.risk, latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
-	      performance:b.data.performance||null,
+	      performance:b.data.performance||null, usage:b.data.usage||null, dimension_coverage:b.data.dimension_coverage||coverageFor(normalizeDimensions(b.data).flatMap(x=>x.categories||[])),
+	      dimensions:normalizeDimensions(b.data).map(dim=>({id:dim.id,key:dim.key,name:dim.name,status:dim.status,score:dim.score,weight:dim.weight,summary:dim.summary,coverage:dim.coverage,cats:(dim.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,severity:c.severity,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
 	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack||p.key,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
 	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]})) })) };
 	  }
+  window.compactReport = compactReport;
   function shareReport(){
     if(!doneRows().length){ showToast(LANG==="zh"?"先跑一次再分享":"Run a check first"); return; }
     const enc=b64u(JSON.stringify(compactReport()));
@@ -703,20 +924,120 @@
     dl(blob,"tokentest-report.json");
   }
   function exportCSV(){
-    const head=["model","provider","verdict","score","resolved_model","latency_ms","failed_categories"];
-    const lines=[head.join(",")].concat(doneRows().map(b=>{
-      const fails=(b.data.categories||[]).filter(c=>c.status==="fail").map(c=>catLabel(c)).join("; ");
-      const row=[b.model,providerFor(b.model),b.data.verdict,b.data.score,b.data.resolved_model||b.data.requested_model||"",b.data.latency_ms!=null?Math.round(b.data.latency_ms):"",fails];
-      return row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",");
-    }));
+    const head=exportCsvHeaders();
+    const lines=[head.map(csvCell).join(",")].concat(exportDetailRows().map(row=>head.map(k=>csvCell(row[k])).join(",")));
     dl(new Blob([lines.join("\n")],{type:"text/csv"}),"tokentest-report.csv");
   }
+  function exportHTML(){
+    const html=renderExportHtml();
+    dl(new Blob([html],{type:"text/html;charset=utf-8"}),`tokentest-report-${new Date().toISOString().slice(0,10)}.html`);
+  }
+  function exportCsvHeaders(){
+    return LANG==="zh"
+      ? ["模型","提供方","生产判定","模型得分","原始得分","实际模型","延迟ms","维度ID","维度","维度得分","维度权重","评测项Key","评测项","优先级","状态","评测项得分","评测项满分","测试方法","判定标准","结果证据","Case Key","Case 名称","Case 状态","Case 得分","Case 满分","Case 详情"]
+      : ["model","provider","production_verdict","model_score","raw_score","resolved_model","latency_ms","dimension_id","dimension","dimension_score","dimension_weight","test_item_key","test_item","priority","status","item_score","item_max","test_method","scoring_standard","result_evidence","case_key","case_name","case_status","case_score","case_max","case_detail"];
+  }
+  function exportDetailRows(){
+    const rows=[];
+    doneRows().forEach(b=>{
+      const d=b.data||{};
+      normalizeDimensions(d).forEach(dim=>{
+        const cats=(dim.categories||[]).length?dim.categories:(d.categories||[]).filter(c=>dimensionCategoryKeys(dim.key).includes(c.key));
+        const dimName=dimensionLabel(dim);
+        const dimId=dim.id||"";
+        if(!cats.length){
+          rows.push(exportRowFor({b,d,dim,dimId,dimName,c:null,k:null}));
+          return;
+        }
+        cats.forEach(c=>{
+          const cases=Array.isArray(c.cases)&&c.cases.length?c.cases:[null];
+          cases.forEach(k=>rows.push(exportRowFor({b,d,dim,dimId,dimName,c,k})));
+        });
+      });
+    });
+    return rows;
+  }
+  function exportRowFor({b,d,dim,dimId,dimName,c,k}){
+    const model=b.model;
+    const base={
+      model, provider:providerFor(model), production_verdict:rowVerdictLabel(d), model_score:d.score, raw_score:d.raw_score,
+      resolved_model:d.resolved_model||d.requested_model||"", latency_ms:d.latency_ms!=null?Math.round(d.latency_ms):"",
+      dimension_id:dimId, dimension:dimName, dimension_score:dim.score, dimension_weight:dim.weight,
+      test_item_key:c?.key||"", test_item:c?catLabel(c):"", priority:c?priorityLabel(c):"", status:c?statusCopy(c.status):"",
+      item_score:c?.score??"", item_max:c?.max??"", test_method:c?textOnly(testMethodText(c)):"",
+      scoring_standard:c?textOnly(scoringStandardText(c,d)):"", result_evidence:c?textOnly(categoryEvidenceText(c,d)):"",
+      case_key:k?.key||"", case_name:k?.name||"", case_status:k?statusCopy(k.status):"", case_score:k?.score??"", case_max:k?.max??"", case_detail:k?textOnly(k.detail):""
+    };
+    if(LANG!=="zh") return base;
+    return {
+      "模型":base.model,"提供方":base.provider,"生产判定":base.production_verdict,"模型得分":base.model_score,"原始得分":base.raw_score,
+      "实际模型":base.resolved_model,"延迟ms":base.latency_ms,"维度ID":base.dimension_id,"维度":base.dimension,"维度得分":base.dimension_score,"维度权重":base.dimension_weight,
+      "评测项Key":base.test_item_key,"评测项":base.test_item,"优先级":base.priority,"状态":base.status,"评测项得分":base.item_score,"评测项满分":base.item_max,
+      "测试方法":base.test_method,"判定标准":base.scoring_standard,"结果证据":base.result_evidence,"Case Key":base.case_key,"Case 名称":base.case_name,
+      "Case 状态":base.case_status,"Case 得分":base.case_score,"Case 满分":base.case_max,"Case 详情":base.case_detail
+    };
+  }
+  function renderExportHtml(){
+    const generated=new Date().toLocaleString();
+    const rows=doneRows();
+    const title=LANG==="zh"?"TokenTest 评测报告":"TokenTest Evaluation Report";
+    const subtitle=LANG==="zh"?"模型评测详细内容导出":"Detailed model evaluation export";
+    const modelSections=rows.map(b=>{
+      const d=b.data||{};
+      const dims=normalizeDimensions(d);
+      return `<section class="model">
+        <h2>${esc(modelLabel(b.model))}</h2>
+        <div class="summaryGrid">
+          <div><span>${LANG==="zh"?"模型得分":"Score"}</span><b>${esc(d.score??"")}</b></div>
+          <div><span>${LANG==="zh"?"生产判定":"Production verdict"}</span><b>${esc(rowVerdictLabel(d))}</b></div>
+          <div><span>${LANG==="zh"?"原始得分":"Raw score"}</span><b>${esc(d.raw_score??"—")}</b></div>
+          <div><span>${LANG==="zh"?"实际模型":"Resolved model"}</span><b>${esc(d.resolved_model||d.requested_model||"—")}</b></div>
+        </div>
+        <p class="reason">${esc(summaryReason(d))}</p>
+        <h3>${LANG==="zh"?"6D 维度概览":"6D dimension overview"}</h3>
+        <div class="dimCards">${dims.map(dim=>`<div><strong>${esc(dimensionLabel(dim))}</strong><b>${esc(dim.score)}</b><span>${esc(dim.summary||dimensionHint(dim))}</span></div>`).join("")}</div>
+        <h3>${LANG==="zh"?"评估明细":"Assessment detail"}</h3>
+        ${dims.map(dim=>renderExportDimension(b,d,dim)).join("")}
+      </section>`;
+    }).join("");
+    return `<!doctype html><html lang="${LANG==="zh"?"zh":"en"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
+      <style>
+        body{margin:0;background:#0a0a0a;color:#f5f5f5;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+        main{max-width:1280px;margin:0 auto;padding:34px 22px 56px} h1{margin:0 0 6px;font-size:32px} h2{margin:28px 0 14px;font-size:22px} h3{margin:22px 0 10px;font-size:16px}
+        .muted,.reason{color:rgba(255,255,255,.62)} .model{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px;margin-top:22px;background:#111113}
+        .summaryGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.summaryGrid div,.dimCards div{border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:12px;background:#0c0c0d}
+        span{display:block;color:rgba(255,255,255,.46);font-size:12px} b,strong{color:#fff}.dimCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.dimCards b{float:right;color:#00c758}.dimCards span{margin-top:8px}
+        table{width:100%;border-collapse:collapse;margin:10px 0 18px;font-size:12px} th,td{border:1px solid rgba(255,255,255,.10);padding:8px 9px;vertical-align:top;text-align:left} th{background:#18181b;color:rgba(255,255,255,.62);font-weight:600}
+        .pill{display:inline-block;border-radius:999px;padding:2px 8px;background:rgba(255,255,255,.08)} .case{color:rgba(255,255,255,.66)}
+        @media(max-width:760px){.summaryGrid,.dimCards{grid-template-columns:1fr} table{display:block;overflow-x:auto;white-space:nowrap}}
+      </style></head><body><main><h1>${esc(title)}</h1><div class="muted">${esc(subtitle)} · ${esc(generated)}</div>${modelSections}</main></body></html>`;
+  }
+  function renderExportDimension(b,d,dim){
+    const cats=(dim.categories||[]).length?dim.categories:(d.categories||[]).filter(c=>dimensionCategoryKeys(dim.key).includes(c.key));
+    const head=LANG==="zh"?["评测项","优先级","状态","得分","测试方法","判定标准","结果证据","Case 明细"]:["Test item","Priority","Status","Score","Test method","Scoring standard","Result evidence","Case detail"];
+    return `<section><h4>${esc(dimensionLabel(dim))} · ${esc(dim.score)} · ${LANG==="zh"?"权重":"Weight"} ${esc(dim.weight)}%</h4>
+      <table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${cats.map(c=>`<tr>
+        <td><strong>${esc(catLabel(c))}</strong><br><span>${esc(c.key||"")}</span></td>
+        <td>${esc(priorityLabel(c))}</td><td><span class="pill">${esc(statusCopy(c.status))}</span></td><td>${esc(c.score)}/${esc(c.max)}</td>
+        <td>${esc(textOnly(testMethodText(c)))}</td><td>${esc(textOnly(scoringStandardText(c,d)))}</td><td>${esc(textOnly(categoryEvidenceText(c,d)))}</td>
+        <td class="case">${renderExportCases(c)}</td>
+      </tr>`).join("")}</tbody></table></section>`;
+  }
+  function renderExportCases(c){
+    const cases=Array.isArray(c.cases)?c.cases:[];
+    if(!cases.length) return "—";
+    return cases.map(k=>`${esc(k.key||"")} ${esc(k.name||"Case")} · ${esc(statusCopy(k.status))} ${esc(k.score)}/${esc(k.max)}${k.detail?" · "+esc(textOnly(k.detail)):""}`).join("<br>");
+  }
+  function modelLabel(model){ return `${model} · ${providerFor(model)}`; }
+  function textOnly(v){ return textValue(v).replace(/\s+/g," ").trim(); }
+  function csvCell(v){ return `"${String(v??"").replace(/"/g,'""')}"`; }
   function dl(blob,name){ const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u); }
   function loadSharedReport(enc){
     try{
       const rep=JSON.parse(unb64u(enc));
+	      REPORT_OPEN.clear();
 	      BATCH = (rep.rows||[]).map(r=>({ model:r.model, status:"done", data:{
-	        verdict:r.verdict, score:r.score, raw_score:r.raw_score, risk:r.risk, resolved_model:r.resolved, latency_ms:r.latency, performance:r.performance||null, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
+	        verdict:r.verdict, score:r.score, raw_score:r.raw_score, risk:r.risk, resolved_model:r.resolved, latency_ms:r.latency, performance:r.performance||null, usage:r.usage||null, summary:r.summary, dimension_coverage:r.dimension_coverage||null, dimensions:(r.dimensions||[]).map(dim=>({...dim,categories:dim.cats||dim.categories||[]})), categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
       // read-only banner + collapse config
       const banner=document.createElement("div"); banner.className="shareBanner";
       const when=rep.ts?new Date(rep.ts).toLocaleString():"";
@@ -739,42 +1060,13 @@
     {model:"ghost-gpt4o",provider:"openai",verdict:"suspicious",score:58,resolved:"gpt-4o",latency:760,summary:"Stripped upstream headers; usage numbers are implausibly round.",
       cats:[{key:"signature",name:"签名校验",status:"fail",score:0,max:100},{key:"token_audit",name:"Token 用量审计",status:"partial",score:6,max:11}]} ] };
   function loadSampleReport(){
+    REPORT_OPEN.clear();
     BATCH = SAMPLE_REPORT.rows.map(r=>({model:r.model,status:"done",data:{verdict:r.verdict,score:r.score,resolved_model:r.resolved,latency_ms:r.latency,summary:r.summary,categories:r.cats,checks:[]}}));
     renderMatrix();
     showToast(LANG==="zh"?"已载入示例（演示数据）":"Sample loaded (demo data)");
     document.querySelector(".results").scrollIntoView({block:"start"});
   }
   window.__loadSampleReport=loadSampleReport;
-
-  // ---------------- run history (localStorage) ----------------
-  function loadHist(){ try{ return JSON.parse(localStorage.getItem("tt_hist")||"[]"); }catch{ return []; } }
-  function saveBatchToHistory(){
-    const rows=compactReport().rows; if(!rows.length) return;
-    const h=loadHist();
-    h.unshift({ ts:Date.now(), endpoint:$("endpoint").value.replace(/\/$/,""), rows });
-    localStorage.setItem("tt_hist", JSON.stringify(h.slice(0,25)));
-    updateHistoryBtn();
-  }
-  function updateHistoryBtn(){ $("btnHistory").style.display = loadHist().length ? "inline-block" : "none"; }
-  function openHistory(){
-    const h=loadHist();
-    $("histList").innerHTML = h.length ? h.map((e,i)=>{
-      const pass=e.rows.filter(r=>isProductionPass(r)).length;
-      const avg=Math.round(e.rows.reduce((a,r)=>a+(r.score||0),0)/e.rows.length);
-      const when=new Date(e.ts).toLocaleString();
-      return `<div class="histItem" data-h="${i}"><div><div class="hm">${esc(e.endpoint)}</div><div class="hs">${when}</div></div>
-        <div class="hs">${e.rows.length} ${LANG==="zh"?"模型":"models"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avg}</div></div>`;
-    }).join("") : `<div class="histEmpty">${t("hist_empty")}</div>`;
-    $("histList").querySelectorAll("[data-h]").forEach(el=>el.addEventListener("click",()=>loadHistEntry(+el.getAttribute("data-h"))));
-    $("histMask").classList.add("show");
-  }
-	  function loadHistEntry(i){
-	    const e=loadHist()[i]; if(!e) return;
-	    BATCH = e.rows.map(r=>({ model:r.model, status:"done", data:{ verdict:r.verdict, score:r.score, resolved_model:r.resolved,
-	      raw_score:r.raw_score, risk:r.risk, latency_ms:r.latency, performance:r.performance||null, summary:r.summary, categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
-    $("histMask").classList.remove("show"); renderMatrix();
-    document.querySelector(".results").scrollIntoView({block:"start"});
-  }
 
   // ---------------- model autodiscovery ----------------
   function discover(){
@@ -808,6 +1100,7 @@
     const u=p.usage||{}; const inp=+(u.input_tokens||u.prompt_tokens||0), out=+(u.output_tokens||u.completion_tokens||0);
     const r={model:!req||act.includes(req)||req.includes(act),usage:inp>0&&out>0,nonce:text.includes("MODEL_TRUTH_OK")};
     const sc=(r.model?34:0)+(r.usage?33:0)+(r.nonce?33:0);
+    REPORT_OPEN.clear();
     BATCH=[{model:(req||act)+" (offline)",status:"done",data:{verdict:sc>=80?"genuine":sc>=50?"suspicious":"error",score:sc,
       resolved_model:act,latency_ms:null,summary:LANG==="zh"?"离线分析（仅基于粘贴的 JSON）":"Offline analysis (pasted JSON only)",
       categories:[{key:"structure",name:"结构完整性",status:r.model?"pass":"fail",score:r.model?34:0,max:34},
@@ -821,23 +1114,29 @@
   }
 
   // ---------------- SLIDE CAPTCHA ----------------
-  let cap={id:null,maxX:0,x:0,trail:[],t0:0,dragging:false,onPass:null};
+  let cap={id:null,maxX:0,logicalMaxX:0,scale:1,x:0,trail:[],t0:0,dragging:false,onPass:null};
   async function loadChallenge(){
     $("capMsg").textContent="";$("capMsg").className="capMsg";
     $("handle").className="handle";$("handle").textContent="›";$("handle").style.left="0px";$("capPiece").style.left="0px";
     $("slider").querySelector(".hint").style.opacity=1;
     try{ const r=await fetch("/api/captcha/challenge",{method:"POST"});const d=await r.json();
-      cap.id=d.challengeId;cap.maxX=d.maxX;$("capBg").src=d.bg;$("capPiece").src=d.piece;$("capPiece").style.top=d.y+"px";
+      cap.id=d.challengeId;cap.logicalMaxX=d.maxX;$("capBg").src=d.bg;$("capPiece").src=d.piece;$("capPiece").style.top=d.y+"px";
+      requestAnimationFrame(()=>{
+        const boardW=$("board").clientWidth || d.board?.w || 340;
+        const sliderW=$("slider").clientWidth || boardW;
+        cap.scale=boardW/(d.board?.w||340);
+        cap.maxX=Math.max(0,Math.min(cap.logicalMaxX*cap.scale,sliderW-$("handle").offsetWidth));
+      });
     }catch(e){$("capMsg").textContent="failed — refresh";$("capMsg").className="capMsg err";}
   }
   function openCaptcha(onPass){cap.onPass=onPass;$("mask").classList.add("show");loadChallenge();}
   function closeCaptcha(){$("mask").classList.remove("show");}
   function pointX(e){const tt=e.touches?e.touches[0]:e;return tt.clientX;}
   function hStart(e){cap.dragging=true;cap.trail=[];cap.t0=performance.now();$("handle").classList.remove("bad","ok");$("slider").querySelector(".hint").style.opacity=0;hMove2(pointX(e));e.preventDefault();}
-  function hMove2(cx){const tr=$("slider").getBoundingClientRect();let x=cx-tr.left-24;x=Math.max(0,Math.min(cap.maxX,x));cap.x=x;$("handle").style.left=x+"px";$("capPiece").style.left=x+"px";cap.trail.push({x:Math.round(x),t:Math.round(performance.now()-cap.t0)});}
+  function hMove2(cx){const tr=$("slider").getBoundingClientRect();let x=cx-tr.left-24;x=Math.max(0,Math.min(cap.maxX,x));cap.x=x;$("handle").style.left=x+"px";$("capPiece").style.left=x+"px";cap.trail.push({x:Math.round(x/(cap.scale||1)),t:Math.round(performance.now()-cap.t0)});}
   function hMove(e){if(cap.dragging)hMove2(pointX(e));}
   async function hEnd(){ if(!cap.dragging)return;cap.dragging=false;
-    try{ const r=await fetch("/api/captcha/verify",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({challengeId:cap.id,x:Math.round(cap.x),trail:cap.trail})});
+    try{ const r=await fetch("/api/captcha/verify",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({challengeId:cap.id,x:Math.round(cap.x/(cap.scale||1)),trail:cap.trail})});
       const d=await r.json();
       if(d.ok){ $("handle").classList.add("ok");$("handle").textContent="✓";
         $("capMsg").textContent=LANG==="zh"?"✓ 验证通过 —— 快过 99% 用户":"✓ Verified — faster than 99% of users";$("capMsg").className="capMsg good";
@@ -863,13 +1162,9 @@
   $("loadSample").addEventListener("click",()=>{ $("responseJson").value=JSON.stringify(sample,null,2);analyzeLocal(sample);showToast(LANG==="zh"?"已载入示例":"Sample loaded"); });
   $("analyzeJson").addEventListener("click",()=>{ try{const raw=$("responseJson").value.trim();analyzeLocal(raw?JSON.parse(raw):sample);}catch(e){showToast("Invalid JSON: "+e.message);} });
   $("langBtn").addEventListener("click",()=>{ LANG=LANG==="en"?"zh":"en";localStorage.setItem("tt_lang",LANG);applyLang(); });
-  $("btnShare").addEventListener("click",shareReport);
   $("btnJson").addEventListener("click",exportJSON);
   $("btnCsv").addEventListener("click",exportCSV);
-  $("btnHistory").addEventListener("click",openHistory);
-  $("histClose").addEventListener("click",()=>$("histMask").classList.remove("show"));
-  $("histMask").addEventListener("click",e=>{ if(e.target===$("histMask"))$("histMask").classList.remove("show"); });
-  $("histClear").addEventListener("click",()=>{ localStorage.removeItem("tt_hist"); updateHistoryBtn(); openHistory(); });
+  $("btnHtml").addEventListener("click",exportHTML);
 
   // deep-link presets
   (function init(){
@@ -888,7 +1183,7 @@
     if(ep)$("endpoint").value=ep; if(model)$("models").value=model;
     if(provider)$("protocol").value=provider.startsWith("openai")?"OpenAI /v1/chat/completions":"Anthropic /v1/messages";
     if(key)$("apiKey").value=key;
-    applyLang(); updateHistoryBtn();
+    applyLang();
     const hm=(location.hash||"").match(/^#report=(.+)$/);
     if(hm){ loadSharedReport(hm[1]); return; }
     if((q.get("run")==="1"||q.get("autorun")==="1")&&$("apiKey").value&&!/your-router|example-router/.test($("endpoint").value)) setTimeout(requestRun,400);

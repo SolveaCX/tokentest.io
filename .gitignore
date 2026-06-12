@@ -6,5 +6,6 @@ npm-debug.log*
 test/
 data/
 report*.html
+llm-eval-upgrade-plan*.html
 research/*case-trace*.html
 research/archive/*case-trace*.html

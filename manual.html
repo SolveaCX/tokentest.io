@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TokenTest Product Manual</title>
+<meta name="description" content="TokenTest product manual: usage guide, evaluation dimensions, cases, scoring metrics and MCP usage." />
+<style>
+  :root{--bg:#0a0a0a;--panel:#111113;--line:rgba(255,255,255,.10);--line2:rgba(255,255,255,.06);--txt:#fafafa;--mut:rgba(255,255,255,.62);--mut2:rgba(255,255,255,.42);--red:#fb2c36;--blue:#3080ff;--green:#00c758;--amber:#f99c00;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(620px 380px at 12% -10%,rgba(251,44,54,.16),transparent 70%),radial-gradient(560px 420px at 96% 0,rgba(48,128,255,.14),transparent 70%)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}nav{position:sticky;top:0;z-index:10;background:rgba(10,10,10,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--line2)}.navIn{height:60px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:10px;font-weight:650}.mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--red),#b3121b);font-family:var(--mono);font-size:13px}.navLinks{display:flex;gap:18px;align-items:center;font-size:14px;color:var(--mut)}.navLinks a:hover{color:#fff}.btn{border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:rgba(255,255,255,.04)}
+  header{padding:56px 0 28px}.eyebrow{font-family:var(--mono);font-size:12px;color:var(--red);margin-bottom:10px}h1{font-size:clamp(34px,5vw,58px);line-height:1.05;letter-spacing:-.03em;margin:0 0 14px}.lead{max-width:820px;color:var(--mut);font-size:18px}.grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start}.toc{position:sticky;top:84px;border:1px solid var(--line2);border-radius:12px;padding:14px;background:rgba(255,255,255,.03)}.toc b{display:block;margin-bottom:8px}.toc a{display:block;color:var(--mut);font-size:13px;padding:6px 0}.toc a:hover{color:#fff}.section{border:1px solid var(--line2);border-radius:14px;padding:20px;margin-bottom:18px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))}h2{font-size:22px;margin:0 0 12px}h3{font-size:16px;margin:18px 0 8px}.muted{color:var(--mut)}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.card{border:1px solid var(--line2);border-radius:10px;padding:13px;background:#0c0c0d}.card span{display:block;color:var(--mut2);font-family:var(--mono);font-size:11px;margin-bottom:5px}.card b{display:block}.pill{display:inline-block;border-radius:999px;padding:3px 8px;background:rgba(48,128,255,.12);color:#7fb0ff;font-family:var(--mono);font-size:11px}table{width:100%;border-collapse:collapse;border:1px solid var(--line2);border-radius:10px;overflow:hidden;font-size:13px}th,td{border-bottom:1px solid var(--line2);padding:10px;text-align:left;vertical-align:top}th{background:#151517;color:var(--mut);font-weight:600}tr:last-child td{border-bottom:0}code,pre{font-family:var(--mono)}code{color:#d8e7ff}pre{white-space:pre-wrap;background:#080809;border:1px solid var(--line2);border-radius:10px;padding:13px;overflow:auto;color:var(--mut);font-size:12px}.callout{border:1px solid rgba(48,128,255,.28);border-radius:12px;padding:14px;background:rgba(48,128,255,.08)}ul{padding-left:20px;color:var(--mut)}li{margin:5px 0}footer{border-top:1px solid var(--line2);padding:28px 0;margin-top:30px;color:var(--mut2);font-size:13px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}.toc{position:static}.cards{grid-template-columns:1fr}.navLinks{display:none}}
+</style>
+</head>
+<body>
+<nav><div class="wrap navIn">
+  <a class="brand" href="/"><span class="mark">TT</span>TokenTest<span class="muted">.io</span></a>
+  <div class="navLinks"><a href="/">返回首页</a><a href="#usage">如何使用</a><a href="#dimensions">测试维度</a><a href="#mcp">MCP usage</a><a class="btn" href="https://github.com/SolveaCX/tokentest.io" target="_blank" rel="noopener">GitHub</a></div>
+</div></nav>
+<header class="wrap">
+  <div class="eyebrow">PRODUCT MANUAL</div>
+  <h1>TokenTest Product Manual</h1>
+  <p class="lead">TokenTest 是面向模型采购、中转渠道接入和生产上线前验证的黑盒评测平台。它不会存储你的 API Key，会围绕身份协议、模型能力、通道完整性、Token 计量、安全鲁棒性和稳定性给出生产参考结论。</p>
+</header>
+<main class="wrap grid">
+  <aside class="toc">
+    <b>目录</b>
+    <a href="#usage">1. How to run an evaluation</a>
+    <a href="#dimensions">2. 6D evaluation dimensions</a>
+    <a href="#cases">3. Cases and metrics</a>
+    <a href="#scoring">4. Scoring and blocking</a>
+    <a href="#exports">5. Reports and exports</a>
+    <a href="#mcp">6. MCP usage</a>
+    <a href="#security">7. Security notes</a>
+  </aside>
+  <div>
+    <section class="section" id="usage">
+      <h2>1. How to run an evaluation / 如何使用</h2>
+      <div class="cards">
+        <div class="card"><span>STEP 01</span><b>填写 endpoint 与测试 Key</b><p class="muted">支持 OpenAI-compatible 或 Anthropic 风格中转。建议使用测试专用 Key。</p></div>
+        <div class="card"><span>STEP 02</span><b>发现或填写模型</b><p class="muted">点击自动发现模型，或手动填入多个模型 ID，用逗号/换行分隔。</p></div>
+        <div class="card"><span>STEP 03</span><b>运行并查看报告</b><p class="muted">每个模型生成摘要卡片，可展开查看每个维度、评测项和 case 证据。</p></div>
+      </div>
+      <p class="callout">建议流程：先用 1-2 个核心模型做快速验证，再对候选模型批量评测；如果要正式接入生产，把失败的 P0/P1 项逐条复核。</p>
+    </section>
+
+    <section class="section" id="dimensions">
+      <h2>2. 6D evaluation dimensions / 测试维度</h2>
+      <table>
+        <thead><tr><th>维度</th><th>说明</th><th>典型指标</th></tr></thead>
+        <tbody>
+          <tr><td><b>D1 身份与协议完整性</b></td><td>验证模型身份、响应协议 shape、nonce 防重放、模型列表一致性、header 溯源和鉴权兼容。</td><td>模型指纹、结构完整性、auth compatibility、signature、nonce replay。</td></tr>
+          <tr><td><b>D2 模型基础能力</b></td><td>验证结构化输出、多约束遵循、语言约束、数学/逻辑/代码理解。</td><td>JSON schema、多约束遵循、GSM8K-style、code benchmark-style cases。</td></tr>
+          <tr><td><b>D3 通道与输出完整性</b></td><td>验证工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 和结束信号。</td><td>tool calls、vision input、document input、stream usage、finish reason。</td></tr>
+          <tr><td><b>D4 Token 计量可信度</b></td><td>验证 usage 存在性、总量一致性、输入单调性、输出合理性、截断联动和 cache token 证据。</td><td>input/output tokens、total consistency、stop/token limit、cache tokens。</td></tr>
+          <tr><td><b>D5 安全鲁棒性</b></td><td>验证良性请求放行、Prompt 注入防护、敏感信息保护、危险代码边界和错误信息泄漏。</td><td>prompt injection、secret leakage、harmful-code boundary、error response shape。</td></tr>
+          <tr><td><b>D6 稳定性、可靠性与合规</b></td><td>验证短时延迟分布、TTFT 和成功率，为生产接入提供体验和可用性参考。</td><td>P50/P95/P99 latency、TTFT、latency sample success rate。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section" id="cases">
+      <h2>3. Cases and metrics / 用例与指标说明</h2>
+      <p class="muted">TokenTest 的评测项由多个 case 组成。一个评测项可能包含本地严格 case、公共基准风格 case 和协议探针。报告中的每一行都会显示测试方法、判定标准、结果证据和 case 明细。</p>
+      <ul>
+        <li><b>结构化输出 case</b>：要求模型只返回合法 JSON，检查字段、类型和额外文本。</li>
+        <li><b>多约束遵循 case</b>：同时要求语言、排序、校验和、决策字段，降低简单模板侥幸通过。</li>
+        <li><b>数学/逻辑/代码 case</b>：使用可确定答案的轻量题，包含 GSM8K-style 和 JavaScript pipeline 风格。</li>
+        <li><b>Token case</b>：检查 input token 单调性、total token 一致性、max_tokens 截断和 stream usage。</li>
+        <li><b>性能 case</b>：短时采样计算 P50/P95/P99、TTFT 和成功率。</li>
+      </ul>
+    </section>
+
+    <section class="section" id="scoring">
+      <h2>4. Scoring and blocking / 得分与阻断</h2>
+      <p>总分由 D1-D6 多维度加权和风险门控共同决定。P0 项代表生产阻断级风险，P1 项代表重要风险，P2 项代表补充观察项。</p>
+      <ul>
+        <li><span class="pill">Production reference pass</span>：适合作为生产接入参考，但仍建议结合业务流量灰度。</li>
+        <li><span class="pill">Needs review</span>：关键能力或证据存在不确定，需要人工复核。</li>
+        <li><span class="pill">Blocked</span>：存在 P0 失败、协议不可用、身份异常或严重安全/计量问题。</li>
+      </ul>
+    </section>
+
+    <section class="section" id="exports">
+      <h2>5. Reports and exports / 报告导出</h2>
+      <p>页面报告支持折叠/展开模型详情，并提供三种导出：</p>
+      <ul>
+        <li><b>JSON</b>：完整机器可读结果，适合二次分析或留档。</li>
+        <li><b>CSV</b>：按当前语言导出维度、评测项、case、判定标准和证据明细。</li>
+        <li><b>HTML</b>：生成离线可阅读的完整模型评测报告。</li>
+      </ul>
+    </section>
+
+    <section class="section" id="mcp">
+      <h2>6. MCP usage / MCP 使用说明</h2>
+      <p>TokenTest 提供本地 stdio MCP 和远程 HTTP MCP。工具包括 <code>discover_models</code>、<code>evaluate_model</code>、<code>evaluate_batch</code>。</p>
+      <h3>Remote MCP tools/list</h3>
+      <pre>curl -sS https://tokentest.io/mcp \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'Content-Type: application/json' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'</pre>
+      <h3>evaluate_model</h3>
+      <pre>curl -sS https://tokentest.io/mcp \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "jsonrpc":"2.0",
+    "id":2,
+    "method":"tools/call",
+    "params":{
+      "name":"evaluate_model",
+      "arguments":{
+        "base_url":"https://your-router.example",
+        "api_key":"&lt;UPSTREAM_ROUTER_API_KEY&gt;",
+        "model":"claude-opus-4-8",
+        "provider":"anthropic"
+      }
+    }
+  }'</pre>
+      <p class="muted">说明：这里的 <code>api_key</code> 是被测模型渠道的 Key，不是 TokenTest 账号 Key。TokenTest 不存储该 Key，远程 MCP 返回证据中会脱敏 Authorization。</p>
+    </section>
+
+    <section class="section" id="security">
+      <h2>7. Security notes / 安全与防滥用</h2>
+      <ul>
+        <li>公开 MCP 默认启用限流：按 IP、工具类型和 batch size 控制调用。</li>
+        <li>远程 MCP 默认禁止 localhost / 私网地址，降低 SSRF 风险。</li>
+        <li>公开模式强制关闭 deep evaluation，避免匿名高成本评测。</li>
+        <li>建议使用测试专用上游 API Key，不要使用生产主 Key。</li>
+        <li>如需大规模内部评测，应使用私有 <code>MCP_ACCESS_TOKEN</code> 模式或专用部署。</li>
+      </ul>
+    </section>
+  </div>
+</main>
+<footer class="wrap">© TokenTest.io · Product manual · <a href="https://flatkey.ai/" target="_blank" rel="noopener">FlatKey</a></footer>
+</body>
+</html>

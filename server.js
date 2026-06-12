@@ -5,7 +5,9 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { discoverModels, evaluateModel } from "./lib/evaluator.js";
+import { createSdkMcpServer } from "./lib/mcp-tools.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -18,10 +20,22 @@ const EVAL_TRACE_RETENTION_DAYS = positiveInt(process.env.EVAL_TRACE_RETENTION_D
 const EVAL_TRACE_RAW = process.env.EVAL_TRACE_RAW == null
   ? (!process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== "production")
   : /^(1|true|yes|on)$/i.test(String(process.env.EVAL_TRACE_RAW));
+const MCP_ACCESS_TOKEN = process.env.MCP_ACCESS_TOKEN || "";
+const MCP_REQUIRES_ACCESS_TOKEN = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === "production");
+const MCP_ALLOWED_ORIGINS = splitCsv(process.env.MCP_ALLOWED_ORIGINS || "https://tokentest.io,https://www.tokentest.io");
+const MCP_PUBLIC_MODE = boolEnv(process.env.MCP_PUBLIC_MODE);
+const MCP_PUBLIC_MAX_BATCH_MODELS = positiveInt(process.env.MCP_PUBLIC_MAX_BATCH_MODELS, 5);
+const MCP_RATE_LIMIT_WINDOW_MS = positiveInt(process.env.MCP_RATE_LIMIT_WINDOW_MS, 10 * 60 * 1000);
+const MCP_RATE_LIMIT_MAX_REQUESTS = positiveInt(process.env.MCP_RATE_LIMIT_MAX_REQUESTS, 120);
+const MCP_RATE_LIMIT_TOOL_WINDOW_MS = positiveInt(process.env.MCP_RATE_LIMIT_TOOL_WINDOW_MS, 60 * 60 * 1000);
+const MCP_RATE_LIMIT_DISCOVER = positiveInt(process.env.MCP_RATE_LIMIT_DISCOVER, 60);
+const MCP_RATE_LIMIT_EVALUATE = positiveInt(process.env.MCP_RATE_LIMIT_EVALUATE, 20);
+const MCP_RATE_LIMIT_BATCH = positiveInt(process.env.MCP_RATE_LIMIT_BATCH, 4);
+const mcpRateBuckets = new Map();
 
 // ---- puzzle geometry ----
 const W = 340, H = 180, SIZE = 48, R = 9; // board + piece size + tab radius
-const TOLERANCE = 7;                       // px slack on the X landing
+const TOLERANCE = 14;                      // px slack on the X landing
 const TTL_MS = 2 * 60 * 1000;              // challenge lifetime
 const challenges = new Map();              // id -> { gapX, y, seed, issued, solved }
 
@@ -122,16 +136,17 @@ app.post("/api/captcha/challenge", (req, res) => {
 
 // trail = [{x, t}] samples captured during the drag; t in ms from drag start
 function trailLooksHuman(trail) {
-  if (!Array.isArray(trail) || trail.length < 6) return false;
+  if (!Array.isArray(trail) || trail.length < 4) return false;
   const dur = trail[trail.length - 1].t - trail[0].t;
-  if (dur < 240 || dur > 30000) return false;          // too fast / stalled
-  if (trail[0].x > 12) return false;                   // must start near origin
+  if (dur < 120 || dur > 30000) return false;          // too fast / stalled
+  if (trail[0].x > 24) return false;                   // must start near origin
   // velocity must vary — reject perfectly linear (scripted) motion
   const dxs = [];
   for (let i = 1; i < trail.length; i++) dxs.push(trail[i].x - trail[i - 1].x);
   const mean = dxs.reduce((a, b) => a + b, 0) / dxs.length;
   const varc = dxs.reduce((a, b) => a + (b - mean) ** 2, 0) / dxs.length;
-  return varc > 0.6;
+  const totalDx = trail[trail.length - 1].x - trail[0].x;
+  return totalDx > 40 && (varc > 0.08 || dxs.length >= 8);
 }
 
 function sign(id, exp) {
@@ -195,11 +210,152 @@ app.post("/api/models", async (req, res) => {
   }
 });
 
+app.all("/mcp", async (req, res) => {
+  setMcpCorsHeaders(req, res);
+  if (req.method === "OPTIONS") return res.status(204).end();
+  if (!mcpOriginAllowed(req)) return res.status(403).json({ error: "mcp_origin_forbidden" });
+  const access = mcpAccess(req);
+  if (!access.ok) return res.status(access.status).json({ error: access.error });
+  const publicRejection = access.mode === "public" ? mcpPublicPolicyRejection(req) : null;
+  if (publicRejection) return sendMcpLimitError(req, res, publicRejection);
+  let mcpServer;
+  try {
+    mcpServer = createSdkMcpServer({
+      remote: true,
+      publicMode: access.mode === "public",
+      maxBatchModels: MCP_PUBLIC_MAX_BATCH_MODELS,
+    });
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+      enableJsonResponse: true,
+    });
+    await mcpServer.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  } catch (error) {
+    if (!res.headersSent) {
+      res.status(500).json({
+        jsonrpc: "2.0",
+        error: { code: -32000, message: String(error?.message || error) },
+        id: req.body?.id ?? null,
+      });
+    }
+  } finally {
+    if (mcpServer) await mcpServer.close().catch(() => {});
+  }
+});
+
 app.get("/healthz", (_req, res) => res.json({ ok: true, challenges: challenges.size }));
 
 function positiveInt(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? Math.floor(number) : fallback;
+}
+
+function boolEnv(value) {
+  return /^(1|true|yes|on)$/i.test(String(value || ""));
+}
+
+function splitCsv(value) {
+  return String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function setMcpCorsHeaders(req, res) {
+  const origin = req.get("origin");
+  if (origin && mcpOriginAllowed(req)) res.set("Access-Control-Allow-Origin", origin);
+  res.set("Vary", "Origin");
+  res.set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "content-type, authorization, mcp-session-id");
+}
+
+function mcpOriginAllowed(req) {
+  const origin = req.get("origin");
+  if (!origin) return true;
+  if (MCP_ALLOWED_ORIGINS.includes("*")) return true;
+  return MCP_ALLOWED_ORIGINS.includes(origin);
+}
+
+function mcpAccess(req) {
+  const bearer = mcpBearer(req);
+  if (MCP_ACCESS_TOKEN) {
+    if (bearer && timingSafeStringEqual(bearer, MCP_ACCESS_TOKEN)) return { ok: true, mode: "authenticated" };
+    if (bearer) return { ok: false, status: 401, error: "mcp_unauthorized" };
+    if (MCP_PUBLIC_MODE) return { ok: true, mode: "public" };
+    return { ok: false, status: 401, error: "mcp_unauthorized" };
+  }
+  if (MCP_REQUIRES_ACCESS_TOKEN && !MCP_PUBLIC_MODE) {
+    return { ok: false, status: 503, error: "mcp_access_token_required" };
+  }
+  return { ok: true, mode: MCP_PUBLIC_MODE ? "public" : "local" };
+}
+
+function mcpBearer(req) {
+  const match = String(req.get("authorization") || "").match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : "";
+}
+
+function mcpPublicPolicyRejection(req) {
+  const identity = mcpClientIdentity(req);
+  const requestLimit = takeRate(`mcp:req:${identity}`, MCP_RATE_LIMIT_MAX_REQUESTS, MCP_RATE_LIMIT_WINDOW_MS);
+  if (!requestLimit.ok) return { message: "mcp_public_rate_limited", retryAfterMs: requestLimit.retryAfterMs };
+
+  const body = req.body || {};
+  if (body.method !== "tools/call") return null;
+  const tool = String(body.params?.name || "");
+  const args = body.params?.arguments || {};
+  if (tool === "evaluate_batch" && Array.isArray(args.models) && args.models.length > MCP_PUBLIC_MAX_BATCH_MODELS) {
+    return { message: "mcp_public_batch_limit_exceeded", retryAfterMs: MCP_RATE_LIMIT_TOOL_WINDOW_MS };
+  }
+
+  const max = tool === "discover_models" ? MCP_RATE_LIMIT_DISCOVER
+    : tool === "evaluate_batch" ? MCP_RATE_LIMIT_BATCH
+      : tool === "evaluate_model" ? MCP_RATE_LIMIT_EVALUATE
+        : MCP_RATE_LIMIT_MAX_REQUESTS;
+  const toolLimit = takeRate(`mcp:tool:${tool}:${identity}`, max, MCP_RATE_LIMIT_TOOL_WINDOW_MS);
+  if (!toolLimit.ok) return { message: `mcp_public_${tool || "tool"}_rate_limited`, retryAfterMs: toolLimit.retryAfterMs };
+  return null;
+}
+
+function mcpClientIdentity(req) {
+  const forwarded = String(req.get("x-forwarded-for") || "").split(",")[0].trim();
+  return forwarded || req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+function takeRate(key, max, windowMs) {
+  const now = Date.now();
+  const existing = mcpRateBuckets.get(key);
+  if (!existing || now >= existing.resetAt) {
+    mcpRateBuckets.set(key, { count: 1, resetAt: now + windowMs });
+    pruneRateBuckets(now);
+    return { ok: true, remaining: max - 1, retryAfterMs: 0 };
+  }
+  if (existing.count >= max) {
+    return { ok: false, remaining: 0, retryAfterMs: Math.max(0, existing.resetAt - now) };
+  }
+  existing.count += 1;
+  return { ok: true, remaining: max - existing.count, retryAfterMs: 0 };
+}
+
+function pruneRateBuckets(now = Date.now()) {
+  if (mcpRateBuckets.size < 5000) return;
+  for (const [key, bucket] of mcpRateBuckets) {
+    if (now >= bucket.resetAt) mcpRateBuckets.delete(key);
+  }
+}
+
+function sendMcpLimitError(req, res, rejection) {
+  res.set("Retry-After", String(Math.max(1, Math.ceil((rejection.retryAfterMs || 1000) / 1000))));
+  return res.status(429).json({
+    jsonrpc: "2.0",
+    error: { code: -32029, message: rejection.message },
+    id: req.body?.id ?? null,
+  });
+}
+
+function timingSafeStringEqual(a, b) {
+  const left = Buffer.from(String(a));
+  const right = Buffer.from(String(b));
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
 }
 
 async function saveEvalRunTrace({ base_url, model, provider, deep, result }) {
