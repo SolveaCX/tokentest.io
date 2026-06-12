@@ -41,18 +41,18 @@ function normalizeInput(raw) {
 function renderHtml(raw, inputPath) {
   const { report, context } = normalizeInput(raw);
   context.inputPath = inputPath;
-  const packs = getPacks(report);
+  const dimensions = getDimensions(report);
   const probes = report.evidence?.probes || [];
-  const failed = packs.flatMap((pack) => (pack.categories || [])
+  const failed = dimensions.flatMap((dimension) => (dimension.categories || [])
     .filter((cat) => cat.status !== "pass")
-    .map((cat) => ({ pack, cat })));
+    .map((cat) => ({ pack: dimension, cat })));
 
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TokenTest 分层评测解读报告 - ${esc(context.model || report.requested_model || "model")}</title>
+<title>TokenTest 生产接入评测报告 - ${esc(context.model || report.requested_model || "model")}</title>
 <style>
   :root{color-scheme:dark;--bg:#08090b;--panel:#11151d;--panel2:#171d27;--soft:#0f131a;--line:#2a3444;--text:#eef3fb;--muted:#a7b3c4;--green:#19c37d;--amber:#f5a524;--red:#ef4444;--blue:#64a8ff}
   *{box-sizing:border-box}
@@ -73,7 +73,7 @@ function renderHtml(raw, inputPath) {
   .riskList{margin:8px 0 0;padding-left:18px}.riskList li{margin:6px 0}
   .toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:14px 0 22px}.toc a{display:block;border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:10px;color:var(--text);text-decoration:none}.toc small{display:block;color:var(--muted)}
   .pill{display:inline-flex;align-items:center;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800}.pill.pass{background:rgba(25,195,125,.14);color:var(--green)}.pill.partial{background:rgba(245,165,36,.16);color:var(--amber)}.pill.fail{background:rgba(239,68,68,.16);color:var(--red)}
-  details.pack{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);margin:18px 0;overflow:hidden}summary.packSummary{cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px;background:#111720;border-bottom:1px solid var(--line)}details.pack:not([open]) summary.packSummary{border-bottom:0}.packBody{padding:14px 16px 16px}
+  details.dimensionPack{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);margin:18px 0;overflow:hidden}summary.dimensionPackSummary{cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px;background:#111720;border-bottom:1px solid var(--line)}details.dimensionPack:not([open]) summary.dimensionPackSummary{border-bottom:0}.packBody{padding:14px 16px 16px}
   details.dimension{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin:12px 0;overflow:hidden}summary.dimensionSummary{cursor:pointer;display:grid;grid-template-columns:minmax(180px,.42fr) minmax(0,1fr) auto;gap:12px;align-items:start;background:var(--panel2);padding:12px;border-bottom:1px solid var(--line)}details.dimension:not([open]) summary.dimensionSummary{border-bottom:0}
   .dimensionBody{padding:12px}.explainGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}.explainGrid div{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px}.explainGrid b{display:block;margin-bottom:4px;color:#dfe7f3}
   .scenario{border:1px solid var(--line);border-radius:10px;background:#0c1017;margin:12px 0;overflow:hidden}.scenarioHead{display:flex;justify-content:space-between;gap:12px;background:#121823;padding:10px 12px;border-bottom:1px solid var(--line)}
@@ -82,20 +82,23 @@ function renderHtml(raw, inputPath) {
   details.evidence{border:1px solid var(--line);border-radius:8px;background:var(--panel);margin:10px 0;overflow:hidden}details.evidence>summary{cursor:pointer;background:#18202b;padding:10px 12px;font-weight:800}
   .evidenceInner{padding:12px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}.evidenceSummary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:8px 0}.evidenceSummary div{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px}.evidenceSummary span{display:block;color:var(--muted);font-size:12px}
   pre{white-space:pre-wrap;word-break:break-word;margin:0;background:#080b10;border:1px solid var(--line);border-radius:8px;padding:10px;color:#d8e4f2;max-height:520px;overflow:auto;font:12px/1.48 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-  @media(max-width:980px){.summary,.cols,summary.dimensionSummary,.explainGrid{display:block}summary.packSummary{display:block}summary.dimensionSummary>*{margin-bottom:8px}}
+  @media(max-width:980px){.summary,.cols,summary.dimensionSummary,.explainGrid{display:block}summary.dimensionPackSummary{display:block}summary.dimensionSummary>*{margin-bottom:8px}}
 </style>
 </head>
 <body><main>
   <section class="hero">
-    <div class="eyebrow">TokenTest Readable Evidence Report</div>
-    <h1>TokenTest 分层评测解读报告</h1>
+    <div class="eyebrow">TokenTest Production Reference Report</div>
+    <h1>TokenTest 生产接入评测报告</h1>
     <p>输入文件：<code>${esc(inputPath)}</code></p>
-    <p class="notice">本报告按原始评测维度分层展示：分类 Pack → 评测维度 → 测试场景 → request/response 证据。原始 trace 本地保留，不做脱敏；请勿提交包含 key 的 data/eval-runs 文件。</p>
+    <p class="notice">本报告按 D1-D6 通用评测维度分层展示：综合评分与最终判定 → 覆盖审计 → 6D 维度概览 → 评测维度 → 测试场景 → request/response 证据。原始 trace 本地保留，不做脱敏；请勿提交包含 key 的 data/eval-runs 文件。</p>
     ${renderTopMetrics(report, context, probes)}
     ${renderOverall(report, failed)}
-    ${renderToc(packs)}
+    ${renderCoverageAudit(report, dimensions)}
+    ${renderDimensionCards(dimensions)}
+    ${renderScoringTable(report, dimensions)}
+    ${renderToc(dimensions)}
   </section>
-  ${packs.map((pack, index) => renderPack(report, pack, index)).join("\n")}
+  ${dimensions.map((dimension, index) => renderDimensionPack(report, dimension, index)).join("\n")}
 </main></body></html>`;
 }
 
@@ -118,34 +121,63 @@ function renderTopMetrics(report, context, probes) {
 function renderOverall(report, failed) {
   const risk = report.risk || {};
   const p1 = risk.p1_failures || [];
+  const p0 = risk.p0_failures || [];
   const questionable = failed.filter(({ cat }) => auditNote(cat.key));
   return `<div class="summary">
     <section class="box">
-      <h2>总体结论</h2>
+      <h2>综合评分与最终判定</h2>
       <p>${esc(report.summary || "未记录总结。")}</p>
-      <p>这次报告没有 P0 失败项；P1 风险会影响生产接入判断。当前最终分 ${esc(report.score)}，原始分 ${esc(report.raw_score ?? risk.raw_score)}，说明基础协议和安全能力总体可用，但仍存在需要复核的关键能力风险。</p>
+      <p>综合分 ${esc(report.score)}，原始分 ${esc(report.raw_score ?? risk.raw_score)}；最终生产判定为 <b>${esc(risk.production_verdict || report.verdict || "unknown")}</b>。P0 失败不可由综合分抵消，P1 失败会触发复核或风险封顶。</p>
       ${questionable.length ? `<p class="audit">注意：部分维度存在人工复核提示，不能直接把这些项全部归因为模型能力问题。下面会在对应维度单独标记。</p>` : ""}
     </section>
     <section class="box">
       <h2>阻断 / 风险原因</h2>
-      ${p1.length ? `<ul class="riskList">${p1.map((item) => `<li><b>${esc(item.name)}</b> <code>${esc(item.key)}</code><br><span class="muted">${esc(item.detail)}</span></li>`).join("")}</ul>` : "<p>没有记录 P1 风险。</p>"}
+      ${p0.length || p1.length ? `<ul class="riskList">${[...p0, ...p1].map((item) => `<li><b>${esc(item.name)}</b> <code>${esc(item.key)}</code><br><span class="muted">${esc(item.detail)}</span></li>`).join("")}</ul>` : "<p>没有记录 P0/P1 阻断风险。</p>"}
     </section>
   </div>`;
 }
 
-function renderToc(packs) {
-  return `<h2>分类 Pack</h2><nav class="toc">
-    ${packs.map((pack, index) => `<a href="#pack-${index}"><b>${esc(pack.name || pack.key)}</b> ${pill(pack.status)}<small>${esc(pack.score ?? "未记录")}/100 · ${(pack.categories || []).length} 个评测维度</small></a>`).join("")}
+function renderCoverageAudit(report, dimensions) {
+  const coverage = report.dimension_coverage || coverageFor(dimensions.flatMap((item) => item.categories || []));
+  return `<section class="box">
+    <h2>覆盖审计</h2>
+    <p>已测试 ${esc(coverage.tested || 0)} 项；通过 ${esc(coverage.pass || 0)}，部分通过 ${esc(coverage.partial || 0)}，失败 ${esc(coverage.fail || 0)}。</p>
+    <p>skipped_scope：${esc(coverage.skipped_scope || 0)}；skipped_infra：${esc(coverage.skipped_infra || 0)}；not_tested：${esc(coverage.not_tested || 0)}。</p>
+  </section>`;
+}
+
+function renderDimensionCards(dimensions) {
+  return `<h2>6D 维度概览</h2><div class="grid">
+    ${dimensions.map((dimension) => `<div class="metric"><span>${esc(dimension.id)} ${esc(dimension.name)}</span><b>${esc(dimension.score ?? "未记录")}</b><span>权重 ${esc(dimension.weight)}% · ${esc(statusZh(dimension.status))} · fail ${esc(dimension.coverage?.fail || 0)}</span></div>`).join("")}
+  </div>`;
+}
+
+function renderScoringTable(report, dimensions) {
+  const rows = dimensions.map((dimension) => {
+    const contribution = Number.isFinite(Number(dimension.score)) ? (Number(dimension.score) * Number(dimension.weight || 0) / 100).toFixed(2) : "未记录";
+    const coverage = dimension.coverage || {};
+    return `<tr><td>${esc(dimension.id)}</td><td>${esc(dimension.name)}</td><td>${esc(dimension.score)}</td><td>${esc(dimension.weight)}%</td><td>${esc(contribution)}</td><td>pass:${esc(coverage.pass || 0)} / partial:${esc(coverage.partial || 0)} / fail:${esc(coverage.fail || 0)}</td></tr>`;
+  }).join("");
+  return `<section class="box">
+    <h2>评分公式</h2>
+    <p>D1×0.15 + D2×0.20 + D3×0.20 + D4×0.10 + D5×0.15 + D6×0.20 = raw_score ${esc(report.raw_score ?? report.risk?.raw_score ?? "未记录")}；最终分 ${esc(report.score ?? "未记录")} 来自 P0/P1 风险门槛处理。</p>
+    <table><thead><tr><th>维度</th><th>名称</th><th>维度分</th><th>权重</th><th>加权贡献</th><th>状态统计</th></tr></thead><tbody>${rows}</tbody></table>
+  </section>`;
+}
+
+function renderToc(dimensions) {
+  return `<h2>维度目录</h2><nav class="toc">
+    ${dimensions.map((dimension, index) => `<a href="#dimension-pack-${index}"><b>${esc(dimension.id)} ${esc(dimension.name)}</b> ${pill(dimension.status)}<small>${esc(dimension.score ?? "未记录")}/100 · ${(dimension.categories || []).length} 个评测维度</small></a>`).join("")}
   </nav>`;
 }
 
-function renderPack(report, pack, index) {
+function renderDimensionPack(report, pack, index) {
   const hasAttentionItems = (pack.categories || []).some((cat) => cat.status !== "pass");
-  const open = pack.status !== "pass" || hasAttentionItems ? " open" : "";
-  return `<details class="pack" id="pack-${index}"${open}>
-    <summary class="packSummary">
+  const open = pack.status !== "pass" || hasAttentionItems || index === 0 ? " open" : "";
+  return `<details class="dimensionPack" id="dimension-pack-${index}"${open}>
+    <summary class="dimensionPackSummary">
       <div>
-        <h2>${esc(pack.name || pack.key)} <code>${esc(pack.key)}</code></h2>
+        <h2>${esc(pack.id ? `${pack.id} ${pack.name}` : pack.name || pack.key)} <code>${esc(pack.key)}</code></h2>
         <p>${esc(pack.summary || packPurpose(pack.key))}</p>
       </div>
       <div>${pill(pack.status || statusForScore(pack.score))} <b>${esc(pack.score ?? "未记录")}/100</b></div>
@@ -295,8 +327,89 @@ function probeKeysFor(key) {
   return PROBE_MAP[key] || [key];
 }
 
+function getDimensions(report) {
+  const actual = Array.isArray(report.dimensions) ? report.dimensions : [];
+  if (actual.length) {
+    return DIMENSION_TEMPLATES.map((template) => {
+      const found = actual.find((item) => item.id === template.id || item.key === template.key);
+      if (!found) return emptyDimension(template);
+      const categories = Array.isArray(found.categories) ? found.categories : [];
+      return {
+        ...template,
+        ...found,
+        id: template.id,
+        key: template.key,
+        name: template.name,
+        weight: template.weight,
+        summary: found.summary || template.summary,
+        categories,
+        coverage: found.coverage || coverageFor(categories),
+      };
+    });
+  }
+  const packs = getPacks(report);
+  const categories = packs.flatMap((pack) => (pack.categories || []).map((cat) => ({ ...cat, pack: pack.key })));
+  return DIMENSION_TEMPLATES.map((template) => {
+    const grouped = categories.filter((cat) => template.categories.includes(cat.key));
+    if (!grouped.length) return emptyDimension(template);
+    const score = weightedCategoryScore(grouped);
+    return {
+      ...template,
+      score,
+      status: statusForScore(score),
+      categories: grouped,
+      coverage: coverageFor(grouped),
+    };
+  });
+}
+
+function emptyDimension(template) {
+  return {
+    ...template,
+    score: 0,
+    status: "not_tested",
+    categories: [],
+    coverage: { tested: 0, pass: 0, partial: 0, fail: 0, warn: 0, skipped_scope: 0, skipped_infra: 0, not_tested: 1 },
+  };
+}
+
 function getPacks(report) {
   return Array.isArray(report.pack_results) ? report.pack_results : [];
+}
+
+function weightedCategoryScore(categories) {
+  const weighted = categories.reduce((acc, item) => {
+    const weight = severityWeight(item.severity);
+    return {
+      score: acc.score + (Number(item.score) || 0) * weight,
+      weight: acc.weight + weight,
+    };
+  }, { score: 0, weight: 0 });
+  return weighted.weight ? Math.round(weighted.score / weighted.weight) : 0;
+}
+
+function coverageFor(items) {
+  const out = { tested: 0, pass: 0, partial: 0, fail: 0, warn: 0, skipped_scope: 0, skipped_infra: 0, not_tested: 0 };
+  for (const item of items) {
+    const status = String(item.status || "not_tested");
+    if (status === "skipped_scope") out.skipped_scope += 1;
+    else if (status === "skipped_infra") out.skipped_infra += 1;
+    else if (status === "not_tested") out.not_tested += 1;
+    else {
+      out.tested += 1;
+      if (status === "pass") out.pass += 1;
+      else if (status === "fail") out.fail += 1;
+      else if (status === "warn") out.warn += 1;
+      else out.partial += 1;
+    }
+  }
+  return out;
+}
+
+function severityWeight(severity) {
+  if (severity === "p0") return 3;
+  if (severity === "p1") return 2;
+  return 1;
 }
 
 function probeEvidence(report, key) {
@@ -346,6 +459,10 @@ function statusZh(status) {
   if (status === "pass") return "通过";
   if (status === "partial") return "部分通过";
   if (status === "fail") return "失败";
+  if (status === "warn") return "警告";
+  if (status === "skipped_scope") return "范围跳过";
+  if (status === "skipped_infra") return "基础设施跳过";
+  if (status === "not_tested") return "未测试";
   return status || "未知";
 }
 
@@ -391,6 +508,57 @@ const PACK_PURPOSE = {
   token_integrity: "验证 usage 存在性、总量一致性、输入单调性、输出合理性、截断、stream usage 和 cache 证据。",
   performance_reliability: "验证轻量请求的延迟分布、首包时间和短时成功率。",
 };
+
+const DIMENSION_TEMPLATES = [
+  {
+    id: "D1",
+    key: "d1_identity_protocol",
+    name: "身份与协议完整性",
+    weight: 15,
+    summary: "协议 shape、模型身份、nonce 防重放、Header 溯源和鉴权兼容性。",
+    categories: ["llm_fingerprint", "model_registry", "structure", "behavior", "nonce_replay", "signature", "header_provenance", "auth_compatibility", "text_baseline"],
+  },
+  {
+    id: "D2",
+    key: "d2_model_core",
+    name: "模型基础能力",
+    weight: 20,
+    summary: "结构化输出、多约束遵循、格式纪律、语言约束、数学/逻辑/代码理解。",
+    categories: ["instruction_json", "instruction_constraints", "instruction_no_extra", "instruction_language", "reasoning_arithmetic", "reasoning_logic", "reasoning_code"],
+  },
+  {
+    id: "D3",
+    key: "d3_channel_output",
+    name: "通道与输出完整性",
+    weight: 20,
+    summary: "工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",
+    categories: ["channel_tool_use", "channel_vision", "channel_documents", "channel_web_search", "channel_long_output", "channel_stream_sse", "channel_stream_delta", "channel_thinking", "channel_message_stop"],
+  },
+  {
+    id: "D4",
+    key: "d4_token_integrity",
+    name: "Token 计量可信度",
+    weight: 10,
+    summary: "usage 存在性、总量一致性、输入单调性、输出合理性、截断联动、stream usage 和 cache 证据。",
+    categories: ["token_audit", "token_total_consistency", "token_input_monotonicity", "token_output_reasonableness", "token_stop_limit", "token_stream_usage", "token_cache_behavior", "token_no_cache_sanity", "channel_cache_tokens"],
+  },
+  {
+    id: "D5",
+    key: "d5_safety_robustness",
+    name: "安全鲁棒性",
+    weight: 15,
+    summary: "良性请求放行、Prompt 注入、敏感信息保护、危险代码边界、错误响应 shape 和错误信息泄漏。",
+    categories: ["safety_benign_allowed", "safety_prompt_injection", "safety_secret_leakage", "safety_harmful_code", "channel_error_leakage", "error_response_shape"],
+  },
+  {
+    id: "D6",
+    key: "d6_stability_compliance",
+    name: "稳定性、可靠性与合规",
+    weight: 20,
+    summary: "P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率；合规类证据后续可继续补充。",
+    categories: ["latency_p50", "latency_p95", "latency_p99", "latency_ttft", "latency_success_rate"],
+  },
+];
 
 const PROBE_MAP = {
   llm_fingerprint: ["authenticity"],

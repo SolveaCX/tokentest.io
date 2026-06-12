@@ -135,6 +135,25 @@ server.listen(0, "127.0.0.1", async () => {
     });
     assert.equal(single.verdict, "genuine");
     assert.equal(single.score >= 80, true);
+    assert.deepEqual(single.dimensions.map((item) => item.key), [
+      "d1_identity_protocol",
+      "d2_model_core",
+      "d3_channel_output",
+      "d4_token_integrity",
+      "d5_safety_robustness",
+      "d6_stability_compliance",
+    ]);
+    assert.deepEqual(single.dimensions.map((item) => item.id), ["D1", "D2", "D3", "D4", "D5", "D6"]);
+    assert.equal(single.dimensions.find((item) => item.id === "D1").categories.some((item) => item.key === "llm_fingerprint"), true);
+    assert.equal(single.dimensions.find((item) => item.id === "D2").categories.some((item) => item.key === "instruction_constraints"), true);
+    assert.equal(single.dimensions.find((item) => item.id === "D2").categories.some((item) => item.key === "reasoning_code"), true);
+    assert.equal(single.dimensions.find((item) => item.id === "D3").categories.some((item) => item.key === "channel_stream_sse"), true);
+    assert.equal(single.dimensions.find((item) => item.id === "D4").categories.some((item) => item.key === "token_input_monotonicity"), true);
+    assert.equal(single.dimensions.find((item) => item.id === "D5").categories.some((item) => item.key === "error_response_shape"), true);
+    assert.equal(single.dimensions.find((item) => item.id === "D6").categories.some((item) => item.key === "latency_p95"), true);
+    assert.equal(single.dimension_coverage.tested > 0, true);
+    assert.equal(single.dimension_coverage.skipped_scope, 0);
+    assert.equal(single.dimension_coverage.not_tested, 0);
     assert.deepEqual(single.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "token_integrity", "performance_reliability"]);
     assert.equal(single.categories.length >= 43, true);
     assert.equal(single.pack_results.every((item) => item.score >= 80), true);

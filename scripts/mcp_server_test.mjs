@@ -114,6 +114,9 @@ try {
   });
   const result = JSON.parse(evaluated.content[0].text);
   assert.equal(result.verdict, "genuine");
+  assert.deepEqual(result.dimensions.map((item) => item.id), ["D1", "D2", "D3", "D4", "D5", "D6"]);
+  assert.deepEqual(result.dimensions.map((item) => item.key), ["d1_identity_protocol", "d2_model_core", "d3_channel_output", "d4_token_integrity", "d5_safety_robustness", "d6_stability_compliance"]);
+  assert.equal(result.dimension_coverage.tested > 0, true);
   assert.equal(result.categories.length >= 43, true);
   assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "token_integrity", "performance_reliability"]);
   assert.equal(result.performance.latency.sample_count, 5);
