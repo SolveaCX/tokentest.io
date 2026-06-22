@@ -560,6 +560,7 @@
   const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
   const RETRY=2; // extra attempts on transient upstream errors
   const MODEL_TIMEOUT_MS={quick:240000,truth:420000,cost:300000};
+  const MODEL_CONCURRENCY={quick:2,truth:1,cost:2};
   function interruptedResult(model,error,summary){
     return {verdict:"error",score:0,error,summary,requested_model:model,resolved_model:"",categories:[]};
   }
@@ -592,22 +593,42 @@
       REPORT_OPEN.clear();
       BATCH = models.map(m=>({model:m,status:"queued",data:null})); renderMatrix();
       $("runProbe").disabled=true; $("runTop").disabled=true;
-      for(let i=0;i<BATCH.length;i++){
-        BATCH[i].status="running"; BATCH[i].retrying=0; renderMatrix();
-        try{ BATCH[i].data=await checkModel(token,BATCH[i].model,(n)=>{ BATCH[i].retrying=n; renderMatrix(); });
-          BATCH[i].status="done"; BATCH[i].retrying=0; }
-        catch(e){ if(e.message==="captcha"){ $("runProbe").disabled=false;$("runTop").disabled=false;
-          const summary=LANG==="zh"?"人机验证已过期，本轮批量评测已中断，请重新验证后再运行。":"Human verification expired, so this batch was interrupted. Verify again and rerun.";
-          for(let j=i;j<BATCH.length;j++){
-            BATCH[j].status="done"; BATCH[j].retrying=0;
-            BATCH[j].data=interruptedResult(BATCH[j].model,j===i?"captcha_expired":"batch_interrupted",summary);
+      let nextIndex=0, interrupted=false;
+      const interruptBatch=(error)=>{
+        if(interrupted) return;
+        interrupted=true;
+        const summary=LANG==="zh"?"人机验证已过期，本轮批量评测已中断，请重新验证后再运行。":"Human verification expired, so this batch was interrupted. Verify again and rerun.";
+        BATCH.forEach((item)=>{
+          if(item.status!=="done"){
+            item.status="done"; item.retrying=0;
+            item.data=interruptedResult(item.model,error||"batch_interrupted",summary);
           }
-          renderMatrix();
-          showToast(LANG==="zh"?"验证已过期，请重试":"Verification expired — retry"); return; } }
+        });
         renderMatrix();
-      }
+      };
+      const worker=async()=>{
+        while(!interrupted){
+          const i=nextIndex++;
+          if(i>=BATCH.length) return;
+        BATCH[i].status="running"; BATCH[i].retrying=0; renderMatrix();
+          try{
+            const data=await checkModel(token,BATCH[i].model,(n)=>{ BATCH[i].retrying=n; renderMatrix(); });
+            if(interrupted) return;
+            BATCH[i].data=data;
+            BATCH[i].status="done"; BATCH[i].retrying=0;
+          }
+          catch(e){ if(e.message==="captcha"){
+            interruptBatch("captcha_expired");
+            showToast(LANG==="zh"?"验证已过期，请重试":"Verification expired — retry");
+            return;
+          } }
+        renderMatrix();
+        }
+      };
+      const concurrency=Math.max(1,Math.min(BATCH.length,MODEL_CONCURRENCY[state.mode]||2));
+      await Promise.all(Array.from({length:concurrency},()=>worker()));
       $("runProbe").disabled=false; $("runTop").disabled=false;
-      showToast(LANG==="zh"?"检测完成":"Verification complete");
+      if(!interrupted) showToast(LANG==="zh"?"检测完成":"Verification complete");
     });
   }
 

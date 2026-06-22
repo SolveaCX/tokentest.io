@@ -185,7 +185,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(single.categories.find((item) => item.key === "latency_p95").status, "pass");
     assert.equal(single.categories.find((item) => item.key === "latency_p99").status, "pass");
     assert.equal(single.categories.find((item) => item.key === "latency_ttft").status, "pass");
-    assert.equal(single.performance.latency.sample_count, 5);
+    assert.equal(single.performance.latency.sample_count, 3);
     assert.equal(single.performance.stream.ttft_ms >= 0, true);
     assert.equal(single.performance.latency.p50_ms >= 0, true);
     assert.equal(single.performance.latency.p95_ms >= single.performance.latency.p50_ms, true);
@@ -250,7 +250,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(batch.summary.error_count, 0);
 
     const opus47 = requests.filter((item) => item.model === "claude-opus-4-7");
-    assert.equal(opus47.length, 33, "opus 4.7 should run core, protocol, channel, token, stream, malformed, latency and expanded code probes");
+    assert.equal(opus47.length, 31, "opus 4.7 should run core, protocol, channel, token, stream, malformed, latency and expanded code probes with compact quick latency sampling");
     assert.equal(opus47.every((item) => !Object.hasOwn(item, "temperature")), true, "probes must not send deprecated temperature");
 
     console.log("ok: local evaluator smoke");

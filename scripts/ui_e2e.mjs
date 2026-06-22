@@ -22,6 +22,8 @@ const VALID_KEY = "test-key-visible-in-ui";
 
 const mockModels = ["claude-sonnet-4-5", "claude-opus-4-8"];
 let chatCalls = 0;
+let activeChatCalls = 0;
+let maxConcurrentChatCalls = 0;
 let router;
 let routerBase = REAL_BASE_URL;
 
@@ -32,7 +34,11 @@ if (!USE_REAL) {
     }
     if (req.url === "/v1/chat/completions") {
       chatCalls += 1;
+      activeChatCalls += 1;
+      maxConcurrentChatCalls = Math.max(maxConcurrentChatCalls, activeChatCalls);
+      res.on("finish", () => { activeChatCalls -= 1; });
       const body = await readJson(req);
+      await sleep(25);
       assert.equal("temperature" in body, false);
       if (!isValidAuth(req)) {
         return json(res, { error: { message: "invalid API key", type: "authentication_error", code: "invalid_api_key" } }, 401);
@@ -184,7 +190,7 @@ try {
   assert.ok(report.every((item) => item.dimensions.map((dimension) => dimension.id).join(",") === "D1,D2,D3,D4,D5,D6"), "six dimensions should be ordered D1-D6");
   assert.ok(report.every((item) => item?.dimension_coverage?.tested > 0), "each report row should include 6D coverage audit");
   assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 43), "each report row should have all merged pack categories, token integrity and performance categories");
-  assert.ok(report.every((item) => item?.performance?.latency?.sample_count === 5), "each report row should include latency percentile samples");
+  assert.ok(report.every((item) => item?.performance?.latency?.sample_count === 3), "each report row should include compact latency percentile samples in quick mode");
   assert.ok(report.every((item) => item?.performance?.stream?.text_chunk_count >= 1), "each report row should include streaming TTFT evidence");
   assert.ok(report.every((item) => item.cats.every((cat) => !cat.key.startsWith("public_"))), "public probes should be case evidence, not categories");
   assert.ok(report.every((item) => item.cats.some((cat) => cat.key === "reasoning_arithmetic" && (cat.cases || []).some((testCase) => testCase.key === "gsm8k_arithmetic_case"))), "GSM8K-style probe should be merged into arithmetic cases");
@@ -195,7 +201,8 @@ try {
 
   if (!USE_REAL) {
     assert.equal(report.length, mockModels.length);
-    assert.equal(chatCalls, mockModels.length * 33);
+    assert.equal(chatCalls, mockModels.length * 31);
+    assert.ok(maxConcurrentChatCalls >= 2, `batch evaluation should run multiple models concurrently, got max ${maxConcurrentChatCalls}`);
     assert.ok(report.every((item) => item.verdict === "genuine"), "mock models should retain compatible genuine verdict");
     assert.ok(report.every((item) => item.risk.production_verdict === "production_reference_pass"), "mock models should pass production reference gate");
   } else {
@@ -408,6 +415,10 @@ async function readJson(req) {
 function listen(server, host) {
   server.listen(0, host);
   return once(server, "listening");
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function signToken(id, exp) {
