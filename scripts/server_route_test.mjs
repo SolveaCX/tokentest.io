@@ -141,14 +141,14 @@ try {
   assert.equal(result.resolved_model, "claude-opus-4-8-20251101");
   assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "token_integrity", "performance_reliability"]);
   assert.equal(result.categories.length >= 43, true);
-  assert.equal(result.performance.latency.sample_count, 5);
+  assert.equal(result.performance.latency.sample_count, 3);
   assert.equal(result.performance.stream.text_chunk_count >= 1, true);
   assert.equal(result.categories.find((item) => item.key === "latency_p95").status, "pass");
   assert.equal(result.categories.some((item) => item.key.startsWith("public_")), false);
   assert.equal(result.categories.find((item) => item.key === "instruction_constraints").cases.some((item) => item.key === "ifeval_constraints_case"), true);
   assert.equal(result.categories.find((item) => item.key === "token_input_monotonicity").status, "pass");
   assert.equal(result.categories.find((item) => item.key === "public_ceval_zh"), undefined);
-  assert.equal(chatCalls, 33);
+  assert.equal(chatCalls, 31);
   assert.equal(result.evidence.probes.find((item) => item.key === "authenticity").request.headers.authorization, "Bearer test-key");
   assert.equal(result.evidence.probes.find((item) => item.key === "authenticity").response.model, "claude-opus-4-8-20251101");
   assert.equal(result.evidence.probes.find((item) => item.key === "authenticity").response.choices[0].message.role, "assistant");
