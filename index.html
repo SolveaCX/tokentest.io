@@ -83,6 +83,9 @@
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .chip{font-family:var(--mono);font-size:12px;color:var(--mut);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
   .chip:hover{color:var(--txt);border-color:var(--blue)}
+  .chip.selected{color:var(--txt);border-color:rgba(0,199,88,.75);background:rgba(0,199,88,.14)}
+  .chip.allChip{border-color:rgba(48,128,255,.72);color:var(--blue);background:rgba(48,128,255,.12)}
+  .chip.allChip.selected{border-color:rgba(0,199,88,.75);color:var(--green);background:rgba(0,199,88,.14)}
   .modes{display:inline-flex;gap:2px;background:#0a0a0a;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:16px}
   .modes button{background:transparent;border:0;color:var(--mut);font-family:var(--mono);font-size:13px;padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s}
   .modes button.active{background:rgba(255,255,255,.08);color:var(--txt)}
@@ -218,6 +221,7 @@
 	  .evBox span{display:block;font-size:11px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
 	  .evBox b,.evBox code{font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:500;word-break:break-word;white-space:pre-wrap}
 	  .rawBox{border-top:1px solid var(--line2);padding:12px 14px;background:rgba(0,0,0,.18)}
+	  .evidenceOverview{color:var(--mut);font-size:12px;font-family:var(--mono)}
 	  pre{background:#0c0c0d;border:1px solid var(--line2);border-radius:8px;padding:13px;overflow:auto;font-family:var(--mono);font-size:11.5px;color:var(--mut);max-height:240px;margin:10px 0 0;text-align:left}
 	  details summary{cursor:pointer;color:var(--mut);font-size:12px;font-family:var(--mono)}
   .emptyRow td{color:var(--mut);padding:26px 22px;text-align:center}
@@ -516,6 +520,34 @@
   function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
   function scoreColor(s){ return s>=80?"var(--green)":s>=55?"var(--amber)":"var(--red)"; }
   function parseModels(){ return $("models").value.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean); }
+  function setModelList(models){
+    const unique=[...new Set((models||[]).map(s=>String(s).trim()).filter(Boolean))];
+    $("models").value=unique.join(", ");
+    updateModelChips();
+  }
+  function updateModelChips(){
+    const selected=new Set(parseModels());
+    const chips=$("chips");
+    chips.querySelectorAll(".chip[data-m]").forEach(chip=>{
+      const model=chip.getAttribute("data-m");
+      const on=selected.has(model);
+      chip.classList.toggle("selected",on);
+      chip.textContent=`${on?"✓":"+"} ${model}`;
+      chip.setAttribute("aria-pressed",on?"true":"false");
+    });
+    const all=chips.querySelector(".chip[data-all]");
+    if(all){
+      const models=[...chips.querySelectorAll(".chip[data-m]")].map(chip=>chip.getAttribute("data-m"));
+      const allSelected=models.length>0 && models.every(model=>selected.has(model));
+      all.classList.toggle("selected",allSelected);
+      all.textContent=`${allSelected?"✓":"✚"} ${LANG==="zh"?(allSelected?"取消全部":"全部添加"):(allSelected?"remove all":"add all")}`;
+      all.setAttribute("aria-pressed",allSelected?"true":"false");
+    }
+  }
+  function toggleDiscoveredModel(model){
+    const cur=parseModels();
+    setModelList(cur.includes(model)?cur.filter(item=>item!==model):cur.concat(model));
+  }
 
   // ---------------- token / captcha gate ----------------
   function getToken(){ try{ const raw=sessionStorage.getItem("tt_cap"); if(!raw)return null;
@@ -527,19 +559,27 @@
   const REPORT_OPEN = new Set();
   const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
   const RETRY=2; // extra attempts on transient upstream errors
+  const MODEL_TIMEOUT_MS={quick:240000,truth:420000,cost:300000};
+  function interruptedResult(model,error,summary){
+    return {verdict:"error",score:0,error,summary,requested_model:model,resolved_model:"",categories:[]};
+  }
   async function checkModel(token, model, onStatus){
     const body={ token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(),
       model, provider:providerFor(model), deep:state.mode==="truth" };
     for(let attempt=0;attempt<=RETRY;attempt++){
-      try{ const r=await fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),MODEL_TIMEOUT_MS[state.mode]||MODEL_TIMEOUT_MS.quick);
+      try{ const r=await fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body),signal:controller.signal});
         if(r.status===401){ sessionStorage.removeItem("tt_cap"); throw new Error("captcha"); }
         const d=await r.json();
         const transient = d.verdict==="error" && /50[023]|429|upstream|connect|unreach|timeout|temporar/i.test(String(d.error||d.summary||""));
         if(transient && attempt<RETRY){ if(onStatus)onStatus(attempt+1); await sleep(1300+attempt*900); continue; }
         return d;
       }catch(e){ if(e.message==="captcha") throw e;
+        if(e.name==="AbortError") return {verdict:"error",score:0,error:"model_eval_timeout",summary:LANG==="zh"?"该模型评测超过单模型时间上限，已停止等待并继续后续模型。":"This model exceeded the per-model evaluation timeout, so TokenTest stopped waiting and continued the batch."};
         if(attempt<RETRY){ if(onStatus)onStatus(attempt+1); await sleep(1100); continue; }
         return {verdict:"error",score:0,error:String(e),summary:t("res_empty")}; }
+      finally{ clearTimeout(timer); }
     }
   }
   function requestRun(){
@@ -550,12 +590,19 @@
     ensureToken(async(token)=>{
       if(!token){ showToast(LANG==="zh"?"需要先通过人机验证":"Human check required"); return; }
       REPORT_OPEN.clear();
-      BATCH = models.map(m=>({model:m,status:"pending",data:null})); renderMatrix();
+      BATCH = models.map(m=>({model:m,status:"queued",data:null})); renderMatrix();
       $("runProbe").disabled=true; $("runTop").disabled=true;
       for(let i=0;i<BATCH.length;i++){
+        BATCH[i].status="running"; BATCH[i].retrying=0; renderMatrix();
         try{ BATCH[i].data=await checkModel(token,BATCH[i].model,(n)=>{ BATCH[i].retrying=n; renderMatrix(); });
           BATCH[i].status="done"; BATCH[i].retrying=0; }
         catch(e){ if(e.message==="captcha"){ $("runProbe").disabled=false;$("runTop").disabled=false;
+          const summary=LANG==="zh"?"人机验证已过期，本轮批量评测已中断，请重新验证后再运行。":"Human verification expired, so this batch was interrupted. Verify again and rerun.";
+          for(let j=i;j<BATCH.length;j++){
+            BATCH[j].status="done"; BATCH[j].retrying=0;
+            BATCH[j].data=interruptedResult(BATCH[j].model,j===i?"captcha_expired":"batch_interrupted",summary);
+          }
+          renderMatrix();
           showToast(LANG==="zh"?"验证已过期，请重试":"Verification expired — retry"); return; } }
         renderMatrix();
       }
@@ -571,11 +618,12 @@
     $("resSum").textContent = BATCH.length ?
       `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avg}` : t("res_empty");
     $("reportList").innerHTML = BATCH.map((b,i)=>{
-      if(b.status==="pending"){ const rt=b.retrying?` · ${LANG==="zh"?"重试":"retry"} ${b.retrying}/${RETRY}`:"";
+      if(b.status!=="done"){ const rt=b.retrying?` · ${LANG==="zh"?"重试":"retry"} ${b.retrying}/${RETRY}`:"";
+        const running=b.status==="running";
         return `<section class="modelReport pending">
           <div class="modelReportHead pending">
             <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerFor(b.model)}</div></div>
-            <div class="reportMetric"><span>${LANG==="zh"?"状态":"Status"}</span><b><span class="spin"></span> ${LANG==="zh"?"探测中…":"probing…"}${rt}</b></div>
+            <div class="reportMetric"><span>${LANG==="zh"?"状态":"Status"}</span><b>${running?'<span class="spin"></span> ':''}${running?(LANG==="zh"?"探测中…":"probing…"):(LANG==="zh"?"排队等待":"queued")}${rt}</b></div>
           </div>
         </section>`; }
       const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=rowVerdictClass(d);
@@ -649,7 +697,7 @@
           <div class="detailTitle">${esc(d.summary||d.error||"")}</div>
         </div>
       </div>
-      <details class="rawBox"><summary>${LANG==="zh"?"证据概览":"Evidence overview"} · Raw score ${d.raw_score!=null?esc(d.raw_score):"—"} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</summary></details>
+      <div class="rawBox evidenceOverview">${LANG==="zh"?"证据概览":"Evidence overview"} · Raw score ${d.raw_score!=null?esc(d.raw_score):"—"} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</div>
       <h3 style="margin:16px 0 8px">${LANG==="zh"?"6D 维度概览":"6D dimension overview"}</h3>
       ${dimensionSummary}
       <h3 class="detailSectionTitle">${LANG==="zh"?"评估明细表":"Assessment detail table"}</h3>
@@ -1079,13 +1127,18 @@
         const d=await r.json();
         if(!d.models||!d.models.length){ showToast(LANG==="zh"?"未发现模型（中转可能未开放 /models）":"No models found (router may hide /models)"); $("chips").innerHTML=""; return; }
         const all=d.models.slice(0,40);
-        $("chips").innerHTML = `<span class="chip" data-all="1" style="border-color:var(--blue);color:var(--blue)">✚ ${LANG==="zh"?"全部添加":"add all"}</span>`
-          + all.map(m=>`<span class="chip" data-m="${esc(m)}">+ ${esc(m)}</span>`).join("");
-        $("chips").querySelector("[data-all]").addEventListener("click",()=>{ $("models").value = all.join(", "); showToast(`${all.length} ${LANG==="zh"?"个模型已加入":"models added"}`); });
+        $("chips").innerHTML = `<button class="chip allChip" type="button" data-all="1" aria-pressed="false">✚ ${LANG==="zh"?"全部添加":"add all"}</button>`
+          + all.map(m=>`<button class="chip" type="button" data-m="${esc(m)}" aria-pressed="false">+ ${esc(m)}</button>`).join("");
+        $("chips").querySelector("[data-all]").addEventListener("click",()=>{
+          const cur=parseModels();
+          const allSelected=all.every(m=>cur.includes(m));
+          setModelList(allSelected?cur.filter(m=>!all.includes(m)):[...cur,...all]);
+          showToast(allSelected?`${all.length} ${LANG==="zh"?"个模型已取消":"models removed"}`:`${all.length} ${LANG==="zh"?"个模型已加入":"models added"}`);
+        });
         $("chips").querySelectorAll(".chip[data-m]").forEach(c=>c.addEventListener("click",()=>{
-          const m=c.getAttribute("data-m"); const cur=parseModels();
-          if(!cur.includes(m)) $("models").value = (cur.concat(m)).join(", ");
+          toggleDiscoveredModel(c.getAttribute("data-m"));
         }));
+        updateModelChips();
         showToast(`${d.models.length} ${LANG==="zh"?"个模型可选":"models found"}`);
       }catch(e){ showToast("discover failed: "+e.message); }
     });
@@ -1159,6 +1212,7 @@
   $("runProbe").addEventListener("click",requestRun);
   $("runTop").addEventListener("click",requestRun);
   $("discoverBtn").addEventListener("click",discover);
+  $("models").addEventListener("input",updateModelChips);
   $("loadSample").addEventListener("click",()=>{ $("responseJson").value=JSON.stringify(sample,null,2);analyzeLocal(sample);showToast(LANG==="zh"?"已载入示例":"Sample loaded"); });
   $("analyzeJson").addEventListener("click",()=>{ try{const raw=$("responseJson").value.trim();analyzeLocal(raw?JSON.parse(raw):sample);}catch(e){showToast("Invalid JSON: "+e.message);} });
   $("langBtn").addEventListener("click",()=>{ LANG=LANG==="en"?"zh":"en";localStorage.setItem("tt_lang",LANG);applyLang(); });

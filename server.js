@@ -37,6 +37,7 @@ const mcpRateBuckets = new Map();
 const W = 340, H = 180, SIZE = 48, R = 9; // board + piece size + tab radius
 const TOLERANCE = 14;                      // px slack on the X landing
 const TTL_MS = 2 * 60 * 1000;              // challenge lifetime
+const TOKEN_TTL_MS = positiveInt(process.env.CAPTCHA_TOKEN_TTL_MS, 60 * 60 * 1000);
 const challenges = new Map();              // id -> { gapX, y, seed, issued, solved }
 
 // prune expired challenges lazily
@@ -166,7 +167,7 @@ app.post("/api/captcha/verify", (req, res) => {
   if (!within) return res.json({ ok: false, reason: "position" });
   if (!human) return res.json({ ok: false, reason: "behavior" });
   c.solved = true;
-  const exp = Date.now() + 5 * 60 * 1000;
+  const exp = Date.now() + TOKEN_TTL_MS;
   res.json({ ok: true, token: sign(challengeId, exp), exp });
 });
 
