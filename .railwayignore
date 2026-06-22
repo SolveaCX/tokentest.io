@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log*
+.env
+.DS_Store
+test/
+data/
+docs/superpowers/
+report*.html
+llm-eval-upgrade-plan*.html
+research/*case-trace*.html
+research/archive/*case-trace*.html
