@@ -79,6 +79,21 @@ const router = http.createServer(async (req, res) => {
       usage,
     });
   }
+  if (req.url === "/v1/images/generations") {
+    const body = await readJson(req);
+    if (!isValidAuth(req)) {
+      return json(res, { error: { message: "invalid API key", type: "authentication_error" } }, 401);
+    }
+    if (/counterfeit medicine|celebrity/i.test(body.prompt || "")) {
+      return json(res, { error: { message: "blocked by safety policy", type: "safety_error" } }, 400);
+    }
+    return json(res, {
+      id: "img-mcp-test",
+      model: body.model,
+      data: [{ url: `https://cdn.example.test/${body.model}/mcp.png`, revised_prompt: body.prompt }],
+      usage: { prompt_tokens: Math.ceil(String(body.prompt || "").length / 4), completion_tokens: 0, total_tokens: Math.ceil(String(body.prompt || "").length / 4) },
+    });
+  }
   json(res, { error: "not_found" }, 404);
 });
 
@@ -100,7 +115,7 @@ try {
 
   const listed = await client.request("tools/list", {});
   const toolNames = listed.tools.map((tool) => tool.name).sort();
-  assert.deepEqual(toolNames, ["discover_models", "evaluate_batch", "evaluate_model"]);
+  assert.deepEqual(toolNames, ["discover_models", "evaluate_batch", "evaluate_image_model", "evaluate_model", "evaluate_video_model", "list_visual_cases"]);
 
   const discovered = await client.request("tools/call", {
     name: "discover_models",
@@ -119,12 +134,28 @@ try {
   assert.equal(result.dimension_coverage.tested > 0, true);
   assert.equal(result.categories.length >= 43, true);
   assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "token_integrity", "performance_reliability"]);
-  assert.equal(result.performance.latency.sample_count, 5);
+  assert.equal(result.performance.latency.sample_count, 3);
   assert.equal(result.performance.stream.text_chunk_count >= 1, true);
   assert.equal(result.categories.some((item) => item.key.startsWith("public_")), false);
   assert.equal(result.categories.find((item) => item.key === "safety_secret_leakage").cases.some((item) => item.key === "truthfulqa_false_premise_case"), true);
   assert.equal(result.categories.find((item) => item.key === "token_total_consistency").status, "pass");
-  assert.equal(chatCalls, 33);
+  assert.equal(chatCalls, 31);
+
+  const visualCases = await client.request("tools/call", {
+    name: "list_visual_cases",
+    arguments: { modality: "image" },
+  });
+  assert.equal(JSON.parse(visualCases.content[0].text).image.some((item) => item.default), true);
+
+  const imageEval = await client.request("tools/call", {
+    name: "evaluate_image_model",
+    arguments: { base_url, api_key: "test-key", model: "image-mcp-model", selected_case_ids: ["image_text_rendering"] },
+  });
+  const imageResult = JSON.parse(imageEval.content[0].text);
+  assert.equal(imageResult.modality, "image");
+  assert.deepEqual(imageResult.dimensions.map((item) => item.id), ["I1", "I2", "I3", "I4"]);
+  assert.equal(imageResult.categories.find((item) => item.key === "visual_optional_control").cases.length, 1);
+  assert.equal(JSON.stringify(imageResult).includes("test-key"), false);
   console.log("ok: mcp server tools");
 } finally {
   child.kill();

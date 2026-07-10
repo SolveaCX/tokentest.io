@@ -123,7 +123,7 @@ try {
   assert.equal(init.result.serverInfo.name, "tokentest-evaluator");
 
   const listed = await mcpJson(appPort, { jsonrpc: "2.0", id: 4, method: "tools/list", params: {} });
-  assert.deepEqual(listed.result.tools.map((tool) => tool.name).sort(), ["discover_models", "evaluate_batch", "evaluate_model"]);
+  assert.deepEqual(listed.result.tools.map((tool) => tool.name).sort(), ["discover_models", "evaluate_batch", "evaluate_image_model", "evaluate_model", "evaluate_video_model", "list_visual_cases"]);
 
   const discovered = await mcpJson(appPort, {
     jsonrpc: "2.0",
@@ -147,7 +147,7 @@ try {
   const authEvidence = result.evidence.probes.find((item) => item.key === "authenticity").request.headers.authorization;
   assert.equal(authEvidence, "<redacted>");
   assert.equal(JSON.stringify(result).includes(VALID_KEY), false);
-  assert.equal(chatCalls, 33);
+  assert.equal(chatCalls, 31);
 
   console.log("ok: remote HTTP MCP endpoint");
 } finally {
@@ -212,7 +212,7 @@ try {
     origin: "https://allowed.example",
   });
   assert.equal(publicList.status, 200, JSON.stringify(publicList.payload));
-  assert.deepEqual(publicList.payload.result.tools.map((tool) => tool.name).sort(), ["discover_models", "evaluate_batch", "evaluate_model"]);
+  assert.deepEqual(publicList.payload.result.tools.map((tool) => tool.name).sort(), ["discover_models", "evaluate_batch", "evaluate_image_model", "evaluate_model", "evaluate_video_model", "list_visual_cases"]);
 
   const publicBlockedOrigin = await mcpPost(publicPort, { jsonrpc: "2.0", id: 9, method: "tools/list", params: {} }, {
     origin: "https://evil.example",
