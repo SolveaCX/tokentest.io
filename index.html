@@ -90,6 +90,19 @@
   .modes button{background:transparent;border:0;color:var(--mut);font-family:var(--mono);font-size:13px;padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s}
   .modes button.active{background:rgba(255,255,255,.08);color:var(--txt)}
   .pad>.modes{display:flex;width:max-content;margin-left:auto;margin-right:auto}
+  .targetModes{display:flex;width:100%;margin-bottom:10px}
+  .targetModes button{flex:1;text-align:center}
+  .visualOptions{display:none;border:1px solid var(--line2);border-radius:10px;background:rgba(255,255,255,.025);padding:12px;margin:-2px 0 16px}
+  .visualOptions.show{display:block}
+  .visualOptionsHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+  .visualOptionsHead b{font-size:13px}
+  .visualOptionsHead span{font-size:11px;color:var(--mut2);font-family:var(--mono);text-align:right}
+  .visualCore{font-size:12px;color:var(--mut);line-height:1.5;border-bottom:1px solid var(--line2);padding-bottom:10px;margin-bottom:10px}
+  .visualCaseList{display:grid;gap:7px}
+  .visualCase{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start;font-size:12px;color:var(--mut)}
+  .visualCase input{width:14px;height:14px;margin:2px 0 0;accent-color:var(--red)}
+  .visualCase b{display:block;color:var(--txt);font-size:12px;font-weight:600;line-height:1.35}
+  .visualCase span{display:block;color:var(--mut2);font-size:11px;line-height:1.45;margin-top:2px}
   .run{width:100%;margin-top:4px;background:var(--red);color:#fff;border:0;border-radius:11px;font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:.15s;box-shadow:0 8px 28px -10px rgba(251,44,54,.7)}
   .run:hover{filter:brightness(1.07)} .run:disabled{opacity:.6;cursor:default}
   .runNote{text-align:center;font-size:12px;color:var(--mut2);margin-top:10px;font-family:var(--mono)}
@@ -315,6 +328,11 @@
           <span class="tag" data-i18n="card_tag">black-box · key not stored</span>
         </div>
         <div class="pad">
+          <div class="modes targetModes" role="tablist" aria-label="Evaluation target">
+            <button class="active" data-target="text" data-i18n="target_text">Text</button>
+            <button data-target="image" data-i18n="target_image">Image</button>
+            <button data-target="video" data-i18n="target_video">Video</button>
+          </div>
           <div class="modes" role="tablist">
             <button class="active" data-mode="quick" data-i18n="mode_quick">Quick</button>
             <button data-mode="truth" data-i18n="mode_truth">Truth</button>
@@ -336,8 +354,16 @@
             <textarea id="models" spellcheck="false" placeholder="click discover models, or paste model ids separated by commas"></textarea>
             <div class="chips" id="chips"></div>
           </div>
+          <div class="visualOptions" id="visualOptions">
+            <div class="visualOptionsHead">
+              <b data-i18n="visual_options_title">Visual evaluation cases</b>
+              <span id="visualCaseCount">core only</span>
+            </div>
+            <div class="visualCore" id="visualCoreText"></div>
+            <div class="visualCaseList" id="visualCaseList"></div>
+          </div>
           <button class="run" id="runProbe" data-i18n="run_btn">Start verification</button>
-          <div class="runNote" data-i18n="run_note">Sends ~30 probes per model · est. $0.01–$0.30 each</div>
+          <div class="runNote" id="runNote" data-i18n="run_note">Sends ~30 probes per model · est. $0.01–$0.30 each</div>
           <details class="advanced">
             <summary data-i18n="adv">Advanced · protocol &amp; offline analyze</summary>
             <div class="field" style="margin-top:12px">
@@ -419,6 +445,10 @@
       safety:"⛨ Black-box probing · for safety, prefer a test-only API key",
       flatkey_bar:"Found a model worth using? Buy and connect it on FlatKey.",
       flatkey_k:"Need a production router behind the test?",flatkey_h:"Use FlatKey to unify model keys, routing and channel governance.",flatkey_p:"Test with TokenTest, then operate the winning channels with FlatKey.",
+      target_text:"Text",target_image:"Image",target_video:"Video",visual_options_title:"Visual evaluation cases",
+      visual_core_image:"Default core image cases run automatically: object rendering, composition/counting, Chinese prompt following and unsafe-generation refusal.",
+      visual_core_video:"Default core video cases run automatically: basic motion, product camera motion and unsafe-generation refusal.",
+      visual_case_count:"{core} core + {optional} optional selected",
       card_title:"Evaluation Run",card_tag:"black-box · key not stored",mode_quick:"Quick",mode_truth:"Truth",mode_cost:"Cost",
       l_endpoint:"API endpoint",l_key:"API key",l_models:"Target model(s)",discover:"↻ discover models",
       run_btn:"Start evaluation",run_note:"Sends ~30 probes per model · est. $0.01–$0.30 each",
@@ -442,6 +472,10 @@
       safety:"⛨ 黑盒探测 · 为安全起见，建议使用测试专用 API Key",
       flatkey_bar:"评测出合适模型后，去 FlatKey 选购并接入生产。",
       flatkey_k:"测完模型，下一步怎么稳定接入？",flatkey_h:"用 FlatKey 统一管理模型 Key、路由和渠道治理。",flatkey_p:"TokenTest 负责选型评测，FlatKey 负责把胜出的通道稳定跑起来。",
+      target_text:"文本",target_image:"图片",target_video:"视频",visual_options_title:"视觉评测用例",
+      visual_core_image:"默认自动运行图片核心用例：物体生成、组合/数量约束、中文 Prompt 遵循、不安全生成拒绝。",
+      visual_core_video:"默认自动运行视频核心用例：基础运动、产品镜头运动、不安全视频生成拒绝。",
+      visual_case_count:"{core} 个核心 + 已选 {optional} 个扩展",
       card_title:"评测运行",card_tag:"黑盒 · 不存储 Key",mode_quick:"快速",mode_truth:"深度",mode_cost:"成本",
       l_endpoint:"API 接口地址",l_key:"API Key",l_models:"目标模型（可多个）",discover:"↻ 自动发现模型",
       run_btn:"开始检测",run_note:"每个模型约 30 次探测 · 单个约 $0.01–$0.30",
@@ -483,6 +517,8 @@
 	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},error_response_shape:{en:"Error response shape"},channel_malformed_error:{en:"Malformed request handling"},
 	    token_total_consistency:{en:"Token total consistency"},token_input_monotonicity:{en:"Input token monotonicity"},token_output_reasonableness:{en:"Output token reasonableness"},token_stop_limit:{en:"Stop/token limit linkage"},token_stream_usage:{en:"Stream usage consistency"},token_cache_behavior:{en:"Cache token double-call"},token_no_cache_sanity:{en:"No-cache usage sanity"},
 	    latency_p50:{en:"P50 latency"},latency_p95:{en:"P95 latency"},latency_p99:{en:"P99 latency"},latency_ttft:{en:"TTFT latency"},latency_success_rate:{en:"Latency sample success"},
+	    visual_protocol_compatibility:{en:"Image protocol compatibility"},visual_asset_integrity:{en:"Image asset integrity"},visual_prompt_alignment:{en:"Image prompt alignment"},visual_safety_boundary:{en:"Image safety boundary"},visual_latency_stability:{en:"Image latency stability"},visual_optional_control:{en:"Image optional controls"},
+	    video_lifecycle_integrity:{en:"Video lifecycle integrity"},video_asset_integrity:{en:"Video asset integrity"},video_prompt_motion:{en:"Video prompt and motion"},video_temporal_consistency:{en:"Video temporal consistency"},video_safety_boundary:{en:"Video safety boundary"},video_latency_stability:{en:"Video latency stability"},video_optional_control:{en:"Video optional controls"},
 	    safety_benign_allowed:{en:"Benign request allowed"},
 	    "LLM 指纹验证":{en:"LLM fingerprint"},"Token 用量审计":{en:"Token usage audit"},"行为验证":{en:"Behavior"},
 	    "签名校验":{en:"Signature"},"文本通道基线":{en:"Text baseline"},"多模态能力":{en:"Multimodal"},"结构完整性":{en:"Structural integrity"} };
@@ -505,6 +541,7 @@
     document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
     $("langBtn").textContent=t("lang");
+    updateTargetUi();
     if(BATCH.length) renderMatrix(); else { $("resSum").textContent=t("res_empty"); }
   }
 
@@ -516,10 +553,16 @@
     if(/gpt|openai|o[134]\b|chatgpt|davinci/i.test(model)) return "openai";
     return ENGINE_PROVIDER();
   }
+  function providerLabel(model,d){
+    if(d?.modality==="image") return "image";
+    if(d?.modality==="video") return "video";
+    return isVisualTarget()?state.target:providerFor(model);
+  }
   function showToast(x){const e=$("toast");e.textContent=x;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600);}
   function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
   function scoreColor(s){ return s>=80?"var(--green)":s>=55?"var(--amber)":"var(--red)"; }
   function parseModels(){ return $("models").value.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean); }
+  let VISUAL_CASES={image:[],video:[]};
   function setModelList(models){
     const unique=[...new Set((models||[]).map(s=>String(s).trim()).filter(Boolean))];
     $("models").value=unique.join(", ");
@@ -548,6 +591,49 @@
     const cur=parseModels();
     setModelList(cur.includes(model)?cur.filter(item=>item!==model):cur.concat(model));
   }
+  function isVisualTarget(){ return state.target==="image" || state.target==="video"; }
+  function selectedVisualCaseIds(){
+    if(!isVisualTarget()) return [];
+    return [...document.querySelectorAll("#visualCaseList input[type='checkbox']:checked")].map(item=>item.value);
+  }
+  async function loadVisualCases(){
+    try{
+      const response=await fetch("/api/visual-cases");
+      const data=await response.json();
+      VISUAL_CASES=data.modalities||VISUAL_CASES;
+      renderVisualOptions();
+    }catch(e){
+      VISUAL_CASES={image:[],video:[]};
+    }
+  }
+  function renderVisualOptions(){
+    const panel=$("visualOptions");
+    if(!panel) return;
+    panel.classList.toggle("show",isVisualTarget());
+    if(!isVisualTarget()) return;
+    const cases=VISUAL_CASES[state.target]||[];
+    const core=cases.filter(item=>item.default);
+    const optional=cases.filter(item=>!item.default);
+    $("visualCoreText").textContent=state.target==="image"?t("visual_core_image"):t("visual_core_video");
+    $("visualCaseList").innerHTML=optional.map(item=>`<label class="visualCase">
+      <input type="checkbox" value="${esc(item.id)}">
+      <span><b>${esc(LANG==="zh"?(item.name_zh||item.name):item.name)}</b><span>${esc(item.id)}</span></span>
+    </label>`).join("") || `<div class="small muted">${LANG==="zh"?"暂无扩展用例":"No optional cases"}</div>`;
+    $("visualCaseCount").textContent=t("visual_case_count").replace("{core}",core.length).replace("{optional}",selectedVisualCaseIds().length);
+    $("visualCaseList").querySelectorAll("input").forEach(input=>input.addEventListener("change",()=>{
+      $("visualCaseCount").textContent=t("visual_case_count").replace("{core}",core.length).replace("{optional}",selectedVisualCaseIds().length);
+    }));
+  }
+  function updateTargetUi(){
+    document.querySelectorAll("[data-target]").forEach(btn=>btn.classList.toggle("active",btn.dataset.target===state.target));
+    renderVisualOptions();
+    const note=isVisualTarget()
+      ? state.target==="image"
+        ? (LANG==="zh"?"默认运行 4 个图片核心用例，可勾选扩展用例 · 成本取决于生成模型":"Runs 4 core image cases by default; optional cases add cost")
+        : (LANG==="zh"?"默认运行 3 个视频核心用例，可勾选扩展用例 · 视频成本通常更高":"Runs 3 core video cases by default; optional cases add cost")
+      : t("run_note");
+    $("runNote").textContent=note;
+  }
 
   // ---------------- token / captcha gate ----------------
   function getToken(){ try{ const raw=sessionStorage.getItem("tt_cap"); if(!raw)return null;
@@ -565,12 +651,15 @@
     return {verdict:"error",score:0,error,summary,requested_model:model,resolved_model:"",categories:[]};
   }
   async function checkModel(token, model, onStatus){
-    const body={ token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(),
+    const body=isVisualTarget()
+      ? { token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(), model, modality:state.target, selected_case_ids:selectedVisualCaseIds() }
+      : { token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(),
       model, provider:providerFor(model), deep:state.mode==="truth" };
+    const path=isVisualTarget()?"/api/check-visual":"/api/check";
     for(let attempt=0;attempt<=RETRY;attempt++){
       const controller=new AbortController();
       const timer=setTimeout(()=>controller.abort(),MODEL_TIMEOUT_MS[state.mode]||MODEL_TIMEOUT_MS.quick);
-      try{ const r=await fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body),signal:controller.signal});
+      try{ const r=await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body),signal:controller.signal});
         if(r.status===401){ sessionStorage.removeItem("tt_cap"); throw new Error("captcha"); }
         const d=await r.json();
         const transient = d.verdict==="error" && /50[023]|429|upstream|connect|unreach|timeout|temporar/i.test(String(d.error||d.summary||""));
@@ -643,7 +732,7 @@
         const running=b.status==="running";
         return `<section class="modelReport pending">
           <div class="modelReportHead pending">
-            <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerFor(b.model)}</div></div>
+            <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerLabel(b.model)}</div></div>
             <div class="reportMetric"><span>${LANG==="zh"?"状态":"Status"}</span><b>${running?'<span class="spin"></span> ':''}${running?(LANG==="zh"?"探测中…":"probing…"):(LANG==="zh"?"排队等待":"queued")}${rt}</b></div>
           </div>
         </section>`; }
@@ -652,7 +741,7 @@
       return `<section class="modelReport ${open?"":"collapsed"}" data-i="${i}">
         <button class="modelReportHeaderButton" type="button" data-i="${i}" aria-expanded="${open?"true":"false"}">
         <div class="modelReportHead">
-          <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerFor(b.model)}</div></div>
+          <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerLabel(b.model,d)}</div></div>
           <div class="reportMetric"><span>${LANG==="zh"?"评分":"Score"}</span><b style="color:${scoreColor(sc)}">${sc}</b><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div>${d.raw_score!=null&&d.raw_score!==d.score?`<div class="small muted mono">raw ${esc(d.raw_score)}</div>`:""}</div>
           <div class="reportMetric"><span>${LANG==="zh"?"生产判定":"Production verdict"}</span><b><span class="pill ${v}">${esc(rowVerdictLabel(d))}</span></b></div>
           <div class="reportMetric"><span>${LANG==="zh"?"原因概述":"Reason"}</span><b>${esc(summaryReason(d))}</b></div>
@@ -696,7 +785,7 @@
       <span>${esc(p.summary||dimensionHint(p))}</span>
     </div>`).join("")}</div>`:"";
     const dimensionSections=dimensions.length?dimensions.map(p=>{
-      const packCats=(p.categories||[]).length?p.categories:cats.filter(c=>dimensionCategoryKeys(p.key).includes(c.key));
+      const packCats=(p.categories||[]).length?p.categories:cats.filter(c=>dimensionCategoryKeys(p.key,d).includes(c.key));
       const dimCoverage=p.coverage||coverageFor(packCats);
       return `<details class="dimSection" open>
         <summary class="dimSummary">
@@ -711,6 +800,7 @@
         ${renderDimensionTable(packCats,d)}
       </details>`;
     }).join(""):`<div class="catGrid">${renderCategoryCards(cats,d)}</div>`;
+    const overviewTitle=d.modality==="image"?(LANG==="zh"?"图片维度概览":"Image dimension overview"):d.modality==="video"?(LANG==="zh"?"视频维度概览":"Video dimension overview"):(LANG==="zh"?"6D 维度概览":"6D dimension overview");
     return `<div class="detailPanel">
       <div class="detailTop">
         <div>
@@ -719,7 +809,7 @@
         </div>
       </div>
       <div class="rawBox evidenceOverview">${LANG==="zh"?"证据概览":"Evidence overview"} · Raw score ${d.raw_score!=null?esc(d.raw_score):"—"} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</div>
-      <h3 style="margin:16px 0 8px">${LANG==="zh"?"6D 维度概览":"6D dimension overview"}</h3>
+      <h3 style="margin:16px 0 8px">${overviewTitle}</h3>
       ${dimensionSummary}
       <h3 class="detailSectionTitle">${LANG==="zh"?"评估明细表":"Assessment detail table"}</h3>
       ${dimensionSections}
@@ -868,16 +958,36 @@
     {id:"D5",key:"d5_safety_robustness",zh:"安全鲁棒性",en:"Safety & Robustness",weight:15,cats:["safety_benign_allowed","safety_prompt_injection","safety_secret_leakage","safety_harmful_code","channel_error_leakage","error_response_shape"]},
     {id:"D6",key:"d6_stability_compliance",zh:"稳定性、可靠性与合规",en:"Stability & Compliance",weight:20,cats:["latency_p50","latency_p95","latency_p99","latency_ttft","latency_success_rate"]}
   ];
+  const VISUAL_DIMENSION_TEMPLATES={
+    image:[
+      {id:"I1",key:"visual_access_integrity",zh:"接入协议与产物完整性",en:"Access & Asset Integrity",weight:30,cats:["visual_protocol_compatibility","visual_asset_integrity"]},
+      {id:"I2",key:"visual_prompt_alignment",zh:"图文一致性与核心遵循",en:"Prompt Alignment",weight:35,cats:["visual_prompt_alignment"]},
+      {id:"I3",key:"visual_safety_boundary",zh:"安全与合规边界",en:"Safety Boundary",weight:20,cats:["visual_safety_boundary"]},
+      {id:"I4",key:"visual_cost_stability",zh:"成本、延迟与稳定性",en:"Cost & Stability",weight:15,cats:["visual_latency_stability","visual_optional_control"]}
+    ],
+    video:[
+      {id:"V1",key:"video_lifecycle_integrity",zh:"接入协议与任务生命周期",en:"Lifecycle Integrity",weight:30,cats:["video_lifecycle_integrity","video_asset_integrity"]},
+      {id:"V2",key:"video_prompt_motion",zh:"Prompt 遵循与运动基础",en:"Prompt & Motion",weight:30,cats:["video_prompt_motion"]},
+      {id:"V3",key:"video_temporal_consistency",zh:"时序一致性与镜头稳定",en:"Temporal Consistency",weight:25,cats:["video_temporal_consistency","video_optional_control"]},
+      {id:"V4",key:"video_safety_boundary",zh:"安全、成本与稳定性",en:"Safety, Cost & Stability",weight:15,cats:["video_safety_boundary","video_latency_stability"]}
+    ]
+  };
+  function dimensionTemplatesFor(d){
+    if(d?.modality==="image") return VISUAL_DIMENSION_TEMPLATES.image;
+    if(d?.modality==="video") return VISUAL_DIMENSION_TEMPLATES.video;
+    return DIMENSION_TEMPLATES;
+  }
   function normalizeDimensions(d){
+    const templates=dimensionTemplatesFor(d);
     if(Array.isArray(d.dimensions)&&d.dimensions.length){
-      return DIMENSION_TEMPLATES.map(t=>{
+      return templates.map(t=>{
         const found=d.dimensions.find(x=>x.id===t.id||x.key===t.key);
         if(!found) return emptyDimension(t);
         return {...found,id:t.id,key:t.key,name:found.name||t.zh,weight:found.weight||t.weight,categories:found.categories||[],coverage:found.coverage||coverageFor(found.categories||[])};
       });
     }
     const cats=d.categories||[];
-    return DIMENSION_TEMPLATES.map(t=>{
+    return templates.map(t=>{
       const items=cats.filter(c=>t.cats.includes(c.key));
       if(!items.length) return emptyDimension(t);
       const score=weightedScore(items);
@@ -885,16 +995,19 @@
     });
   }
   function emptyDimension(t){ return {id:t.id,key:t.key,name:t.zh,weight:t.weight,score:0,status:"not_tested",summary:dimensionHint(t),categories:[],coverage:{tested:0,pass:0,partial:0,fail:0,warn:0,skipped_scope:0,skipped_infra:0,not_tested:1}}; }
-  function dimensionCategoryKeys(key){ return (DIMENSION_TEMPLATES.find(t=>t.key===key||t.id===key)||{}).cats||[]; }
+  function dimensionCategoryKeys(key,d){ return (dimensionTemplatesFor(d).find(t=>t.key===key||t.id===key)||{}).cats||[]; }
   function dimensionLabel(d){
-    const t=DIMENSION_TEMPLATES.find(x=>x.key===d.key||x.id===d.id);
+    const all=[...DIMENSION_TEMPLATES,...VISUAL_DIMENSION_TEMPLATES.image,...VISUAL_DIMENSION_TEMPLATES.video];
+    const t=all.find(x=>x.key===d.key||x.id===d.id);
     return t ? `${t.id} ${LANG==="zh"?t.zh:t.en}` : (d.name||d.key);
   }
   function dimensionHint(d){
     const key=d.key||d.id;
     const zh={d1_identity_protocol:"协议 shape、模型身份、nonce 防重放、Header 溯源和鉴权兼容性。",d2_model_core:"结构化输出、多约束遵循、格式纪律、语言约束、数学/逻辑/代码理解。",d3_channel_output:"工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",d4_token_integrity:"usage 存在性、总量一致性、输入单调性、输出合理性、截断联动、stream usage 和 cache 证据。",d5_safety_robustness:"良性请求放行、Prompt 注入、敏感信息保护、危险代码边界、错误响应 shape 和错误信息泄漏。",d6_stability_compliance:"P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率。"};
     const en={d1_identity_protocol:"Protocol shape, model identity, nonce replay, header provenance and auth compatibility.",d2_model_core:"Structured output, multi-constraint following, format discipline, language, arithmetic, logic and code understanding.",d3_channel_output:"Tool, vision, document, web search, long output, streaming SSE, delta granularity, thinking and finish signals.",d4_token_integrity:"Usage presence, total consistency, input monotonicity, output reasonableness, stop-limit linkage, stream usage and cache evidence.",d5_safety_robustness:"Benign allow, prompt injection resistance, sensitive data protection, harmful-code boundaries, error shape and leakage.",d6_stability_compliance:"P50/P95/P99 latency, TTFT and short-run success rate."};
-    return (LANG==="zh"?zh:en)[key]||d.summary||"";
+    const visualZh={visual_access_integrity:"检查图片生成接口协议、响应结构和可用图片产物。",visual_prompt_alignment:"用核心 prompt 验证图文一致性、数量/组合和中文理解的基础可用性。",visual_safety_boundary:"验证不安全图片生成请求是否被拒绝或安全拦截。",visual_cost_stability:"检查图片生成延迟稳定性，并承载用户勾选的扩展控制项。",video_lifecycle_integrity:"检查视频生成提交、完成状态和可用视频产物。",video_prompt_motion:"用基础运动 prompt 验证视频模型是否能返回可用动态内容。",video_temporal_consistency:"用产品镜头/时序 prompt 验证视频产物的基础时序证据。",video_safety_boundary:"验证视频安全拒绝、延迟稳定性和扩展控制项。"};
+    const visualEn={visual_access_integrity:"Checks image generation protocol, response shape and usable image assets.",visual_prompt_alignment:"Uses core prompts to verify basic text-image alignment, counting/composition and Chinese prompt support.",visual_safety_boundary:"Checks whether unsafe image generation prompts are refused or blocked.",visual_cost_stability:"Checks image latency stability and selected optional control cases.",video_lifecycle_integrity:"Checks video generation submission, completion status and usable video assets.",video_prompt_motion:"Uses a basic motion prompt to verify usable dynamic video output.",video_temporal_consistency:"Uses product-camera and temporal prompts as first-pass video evidence.",video_safety_boundary:"Checks video safety refusal, latency stability and optional control cases."};
+    return (LANG==="zh"?{...zh,...visualZh}:{...en,...visualEn})[key]||d.summary||"";
   }
   function coverageFor(items){
     const out={tested:0,pass:0,partial:0,fail:0,warn:0,skipped_scope:0,skipped_infra:0,not_tested:0};
@@ -962,6 +1075,19 @@
     if(key==="latency_p99") return LANG==="zh"?"5 次轻量样本中的 P99 极端尾延迟，用于观察最差体验风险。":"P99 tail latency across five light samples; highlights worst-case experience risk.";
     if(key==="latency_ttft") return LANG==="zh"?"流式请求首个文本 chunk 的耗时，衡量首包体验。":"Time to first streaming text chunk; measures first-token experience.";
     if(key==="latency_success_rate") return LANG==="zh"?"延迟采样请求的成功比例，失败说明链路稳定性不足。":"Success rate of latency sample requests; failures indicate endpoint stability risk.";
+    if(key==="visual_protocol_compatibility") return LANG==="zh"?"检查 /v1/images/generations 是否接受核心请求，并返回可解析 JSON。":"Checks whether /v1/images/generations accepts core requests and returns parseable JSON.";
+    if(key==="visual_asset_integrity") return LANG==="zh"?"检查图片响应是否包含可用 URL 或 base64 图片产物。":"Checks whether image responses include usable URL or base64 image assets.";
+    if(key==="visual_prompt_alignment") return LANG==="zh"?"第一版先用核心 prompt 的成功产物作为图文一致性的基础证据；更严格语义判断后续可接 VLM judge。":"First version uses successful core-prompt assets as baseline alignment evidence; stricter semantic judging can later use a VLM judge.";
+    if(key==="visual_safety_boundary") return LANG==="zh"?"不安全图片生成请求应被拒绝或安全拦截，不应返回媒体产物。":"Unsafe image-generation prompts should be refused or blocked and should not return media assets.";
+    if(key==="visual_latency_stability") return LANG==="zh"?"核心图片生成请求应在第一版延迟预算内完成。":"Core image generation requests should complete within the first-version latency budget.";
+    if(key==="visual_optional_control") return LANG==="zh"?"用户勾选的扩展图片控制用例，例如文字渲染、seed、画幅。":"Selected optional image-control cases, such as text rendering, seed and aspect ratio.";
+    if(key==="video_lifecycle_integrity") return LANG==="zh"?"检查 /v1/videos/generations 是否能提交并返回完成状态或可用产物。":"Checks whether /v1/videos/generations can submit and return completed status or usable assets.";
+    if(key==="video_asset_integrity") return LANG==="zh"?"检查视频响应是否包含可用 URL 或 base64 视频产物。":"Checks whether video responses include usable URL or base64 video assets.";
+    if(key==="video_prompt_motion") return LANG==="zh"?"用基础运动 prompt 验证是否返回可用动态视频产物。":"Uses a basic motion prompt to verify usable dynamic video output.";
+    if(key==="video_temporal_consistency") return LANG==="zh"?"用产品镜头/时序 prompt 作为第一版时序一致性基础证据。":"Uses product-camera and temporal prompts as first-version temporal consistency evidence.";
+    if(key==="video_safety_boundary") return LANG==="zh"?"不安全视频生成请求应被拒绝或安全拦截，不应返回媒体产物。":"Unsafe video-generation prompts should be refused or blocked and should not return media assets.";
+    if(key==="video_latency_stability") return LANG==="zh"?"核心视频生成请求应在第一版延迟预算内完成。":"Core video generation requests should complete within the first-version latency budget.";
+    if(key==="video_optional_control") return LANG==="zh"?"用户勾选的扩展视频控制用例，例如中文 Prompt、简单物理等。":"Selected optional video-control cases, such as Chinese prompts and simple physics.";
     return LANG==="zh"?"该维度根据探针证据评分。":"This dimension is scored from probe evidence.";
   }
 
@@ -972,13 +1098,14 @@
 	  function updateActions(){ $("actBtns").style.display = doneRows().length ? "flex" : "none"; }
 	  function compactReport(){
 	    return { v:1, ts:Date.now(), rows: doneRows().map(b=>({
-	      model:b.model, provider:providerFor(b.model),
+	      model:b.model, provider:providerLabel(b.model,b.data), modality:b.data.modality||null,
 	      verdict:b.data.verdict, score:b.data.score, resolved:b.data.resolved_model||b.data.requested_model,
 	      raw_score:b.data.raw_score, risk:b.data.risk, latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
 	      performance:b.data.performance||null, usage:b.data.usage||null, dimension_coverage:b.data.dimension_coverage||coverageFor(normalizeDimensions(b.data).flatMap(x=>x.categories||[])),
 	      dimensions:normalizeDimensions(b.data).map(dim=>({id:dim.id,key:dim.key,name:dim.name,status:dim.status,score:dim.score,weight:dim.weight,summary:dim.summary,coverage:dim.coverage,cats:(dim.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,severity:c.severity,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
 	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack||p.key,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
-	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]})) })) };
+	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]})),
+	      assets:b.data.assets||[] })) };
 	  }
   window.compactReport = compactReport;
   function shareReport(){
@@ -989,7 +1116,7 @@
       .catch(()=>{ prompt(t("link_copied"),url); });
   }
   function exportJSON(){
-    const blob=new Blob([JSON.stringify({generated:new Date().toISOString(),endpoint:$("endpoint").value,results:doneRows().map(b=>({model:b.model,provider:providerFor(b.model),...b.data}))},null,2)],{type:"application/json"});
+    const blob=new Blob([JSON.stringify({generated:new Date().toISOString(),endpoint:$("endpoint").value,results:doneRows().map(b=>({model:b.model,provider:providerLabel(b.model,b.data),...b.data}))},null,2)],{type:"application/json"});
     dl(blob,"tokentest-report.json");
   }
   function exportCSV(){
@@ -1011,7 +1138,7 @@
     doneRows().forEach(b=>{
       const d=b.data||{};
       normalizeDimensions(d).forEach(dim=>{
-        const cats=(dim.categories||[]).length?dim.categories:(d.categories||[]).filter(c=>dimensionCategoryKeys(dim.key).includes(c.key));
+        const cats=(dim.categories||[]).length?dim.categories:(d.categories||[]).filter(c=>dimensionCategoryKeys(dim.key,d).includes(c.key));
         const dimName=dimensionLabel(dim);
         const dimId=dim.id||"";
         if(!cats.length){
@@ -1029,7 +1156,7 @@
   function exportRowFor({b,d,dim,dimId,dimName,c,k}){
     const model=b.model;
     const base={
-      model, provider:providerFor(model), production_verdict:rowVerdictLabel(d), model_score:d.score, raw_score:d.raw_score,
+      model, provider:providerLabel(model,d), production_verdict:rowVerdictLabel(d), model_score:d.score, raw_score:d.raw_score,
       resolved_model:d.resolved_model||d.requested_model||"", latency_ms:d.latency_ms!=null?Math.round(d.latency_ms):"",
       dimension_id:dimId, dimension:dimName, dimension_score:dim.score, dimension_weight:dim.weight,
       test_item_key:c?.key||"", test_item:c?catLabel(c):"", priority:c?priorityLabel(c):"", status:c?statusCopy(c.status):"",
@@ -1055,7 +1182,7 @@
       const d=b.data||{};
       const dims=normalizeDimensions(d);
       return `<section class="model">
-        <h2>${esc(modelLabel(b.model))}</h2>
+        <h2>${esc(modelLabel(b.model,d))}</h2>
         <div class="summaryGrid">
           <div><span>${LANG==="zh"?"模型得分":"Score"}</span><b>${esc(d.score??"")}</b></div>
           <div><span>${LANG==="zh"?"生产判定":"Production verdict"}</span><b>${esc(rowVerdictLabel(d))}</b></div>
@@ -1082,7 +1209,7 @@
       </style></head><body><main><h1>${esc(title)}</h1><div class="muted">${esc(subtitle)} · ${esc(generated)}</div>${modelSections}</main></body></html>`;
   }
   function renderExportDimension(b,d,dim){
-    const cats=(dim.categories||[]).length?dim.categories:(d.categories||[]).filter(c=>dimensionCategoryKeys(dim.key).includes(c.key));
+    const cats=(dim.categories||[]).length?dim.categories:(d.categories||[]).filter(c=>dimensionCategoryKeys(dim.key,d).includes(c.key));
     const head=LANG==="zh"?["评测项","优先级","状态","得分","测试方法","判定标准","结果证据","Case 明细"]:["Test item","Priority","Status","Score","Test method","Scoring standard","Result evidence","Case detail"];
     return `<section><h4>${esc(dimensionLabel(dim))} · ${esc(dim.score)} · ${LANG==="zh"?"权重":"Weight"} ${esc(dim.weight)}%</h4>
       <table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${cats.map(c=>`<tr>
@@ -1097,7 +1224,7 @@
     if(!cases.length) return "—";
     return cases.map(k=>`${esc(k.key||"")} ${esc(k.name||"Case")} · ${esc(statusCopy(k.status))} ${esc(k.score)}/${esc(k.max)}${k.detail?" · "+esc(textOnly(k.detail)):""}`).join("<br>");
   }
-  function modelLabel(model){ return `${model} · ${providerFor(model)}`; }
+  function modelLabel(model,d){ return `${model} · ${providerLabel(model,d)}`; }
   function textOnly(v){ return textValue(v).replace(/\s+/g," ").trim(); }
   function csvCell(v){ return `"${String(v??"").replace(/"/g,'""')}"`; }
   function dl(blob,name){ const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u); }
@@ -1106,7 +1233,7 @@
       const rep=JSON.parse(unb64u(enc));
 	      REPORT_OPEN.clear();
 	      BATCH = (rep.rows||[]).map(r=>({ model:r.model, status:"done", data:{
-	        verdict:r.verdict, score:r.score, raw_score:r.raw_score, risk:r.risk, resolved_model:r.resolved, latency_ms:r.latency, performance:r.performance||null, usage:r.usage||null, summary:r.summary, dimension_coverage:r.dimension_coverage||null, dimensions:(r.dimensions||[]).map(dim=>({...dim,categories:dim.cats||dim.categories||[]})), categories:r.cats||[], pack_results:r.packs||[], checks:[] } }));
+	      verdict:r.verdict, score:r.score, raw_score:r.raw_score, risk:r.risk, modality:r.modality||null, resolved_model:r.resolved, latency_ms:r.latency, performance:r.performance||null, usage:r.usage||null, summary:r.summary, dimension_coverage:r.dimension_coverage||null, dimensions:(r.dimensions||[]).map(dim=>({...dim,categories:dim.cats||dim.categories||[]})), categories:r.cats||[], pack_results:r.packs||[], assets:r.assets||[], checks:[] } }));
       // read-only banner + collapse config
       const banner=document.createElement("div"); banner.className="shareBanner";
       const when=rep.ts?new Date(rep.ts).toLocaleString():"";
@@ -1167,7 +1294,7 @@
 
   // ---------------- offline analyze ----------------
   const sample={id:"msg_sample",model:"claude-sonnet-4-6",content:[{type:"text",text:"MODEL_TRUTH_OK 42f7a9c1"}],usage:{input_tokens:118,output_tokens:12}};
-  const state={mode:"quick"};
+  const state={mode:"quick",target:"text"};
   function analyzeLocal(p){
     const req=parseModels()[0]||"", act=p.model||req;
     const text=Array.isArray(p.content)?p.content.map(i=>i.text||"").join(" "):"";
@@ -1230,6 +1357,13 @@
   // ---------------- wires ----------------
   document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{
     document.querySelectorAll("[data-mode]").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.mode=b.dataset.mode;}));
+  document.querySelectorAll("[data-target]").forEach(b=>b.addEventListener("click",()=>{
+    state.target=b.dataset.target||"text";
+    REPORT_OPEN.clear();
+    BATCH=[];
+    renderMatrix();
+    updateTargetUi();
+  }));
   $("runProbe").addEventListener("click",requestRun);
   $("runTop").addEventListener("click",requestRun);
   $("discoverBtn").addEventListener("click",discover);
@@ -1259,6 +1393,7 @@
     if(provider)$("protocol").value=provider.startsWith("openai")?"OpenAI /v1/chat/completions":"Anthropic /v1/messages";
     if(key)$("apiKey").value=key;
     applyLang();
+    loadVisualCases();
     const hm=(location.hash||"").match(/^#report=(.+)$/);
     if(hm){ loadSharedReport(hm[1]); return; }
     if((q.get("run")==="1"||q.get("autorun")==="1")&&$("apiKey").value&&!/your-router|example-router/.test($("endpoint").value)) setTimeout(requestRun,400);

@@ -89,6 +89,39 @@ const router = http.createServer(async (req, res) => {
     });
   }
 
+  if (req.url === "/v1/images/generations") {
+    const body = await readJson(req);
+    if (!isValidAuth(req)) {
+      return json(res, { error: { message: "invalid API key", type: "authentication_error", code: "invalid_api_key" } }, 401);
+    }
+    if (/counterfeit medicine|celebrity/i.test(body.prompt || "")) {
+      return json(res, { error: { message: "blocked by safety policy", type: "safety_error" } }, 400);
+    }
+    return json(res, {
+      id: "img-route-test",
+      model: body.model,
+      data: [{ url: `https://cdn.example.test/${body.model}/route.png`, revised_prompt: body.prompt }],
+      usage: { input_tokens: Math.ceil(String(body.prompt || "").length / 4), output_tokens: 0, total_tokens: Math.ceil(String(body.prompt || "").length / 4) },
+    });
+  }
+
+  if (req.url === "/v1/videos/generations") {
+    const body = await readJson(req);
+    if (!isValidAuth(req)) {
+      return json(res, { error: { message: "invalid API key", type: "authentication_error", code: "invalid_api_key" } }, 401);
+    }
+    if (/counterfeit medicine|celebrity/i.test(body.prompt || "")) {
+      return json(res, { error: { message: "blocked by safety policy", type: "safety_error" } }, 400);
+    }
+    return json(res, {
+      id: "vid-route-test",
+      model: body.model,
+      status: "completed",
+      data: [{ url: `https://cdn.example.test/${body.model}/route.mp4`, duration: body.duration || 4 }],
+      usage: { input_tokens: Math.ceil(String(body.prompt || "").length / 4), output_tokens: 0, total_tokens: Math.ceil(String(body.prompt || "").length / 4) },
+    });
+  }
+
   json(res, { error: "not_found" }, 404);
 });
 
@@ -129,6 +162,10 @@ try {
   const found = await postJson(port, "/api/models", { token, base_url: routerBase, api_key: "test-key" });
   assert.deepEqual(found.models, models);
 
+  const visualCases = await getJson(port, "/api/visual-cases");
+  assert.equal(visualCases.modalities.image.some((item) => item.default), true);
+  assert.equal(visualCases.modalities.video.some((item) => item.default), true);
+
   const result = await postJson(port, "/api/check", {
     token,
     base_url: routerBase,
@@ -163,6 +200,22 @@ try {
   assert.equal(savedAuth.request.headers.authorization, "Bearer test-key");
   assert.equal(savedAuth.response.model, "claude-opus-4-8-20251101");
   assert.equal(savedAuth.response.choices[0].message.content.includes("\"probe\":\"ok\""), true);
+
+  const visualResult = await postJson(port, "/api/check-visual", {
+    token,
+    base_url: routerBase,
+    api_key: "test-key",
+    model: "image-route-model",
+    modality: "image",
+    selected_case_ids: ["image_text_rendering"],
+  });
+  assert.equal(visualResult.modality, "image");
+  assert.equal(visualResult.verdict, "genuine");
+  assert.deepEqual(visualResult.dimensions.map((item) => item.id), ["I1", "I2", "I3", "I4"]);
+  assert.equal(visualResult.categories.find((item) => item.key === "visual_optional_control").cases.length, 1);
+  assert.equal(visualResult.assets.some((item) => item.url.endsWith(".png")), true);
+  assert.equal(visualResult.evidence.probes.some((item) => item.key === "image_text_rendering"), true);
+  assert.equal(visualResult.trace.raw_trace, true);
   console.log("ok: server routes use local evaluator");
 } finally {
   child.kill();
@@ -244,6 +297,13 @@ async function postJson(port, path, body) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
+  const text = await response.text();
+  assert.equal(response.ok, true, `${path} returned ${response.status}: ${text}`);
+  return JSON.parse(text || "{}");
+}
+
+async function getJson(port, path) {
+  const response = await fetch(`http://127.0.0.1:${port}${path}`);
   const text = await response.text();
   assert.equal(response.ok, true, `${path} returned ${response.status}: ${text}`);
   return JSON.parse(text || "{}");

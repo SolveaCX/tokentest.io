@@ -11,6 +11,7 @@
     "start": "node server.js",
     "mcp": "node mcp-server.js",
     "test:evaluator": "node scripts/local_eval_test.mjs",
+    "test:visual": "node scripts/visual_eval_test.mjs",
     "test:server": "node scripts/server_route_test.mjs",
     "test:mcp": "node scripts/mcp_server_test.mjs",
     "test:http-mcp": "node scripts/http_mcp_test.mjs",

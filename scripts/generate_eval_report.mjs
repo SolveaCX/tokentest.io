@@ -776,7 +776,7 @@ const DEFAULT_SEVERITY = {
   reasoning_logic: "p1",
   reasoning_code: "p1",
   channel_tool_use: "p1",
-  channel_vision: "p1",
+  channel_vision: "p2",
   channel_documents: "p1",
   channel_web_search: "p1",
   channel_long_output: "p1",
@@ -936,7 +936,7 @@ const CATEGORY_META = {
   },
   channel_vision: {
     probe: "channel_vision",
-    input: "发送一张 1px 红色 PNG 图片，要求返回 `{\"vision\":\"pass\",\"color\":\"red\"}`。",
+    input: "发送一张 64x64 红色 PNG 图片，要求返回 `{\"vision\":\"pass\",\"color\":\"red\"}`。",
     expected: "图片输入应被接受并正确识别红色。",
   },
   channel_documents: {

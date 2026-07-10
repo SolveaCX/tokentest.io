@@ -57,6 +57,9 @@ const server = http.createServer(async (req, res) => {
         toolCalls = [{ id: "call-web", type: "function", function: { name: "web_search", arguments: "{\"query\":\"TokenTest channel capability\"}" } }];
         content = "";
       } else if (prompt.includes("TT_VISION_PACK")) {
+        if (body.model === "claude-sonnet-4-6") {
+          return json(res, 500, { error: { message: "BedrockException - The model returned the following errors: Could not process image" } });
+        }
         content = JSON.stringify({ vision: "pass", color: "red" });
       } else if (prompt.includes("TT_DOCUMENT_PACK")) {
         content = JSON.stringify({ document: "pass", answer: "TokenTest" });
@@ -223,6 +226,19 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(codeCategory.severity, "p1", "aggregate code dimension remains important only when enough cases fail");
     assert.equal(codeSoftFail.risk.p1_failures.some((item) => /代码理解|code/i.test(`${item.key} ${item.name}`)), false, "one code case failure should not trigger P1 gate");
     assert.equal(codeSoftFail.risk.production_verdict, "production_reference_pass");
+
+    const visionSoftFail = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "claude-sonnet-4-6",
+      provider: "anthropic",
+    });
+    const visionCategory = visionSoftFail.categories.find((item) => item.key === "channel_vision");
+    assert.equal(visionCategory.status, "fail");
+    assert.equal(visionCategory.score, 15);
+    assert.equal(visionCategory.severity, "p2", "default LLM vision coverage should not be a P1 gate");
+    assert.equal(visionSoftFail.risk.p1_failures.some((item) => item.key === "channel_vision"), false);
+    assert.equal(visionSoftFail.risk.production_verdict, "production_reference_pass");
 
     const badChannel = await evaluateModel({
       base_url: baseUrl,

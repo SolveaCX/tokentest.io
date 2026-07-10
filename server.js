@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { discoverModels, evaluateModel } from "./lib/evaluator.js";
+import { evaluateVisualModel, visualCaseCatalog } from "./lib/visual-evaluator.js";
 import { createSdkMcpServer } from "./lib/mcp-tools.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -196,6 +197,27 @@ app.post("/api/check", async (req, res) => {
     res.json(result);
   } catch (e) {
     res.status(502).json({ verdict: "error", score: 0, error: String(e), summary: "Local evaluator failed." });
+  }
+});
+
+app.get("/api/visual-cases", (_req, res) => {
+  res.json({ modalities: visualCaseCatalog });
+});
+
+app.post("/api/check-visual", async (req, res) => {
+  const { token, base_url, api_key, model, modality, selected_case_ids } = req.body || {};
+  if (!tokenValid(token)) return res.status(401).json({ verdict: "error", score: 0, error: "captcha_required", summary: "Human verification required." });
+  if (!base_url || !api_key || !model || !modality) return res.status(400).json({ verdict: "error", score: 0, error: "missing_fields" });
+  try {
+    const result = await evaluateVisualModel({ base_url, api_key, model, modality, selected_case_ids, trace_raw: EVAL_TRACE_RAW });
+    try {
+      result.trace = await saveEvalRunTrace({ base_url, model, provider: modality, deep: false, result });
+    } catch (traceError) {
+      result.trace = { error: String(traceError?.message || traceError) };
+    }
+    res.json(result);
+  } catch (e) {
+    res.status(502).json({ verdict: "error", score: 0, error: String(e), summary: "Visual evaluator failed." });
   }
 });
 
