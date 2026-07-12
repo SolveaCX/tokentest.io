@@ -153,14 +153,19 @@ function renderDimensionCards(dimensions) {
 }
 
 function renderScoringTable(report, dimensions) {
+  const totalWeight = dimensions.reduce((sum, dimension) => sum + Number(dimension.weight || 0), 0);
+  const formula = dimensions.map((dimension) => {
+    const ratio = totalWeight ? (Number(dimension.weight || 0) / totalWeight).toFixed(3) : "0.000";
+    return `${esc(dimension.id)}×${esc(ratio)}`;
+  }).join(" + ");
   const rows = dimensions.map((dimension) => {
-    const contribution = Number.isFinite(Number(dimension.score)) ? (Number(dimension.score) * Number(dimension.weight || 0) / 100).toFixed(2) : "未记录";
+    const contribution = Number.isFinite(Number(dimension.score)) && totalWeight ? (Number(dimension.score) * Number(dimension.weight || 0) / totalWeight).toFixed(2) : "未记录";
     const coverage = dimension.coverage || {};
     return `<tr><td>${esc(dimension.id)}</td><td>${esc(dimension.name)}</td><td>${esc(dimension.score)}</td><td>${esc(dimension.weight)}%</td><td>${esc(contribution)}</td><td>pass:${esc(coverage.pass || 0)} / partial:${esc(coverage.partial || 0)} / fail:${esc(coverage.fail || 0)}</td></tr>`;
   }).join("");
   return `<section class="box">
     <h2>评分公式</h2>
-    <p>D1×0.15 + D2×0.20 + D3×0.20 + D4×0.10 + D5×0.15 + D6×0.20 = raw_score ${esc(report.raw_score ?? report.risk?.raw_score ?? "未记录")}；最终分 ${esc(report.score ?? "未记录")} 来自 P0/P1 风险门槛处理。</p>
+    <p>${formula} = raw_score ${esc(report.raw_score ?? report.risk?.raw_score ?? "未记录")}；最终分 ${esc(report.score ?? "未记录")} 来自 P0/P1 风险门槛处理。</p>
     <table><thead><tr><th>维度</th><th>名称</th><th>维度分</th><th>权重</th><th>加权贡献</th><th>状态统计</th></tr></thead><tbody>${rows}</tbody></table>
   </section>`;
 }
@@ -523,7 +528,7 @@ const DIMENSION_TEMPLATES = [
     id: "D2",
     key: "d2_model_core",
     name: "模型基础能力",
-    weight: 25,
+    weight: 42,
     summary: "结构化输出、多约束遵循、格式纪律、语言约束、基础推理和高阶推理。",
     categories: ["instruction_json", "instruction_constraints", "instruction_no_extra", "instruction_language", "reasoning_arithmetic", "reasoning_logic", "reasoning_code", "reasoning_constraint", "reasoning_table", "reasoning_counterfactual", "reasoning_proof_check"],
   },
@@ -531,7 +536,7 @@ const DIMENSION_TEMPLATES = [
     id: "D3",
     key: "d3_channel_output",
     name: "通道与输出完整性",
-    weight: 15,
+    weight: 8,
     summary: "工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",
     categories: ["channel_tool_use", "channel_vision", "channel_documents", "channel_web_search", "channel_long_output", "channel_stream_sse", "channel_stream_delta", "channel_thinking", "channel_message_stop"],
   },
@@ -555,7 +560,7 @@ const DIMENSION_TEMPLATES = [
     id: "D6",
     key: "d6_stability_compliance",
     name: "稳定性、可靠性与合规",
-    weight: 15,
+    weight: 10,
     summary: "P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率；合规类证据后续可继续补充。",
     categories: ["latency_p50", "latency_p95", "latency_p99", "latency_ttft", "latency_success_rate"],
   },

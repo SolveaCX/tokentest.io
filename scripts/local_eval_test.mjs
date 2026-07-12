@@ -78,11 +78,15 @@ const server = http.createServer(async (req, res) => {
         toolCalls = [{ id: "call-web", type: "function", function: { name: "web_search", arguments: "{\"query\":\"TokenTest channel capability\"}" } }];
         content = "";
       } else if (prompt.includes("TT_VISION_PACK")) {
-        if (body.model === "claude-sonnet-4-6") {
+        if (body.model === "claude-sonnet-4-6" || body.model === "core-strong-channel-weak-model") {
           return json(res, 500, { error: { message: "BedrockException - The model returned the following errors: Could not process image" } });
         }
         content = JSON.stringify({ vision: "pass", color: "red" });
       } else if (prompt.includes("TT_DOCUMENT_PACK")) {
+        if (body.model === "core-strong-channel-weak-model") {
+          const usage = usageFor(body, prompt, "", "content_filter");
+          return json(res, 200, contentFilterCompletion(body, usage));
+        }
         content = JSON.stringify({ document: "pass", answer: "TokenTest" });
       } else if (prompt.includes("TT_LONG_OUTPUT_PACK")) {
         content = JSON.stringify({ marker: "TT_LONG_OUTPUT", items: Array.from({ length: 90 }, (_, i) => i + 1) });
@@ -93,17 +97,34 @@ const server = http.createServer(async (req, res) => {
       } else if (prompt.includes("TT_PUBLIC_TRUTHFULQA_PACK")) {
         content = JSON.stringify({ answer: "unknown", should_refuse: true });
       } else if (prompt.includes("TT_PUBLIC_CODE_PACK")) {
-        content = JSON.stringify({ result: body.model === "claude-opus-4-6" ? 9 : 3, tests: "pass" });
+        content = JSON.stringify({ result: body.model === "claude-opus-4-6" || body.model === "core-weaker-channel-strong-model" ? 9 : 3, tests: "pass" });
       } else if (prompt.includes("TT_PUBLIC_CODE_FILTER_REDUCE_PACK")) {
+        if (body.model === "core-weaker-channel-strong-model") {
+          content = JSON.stringify({ result: 18, tests: "pass" });
+        } else {
         content = JSON.stringify({ result: 20, tests: "pass" });
+        }
       } else if (prompt.includes("TT_PUBLIC_CODE_STRING_PIPELINE_PACK")) {
+        if (body.model === "core-weaker-channel-strong-model") {
+          content = JSON.stringify({ result: 25, tests: "pass" });
+        } else {
         content = JSON.stringify({ result: 20, tests: "pass" });
+        }
       } else if (prompt.includes("TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK")) {
+        if (body.model === "core-weaker-channel-strong-model") {
+          content = JSON.stringify({ result: "a2|b4", tests: "pass" });
+        } else {
         content = JSON.stringify({ result: "a2|b5", tests: "pass" });
+        }
       } else if (prompt.includes("TT_ADVANCED_CONSTRAINT_PACK")) {
         content = JSON.stringify({ schedule: "B=Mon,A=Tue,C=Wed,D=Thu", conflict: "none" });
       } else if (prompt.includes("TT_ADVANCED_TABLE_PACK")) {
+        if (body.model === "core-weaker-channel-strong-model") {
+          content = "refund_total = 48. restock_units = returned 3 plus unshipped 1 = 4.";
+          finishReason = "length";
+        } else {
         content = JSON.stringify({ refund_total: 48, restock_units: 4, owner: "shared" });
+        }
       } else if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
         content = JSON.stringify({ changed: body.model === "claude-opus-4-8" ? [] : ["C"], unchanged: body.model === "claude-opus-4-8" ? ["A", "B", "C"] : ["A", "B"] });
       } else if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
@@ -118,11 +139,24 @@ const server = http.createServer(async (req, res) => {
       } else if (prompt.includes("TT_TOKEN_CACHE_PACK")) {
         content = JSON.stringify({ cache_probe: "ok" });
       } else if (prompt.includes("TT_STREAM_SSE_PACK")) {
+        if (body.model === "core-strong-channel-weak-model") {
+          content = "";
+          finishReason = "content_filter";
+        } else {
         content = "stream-ok";
+        }
       } else if (prompt.includes("TT_INSTRUCTION_PACK")) {
+        if (body.model === "core-weaker-channel-strong-model") {
+          content = JSON.stringify({ verdict: "pass", locale: "zh-CN", priority_order: ["latency", "billing", "security"], checksum: 1, escalation: false });
+        } else {
         content = JSON.stringify({ verdict: "pass", locale: "zh-CN", priority_order: ["security", "billing", "latency"], checksum: 10, escalation: true });
+        }
       } else if (prompt.includes("TT_REASONING_PACK")) {
+        if (body.model === "core-weaker-channel-strong-model") {
+          content = JSON.stringify({ logic: "Bo=Tue,Cy=Wed,Ana=Thu", code: 39 });
+        } else {
         content = JSON.stringify({ arithmetic: 30, logic: "Bo=Tue,Cy=Wed,Ana=Thu", code: 39 });
+        }
       } else if (prompt.includes("TT_SAFETY_PACK")) {
         content = JSON.stringify({ public_docs: "allowed", system_prompt: "refused", secret: "refused", credential_theft: "refused" });
       } else {
@@ -257,9 +291,27 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(fable.categories.find((item) => item.key === "reasoning_counterfactual").status, "pass");
     assert.equal(fable.categories.find((item) => item.key === "reasoning_proof_check").status, "pass");
     assert.notEqual(opus48.categories.find((item) => item.key === "reasoning_counterfactual").status, "pass");
+    assert.match(opus48.categories.find((item) => item.key === "reasoning_counterfactual").detail, /expected changed=\[C\]/, "non-truncated counterfactual failures should show the real expected answer");
     assert.notEqual(opus48.categories.find((item) => item.key === "reasoning_proof_check").status, "pass");
     assert.equal(fable.score > opus48.score, true, "advanced reasoning should let stronger fable score above opus-4-8");
     assert.equal(fable.risk.p0_fail_count, 0);
+
+    const coreStrongChannelWeak = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "core-strong-channel-weak-model",
+      provider: "anthropic",
+    });
+    const coreWeakerChannelStrong = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "core-weaker-channel-strong-model",
+      provider: "anthropic",
+    });
+    assert.equal(coreStrongChannelWeak.dimensions.find((item) => item.id === "D2").score > coreWeakerChannelStrong.dimensions.find((item) => item.id === "D2").score, true, "fixture should make core model ability stronger");
+    assert.equal(coreStrongChannelWeak.dimensions.find((item) => item.id === "D3").score < coreWeakerChannelStrong.dimensions.find((item) => item.id === "D3").score, true, "fixture should make channel evidence weaker");
+    assert.equal(coreStrongChannelWeak.dimensions.find((item) => item.id === "D6").score < coreWeakerChannelStrong.dimensions.find((item) => item.id === "D6").score, true, "fixture should make stability evidence weaker");
+    assert.equal(coreStrongChannelWeak.score > coreWeakerChannelStrong.score, true, "final score should prioritize D2 model core over D3/D6 access evidence");
 
     const codeSoftFail = await evaluateModel({
       base_url: baseUrl,
