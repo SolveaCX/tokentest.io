@@ -291,7 +291,9 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(fable.categories.find((item) => item.key === "reasoning_counterfactual").status, "pass");
     assert.equal(fable.categories.find((item) => item.key === "reasoning_proof_check").status, "pass");
     assert.notEqual(opus48.categories.find((item) => item.key === "reasoning_counterfactual").status, "pass");
+    assert.equal(opus48.categories.find((item) => item.key === "reasoning_counterfactual").severity, "p2", "single counterfactual case failures should score down without direct P1 risk");
     assert.match(opus48.categories.find((item) => item.key === "reasoning_counterfactual").detail, /expected changed=\[C\]/, "non-truncated counterfactual failures should show the real expected answer");
+    assert.equal(opus48.risk.p1_failures.some((item) => item.key === "reasoning_counterfactual"), false, "single counterfactual case failures should not trip the P1 gate");
     assert.notEqual(opus48.categories.find((item) => item.key === "reasoning_proof_check").status, "pass");
     assert.equal(fable.score > opus48.score, true, "advanced reasoning should let stronger fable score above opus-4-8");
     assert.equal(fable.risk.p0_fail_count, 0);
