@@ -59,6 +59,14 @@ const router = http.createServer(async (req, res) => {
       content = JSON.stringify({ result: 20, tests: "pass" });
     } else if (prompt.includes("TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK")) {
       content = JSON.stringify({ result: "a2|b5", tests: "pass" });
+    } else if (prompt.includes("TT_ADVANCED_CONSTRAINT_PACK")) {
+      content = JSON.stringify({ schedule: "B=Mon,A=Tue,C=Wed,D=Thu", conflict: "none" });
+    } else if (prompt.includes("TT_ADVANCED_TABLE_PACK")) {
+      content = JSON.stringify({ refund_total: 48, restock_units: 4, owner: "shared" });
+    } else if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
+      content = JSON.stringify({ changed: ["C"], unchanged: ["A", "B"] });
+    } else if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
+      content = JSON.stringify({ first_bad_step: 3, corrected_total: 42 });
     } else if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
       content = Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
     } else if (prompt.includes("TT_TOKEN_TRUNCATION_PACK")) {
@@ -177,7 +185,7 @@ try {
   assert.equal(result.requested_model, "claude-opus-4-8");
   assert.equal(result.resolved_model, "claude-opus-4-8-20251101");
   assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "token_integrity", "performance_reliability"]);
-  assert.equal(result.categories.length >= 43, true);
+  assert.equal(result.categories.length >= 47, true);
   assert.equal(result.performance.latency.sample_count, 3);
   assert.equal(result.performance.stream.text_chunk_count >= 1, true);
   assert.equal(result.categories.find((item) => item.key === "latency_p95").status, "pass");
@@ -185,7 +193,7 @@ try {
   assert.equal(result.categories.find((item) => item.key === "instruction_constraints").cases.some((item) => item.key === "ifeval_constraints_case"), true);
   assert.equal(result.categories.find((item) => item.key === "token_input_monotonicity").status, "pass");
   assert.equal(result.categories.find((item) => item.key === "public_ceval_zh"), undefined);
-  assert.equal(chatCalls, 31);
+  assert.equal(chatCalls, 35);
   assert.equal(result.evidence.probes.find((item) => item.key === "authenticity").request.headers.authorization, "Bearer test-key");
   assert.equal(result.evidence.probes.find((item) => item.key === "authenticity").response.model, "claude-opus-4-8-20251101");
   assert.equal(result.evidence.probes.find((item) => item.key === "authenticity").response.choices[0].message.role, "assistant");

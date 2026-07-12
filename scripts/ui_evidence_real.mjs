@@ -87,7 +87,7 @@ try {
   });
   assert.equal(report.length, selectedModels.length, "report should include every selected model");
   assert.ok(report.every((item) => item.verdict !== "error"), "report should not contain evaluator errors");
-  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 43), "each report row should include all merged pack categories, token integrity and performance categories");
+  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 47), "each report row should include all merged pack categories, advanced reasoning, token integrity and performance categories");
   assert.ok(report.every((item) => item?.performance?.latency?.sample_count === 5), "each report row should include latency percentile samples");
   assert.ok(report.every((item) => item?.performance?.stream), "each report row should include streaming evidence metadata");
   assert.ok(report.every((item) => item.cats.every((cat) => !cat.key.startsWith("public_"))), "public probes should be case evidence, not categories");

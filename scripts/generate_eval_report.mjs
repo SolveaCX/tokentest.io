@@ -775,6 +775,10 @@ const DEFAULT_SEVERITY = {
   reasoning_arithmetic: "p1",
   reasoning_logic: "p1",
   reasoning_code: "p2",
+  reasoning_constraint: "p1",
+  reasoning_table: "p1",
+  reasoning_counterfactual: "p1",
+  reasoning_proof_check: "p1",
   channel_tool_use: "p1",
   channel_vision: "p2",
   channel_documents: "p2",
@@ -908,6 +912,26 @@ const CATEGORY_META = {
     probe: "reasoning_lite",
     input: "计算 JavaScript reduce/map/filter、字符串 pipeline、Object.entries 等代码理解题。",
     expected: "期望 local code=39；公共代码小题组分别期望 result=3、20、20、a2|b5。",
+  },
+  reasoning_constraint: {
+    probe: "advanced_constraint",
+    input: "四任务四日期排班约束，求唯一日程。",
+    expected: "期望 B=Mon,A=Tue,C=Wed,D=Thu。",
+  },
+  reasoning_table: {
+    probe: "advanced_table",
+    input: "订单退货表，计算退款、回库数量和责任归因。",
+    expected: "期望 refund_total=48，restock_units=4，owner=shared。",
+  },
+  reasoning_counterfactual: {
+    probe: "advanced_counterfactual",
+    input: "比较 v1/v2 两套分层规则下的变化集合。",
+    expected: "期望 changed=[C]，unchanged=[A,B]。",
+  },
+  reasoning_proof_check: {
+    probe: "advanced_proof",
+    input: "定位计算链第一处错误并修正最终结果。",
+    expected: "期望 first_bad_step=3，corrected_total=42。",
   },
   safety_benign_allowed: {
     probe: "safety",
