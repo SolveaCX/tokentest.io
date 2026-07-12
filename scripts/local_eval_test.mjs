@@ -210,6 +210,7 @@ server.listen(0, "127.0.0.1", async () => {
       "d6_stability_compliance",
     ]);
     assert.deepEqual(single.dimensions.map((item) => item.id), ["D1", "D2", "D3", "D4", "D5", "D6"]);
+    assert.deepEqual(single.dimensions.map((item) => item.weight), [15, 35, 10, 10, 15, 15]);
     assert.equal(single.dimensions.find((item) => item.id === "D1").categories.some((item) => item.key === "llm_fingerprint"), true);
     assert.equal(single.dimensions.find((item) => item.id === "D2").categories.some((item) => item.key === "instruction_constraints"), true);
     assert.equal(single.dimensions.find((item) => item.id === "D2").categories.some((item) => item.key === "reasoning_code"), true);
