@@ -57,6 +57,17 @@ const server = http.createServer(async (req, res) => {
         if (body.stream) return streamJson(res, body, "", usage, "content_filter");
         return json(res, 200, contentFilterCompletion(body, usage));
       }
+      if (body.model === "textual-reasoning-model" && shouldTextualReasoningRespond(prompt)) {
+        const { content: textualContent, finishReason: textualFinishReason = "stop" } = textualReasoningResponse(prompt);
+        const usage = usageFor(body, prompt, textualContent, textualFinishReason);
+        return json(res, 200, {
+          id: "chatcmpl-textual-reasoning",
+          object: "chat.completion",
+          model: body.model,
+          choices: [{ index: 0, message: { role: "assistant", content: textualContent }, finish_reason: textualFinishReason }],
+          usage,
+        });
+      }
       let content = "{\"probe\":\"ok\",\"answer\":42}";
       let toolCalls = null;
       let finishReason = "stop";
@@ -307,6 +318,20 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(officialStyleSafetyFilter.risk.p1_fail_count, 0, "official-style empty content filters should not trip the P1 gate");
     assert.equal(officialStyleSafetyFilter.score >= 89, true, "weak P2 reminders should not dominate official-key score");
 
+    const textualReasoning = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "textual-reasoning-model",
+      provider: "anthropic",
+    });
+    assert.equal(textualReasoning.categories.find((item) => item.key === "instruction_constraints").status, "pass", "semantic priority labels should satisfy instruction constraints");
+    assert.equal(textualReasoning.categories.find((item) => item.key === "reasoning_logic").status, "pass", "natural-language schedule evidence should satisfy logic reasoning");
+    assert.equal(textualReasoning.categories.find((item) => item.key === "reasoning_table").status, "partial", "truncated table reasoning with key arithmetic should be partial, not failed");
+    assert.equal(textualReasoning.categories.find((item) => item.key === "reasoning_table").severity, "p2");
+    assert.equal(textualReasoning.categories.find((item) => item.key === "reasoning_counterfactual").status, "partial", "truncated counterfactual reasoning should be partial, not failed");
+    assert.equal(textualReasoning.categories.find((item) => item.key === "channel_web_search").severity, "p2", "web search is an optional channel weak reminder");
+    assert.equal(textualReasoning.risk.p1_failures.some((item) => ["reasoning_logic", "reasoning_table", "reasoning_counterfactual", "channel_web_search"].includes(item.key)), false);
+
     const badChannel = await evaluateModel({
       base_url: baseUrl,
       api_key: "test-key",
@@ -386,6 +411,40 @@ function shouldOfficialStyleFilter(prompt) {
     "TT_PUBLIC_CODE_STRING_PIPELINE_PACK",
     "TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK",
   ].some((marker) => prompt.includes(marker));
+}
+
+function shouldTextualReasoningRespond(prompt) {
+  return [
+    "TT_INSTRUCTION_PACK",
+    "TT_REASONING_PACK",
+    "TT_ADVANCED_TABLE_PACK",
+    "TT_ADVANCED_COUNTERFACTUAL_PACK",
+  ].some((marker) => prompt.includes(marker));
+}
+
+function textualReasoningResponse(prompt) {
+  if (prompt.includes("TT_INSTRUCTION_PACK")) {
+    return { content: JSON.stringify({ verdict: "pass", locale: "zh-CN", priority_order: ["security alert", "billing alert", "latency alert"], checksum: 10, escalation: true }) };
+  }
+  if (prompt.includes("TT_REASONING_PACK")) {
+    return {
+      content: "Arithmetic: not reserved = 30. Logic: If Bo = Tue, then Cy = Wed. Ana must work Thu. Code result is 39.",
+      finishReason: "length",
+    };
+  }
+  if (prompt.includes("TT_ADVANCED_TABLE_PACK")) {
+    return {
+      content: "refund_total = 12*2 + 8*3 + 6*0 = 48. restock_units = wrong_item returned 3 plus unshipped 1 = 4. The owner attribution would be shared",
+      finishReason: "length",
+    };
+  }
+  if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
+    return {
+      content: "v1: A is L2, B is L2, C is L3. v2: A remains L2, B remains L2, and C",
+      finishReason: "length",
+    };
+  }
+  return { content: "{}" };
 }
 
 function contentFilterCompletion(body, usage) {
