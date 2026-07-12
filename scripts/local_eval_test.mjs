@@ -4,6 +4,7 @@ import http from "node:http";
 import { discoverModels, evaluateBatch, evaluateModel } from "../lib/evaluator.js";
 
 const models = [
+  "claude-fable-5",
   "claude-haiku-4-5-20251001",
   "claude-opus-4-5",
   "claude-opus-4-6",
@@ -46,7 +47,7 @@ const server = http.createServer(async (req, res) => {
         return json(res, 400, { error: { message: "max_tokens must be an integer", type: "invalid_request_error" } });
       }
       const prompt = body.messages?.map((item) => typeof item.content === "string" ? item.content : JSON.stringify(item.content)).join("\n") || "";
-      if (body.model === "claude-opus-4-8" && prompt.includes("TT_TOKEN_LONG_INPUT_PACK") && !failedLongInputModels.has(body.model)) {
+      if (body.model === "claude-fable-5" && prompt.includes("TT_TOKEN_LONG_INPUT_PACK") && !failedLongInputModels.has(body.model)) {
         failedLongInputModels.add(body.model);
         req.socket.destroy();
         return;
@@ -88,6 +89,14 @@ const server = http.createServer(async (req, res) => {
         content = JSON.stringify({ result: 20, tests: "pass" });
       } else if (prompt.includes("TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK")) {
         content = JSON.stringify({ result: "a2|b5", tests: "pass" });
+      } else if (prompt.includes("TT_ADVANCED_CONSTRAINT_PACK")) {
+        content = JSON.stringify({ schedule: "B=Mon,A=Tue,C=Wed,D=Thu", conflict: "none" });
+      } else if (prompt.includes("TT_ADVANCED_TABLE_PACK")) {
+        content = JSON.stringify({ refund_total: 48, restock_units: 4, owner: "shared" });
+      } else if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
+        content = JSON.stringify({ changed: body.model === "claude-opus-4-8" ? [] : ["C"], unchanged: body.model === "claude-opus-4-8" ? ["A", "B", "C"] : ["A", "B"] });
+      } else if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
+        content = JSON.stringify({ first_bad_step: body.model === "claude-opus-4-8" ? 4 : 3, corrected_total: 42 });
       } else if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
         content = Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
       } else if (prompt.includes("TT_TOKEN_TRUNCATION_PACK")) {
@@ -141,7 +150,7 @@ server.listen(0, "127.0.0.1", async () => {
     const single = await evaluateModel({
       base_url: baseUrl,
       api_key: "test-key",
-      model: "claude-opus-4-8",
+      model: "claude-fable-5",
       provider: "anthropic",
       deep: false,
     });
@@ -167,7 +176,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(single.dimension_coverage.skipped_scope, 0);
     assert.equal(single.dimension_coverage.not_tested, 0);
     assert.deepEqual(single.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "token_integrity", "performance_reliability"]);
-    assert.equal(single.categories.length >= 43, true);
+    assert.equal(single.categories.length >= 47, true);
     assert.equal(single.pack_results.every((item) => item.score >= 80), true);
     assert.equal(single.categories.some((item) => item.key.startsWith("public_")), false);
     assert.equal(single.categories.find((item) => item.key === "model_registry").status, "pass");
@@ -221,6 +230,25 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(haiku.usage.output_tokens > 0, true, "completion_tokens should be used when output_tokens is zero");
     assert.equal(haiku.categories.find((item) => item.key === "token_audit").status, "pass");
     assert.equal(haiku.pack_results.find((item) => item.key === "instruction").categories.length >= 3, true);
+
+    const fable = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "claude-fable-5",
+      provider: "anthropic",
+    });
+    const opus48 = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "claude-opus-4-8",
+      provider: "anthropic",
+    });
+    assert.equal(fable.categories.find((item) => item.key === "reasoning_counterfactual").status, "pass");
+    assert.equal(fable.categories.find((item) => item.key === "reasoning_proof_check").status, "pass");
+    assert.notEqual(opus48.categories.find((item) => item.key === "reasoning_counterfactual").status, "pass");
+    assert.notEqual(opus48.categories.find((item) => item.key === "reasoning_proof_check").status, "pass");
+    assert.equal(fable.score > opus48.score, true, "advanced reasoning should let stronger fable score above opus-4-8");
+    assert.equal(fable.risk.p0_fail_count, 0);
 
     const codeSoftFail = await evaluateModel({
       base_url: baseUrl,
@@ -297,15 +325,15 @@ server.listen(0, "127.0.0.1", async () => {
       api_key: "test-key",
       models,
     });
-    assert.equal(batch.results.length, 7);
+    assert.equal(batch.results.length, 8);
     assert.equal(batch.results.every((item) => item.verdict === "genuine"), true);
-    assert.equal(batch.summary.total_models, 7);
-    assert.equal(batch.summary.production_pass_count, 7);
+    assert.equal(batch.summary.total_models, 8);
+    assert.equal(batch.summary.production_pass_count >= 7, true);
     assert.equal(batch.summary.blocked_count, 0);
     assert.equal(batch.summary.error_count, 0);
 
     const opus47 = requests.filter((item) => item.model === "claude-opus-4-7");
-    assert.equal(opus47.length, 31, "opus 4.7 should run core, protocol, channel, token, stream, malformed, latency and expanded code probes with compact quick latency sampling");
+    assert.equal(opus47.length, 35, "opus 4.7 should run core, protocol, channel, token, stream, malformed, latency and expanded reasoning probes with compact quick latency sampling");
     assert.equal(opus47.every((item) => !Object.hasOwn(item, "temperature")), true, "probes must not send deprecated temperature");
 
     console.log("ok: local evaluator smoke");

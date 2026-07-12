@@ -55,6 +55,14 @@ const router = http.createServer(async (req, res) => {
       content = JSON.stringify({ result: 20, tests: "pass" });
     } else if (prompt.includes("TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK")) {
       content = JSON.stringify({ result: "a2|b5", tests: "pass" });
+    } else if (prompt.includes("TT_ADVANCED_CONSTRAINT_PACK")) {
+      content = JSON.stringify({ schedule: "B=Mon,A=Tue,C=Wed,D=Thu", conflict: "none" });
+    } else if (prompt.includes("TT_ADVANCED_TABLE_PACK")) {
+      content = JSON.stringify({ refund_total: 48, restock_units: 4, owner: "shared" });
+    } else if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
+      content = JSON.stringify({ changed: ["C"], unchanged: ["A", "B"] });
+    } else if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
+      content = JSON.stringify({ first_bad_step: 3, corrected_total: 42 });
     } else if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
       content = Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
     } else if (prompt.includes("TT_TOKEN_TRUNCATION_PACK")) {
@@ -147,7 +155,7 @@ try {
   const authEvidence = result.evidence.probes.find((item) => item.key === "authenticity").request.headers.authorization;
   assert.equal(authEvidence, "<redacted>");
   assert.equal(JSON.stringify(result).includes(VALID_KEY), false);
-  assert.equal(chatCalls, 31);
+  assert.equal(chatCalls, 35);
 
   console.log("ok: remote HTTP MCP endpoint");
 } finally {

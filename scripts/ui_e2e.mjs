@@ -77,6 +77,14 @@ if (!USE_REAL) {
         content = JSON.stringify({ result: 20, tests: "pass" });
       } else if (prompt.includes("TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK")) {
         content = JSON.stringify({ result: "a2|b5", tests: "pass" });
+      } else if (prompt.includes("TT_ADVANCED_CONSTRAINT_PACK")) {
+        content = JSON.stringify({ schedule: "B=Mon,A=Tue,C=Wed,D=Thu", conflict: "none" });
+      } else if (prompt.includes("TT_ADVANCED_TABLE_PACK")) {
+        content = JSON.stringify({ refund_total: 48, restock_units: 4, owner: "shared" });
+      } else if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
+        content = JSON.stringify({ changed: ["C"], unchanged: ["A", "B"] });
+      } else if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
+        content = JSON.stringify({ first_bad_step: 3, corrected_total: 42 });
       } else if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
         content = Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
       } else if (prompt.includes("TT_TOKEN_TRUNCATION_PACK")) {
@@ -189,7 +197,7 @@ try {
   assert.ok(report.every((item) => Array.isArray(item.dimensions) && item.dimensions.length === 6), "each report row should expose six user-visible dimensions");
   assert.ok(report.every((item) => item.dimensions.map((dimension) => dimension.id).join(",") === "D1,D2,D3,D4,D5,D6"), "six dimensions should be ordered D1-D6");
   assert.ok(report.every((item) => item?.dimension_coverage?.tested > 0), "each report row should include 6D coverage audit");
-  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 43), "each report row should have all merged pack categories, token integrity and performance categories");
+  assert.ok(report.every((item) => Array.isArray(item.cats) && item.cats.length >= 47), "each report row should have all merged pack categories, advanced reasoning, token integrity and performance categories");
   assert.ok(report.every((item) => item?.performance?.latency?.sample_count === 3), "each report row should include compact latency percentile samples in quick mode");
   assert.ok(report.every((item) => item?.performance?.stream?.text_chunk_count >= 1), "each report row should include streaming TTFT evidence");
   assert.ok(report.every((item) => item.cats.every((cat) => !cat.key.startsWith("public_"))), "public probes should be case evidence, not categories");
@@ -201,7 +209,7 @@ try {
 
   if (!USE_REAL) {
     assert.equal(report.length, mockModels.length);
-    assert.equal(chatCalls, mockModels.length * 31);
+    assert.equal(chatCalls, mockModels.length * 35);
     assert.ok(maxConcurrentChatCalls >= 2, `batch evaluation should run multiple models concurrently, got max ${maxConcurrentChatCalls}`);
     assert.ok(report.every((item) => item.verdict === "genuine"), "mock models should retain compatible genuine verdict");
     assert.ok(report.every((item) => item.risk.production_verdict === "production_reference_pass"), "mock models should pass production reference gate");

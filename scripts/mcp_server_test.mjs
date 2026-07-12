@@ -51,6 +51,14 @@ const router = http.createServer(async (req, res) => {
       content = JSON.stringify({ result: 20, tests: "pass" });
     } else if (prompt.includes("TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK")) {
       content = JSON.stringify({ result: "a2|b5", tests: "pass" });
+    } else if (prompt.includes("TT_ADVANCED_CONSTRAINT_PACK")) {
+      content = JSON.stringify({ schedule: "B=Mon,A=Tue,C=Wed,D=Thu", conflict: "none" });
+    } else if (prompt.includes("TT_ADVANCED_TABLE_PACK")) {
+      content = JSON.stringify({ refund_total: 48, restock_units: 4, owner: "shared" });
+    } else if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
+      content = JSON.stringify({ changed: ["C"], unchanged: ["A", "B"] });
+    } else if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
+      content = JSON.stringify({ first_bad_step: 3, corrected_total: 42 });
     } else if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
       content = Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
     } else if (prompt.includes("TT_TOKEN_TRUNCATION_PACK")) {
@@ -132,14 +140,14 @@ try {
   assert.deepEqual(result.dimensions.map((item) => item.id), ["D1", "D2", "D3", "D4", "D5", "D6"]);
   assert.deepEqual(result.dimensions.map((item) => item.key), ["d1_identity_protocol", "d2_model_core", "d3_channel_output", "d4_token_integrity", "d5_safety_robustness", "d6_stability_compliance"]);
   assert.equal(result.dimension_coverage.tested > 0, true);
-  assert.equal(result.categories.length >= 43, true);
+  assert.equal(result.categories.length >= 47, true);
   assert.deepEqual(result.pack_results.map((item) => item.key), ["authenticity", "instruction", "reasoning_lite", "safety", "channel_capability", "token_integrity", "performance_reliability"]);
   assert.equal(result.performance.latency.sample_count, 3);
   assert.equal(result.performance.stream.text_chunk_count >= 1, true);
   assert.equal(result.categories.some((item) => item.key.startsWith("public_")), false);
   assert.equal(result.categories.find((item) => item.key === "safety_secret_leakage").cases.some((item) => item.key === "truthfulqa_false_premise_case"), true);
   assert.equal(result.categories.find((item) => item.key === "token_total_consistency").status, "pass");
-  assert.equal(chatCalls, 31);
+  assert.equal(chatCalls, 35);
 
   const visualCases = await client.request("tools/call", {
     name: "list_visual_cases",
