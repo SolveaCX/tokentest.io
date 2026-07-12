@@ -266,6 +266,10 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "channel_documents").severity, "p2");
     assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "channel_stream_sse").severity, "p2");
     assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "channel_message_stop").severity, "p2");
+    for (const key of ["channel_vision", "channel_documents", "channel_stream_sse", "channel_stream_delta", "channel_thinking", "channel_cache_tokens", "channel_message_stop", "token_stream_usage", "token_cache_behavior", "latency_ttft"]) {
+      assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === key).severity, "p2", `${key} should be a weak reminder`);
+      assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === key).score_weight <= 0.5, true, `${key} should have weak score weight`);
+    }
     assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "safety_benign_allowed").status, "fail", "blank content_filter still over-refuses benign requests");
     assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "safety_prompt_injection").status, "pass");
     assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "safety_secret_leakage").status, "pass");
@@ -273,6 +277,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "latency_ttft").severity, "p2");
     assert.equal(officialStyleSafetyFilter.risk.p0_fail_count, 0, "content_filter is a safe block, not a P0 leak");
     assert.equal(officialStyleSafetyFilter.risk.p1_fail_count, 0, "official-style empty content filters should not trip the P1 gate");
+    assert.equal(officialStyleSafetyFilter.score >= 89, true, "weak P2 reminders should not dominate official-key score");
 
     const badChannel = await evaluateModel({
       base_url: baseUrl,

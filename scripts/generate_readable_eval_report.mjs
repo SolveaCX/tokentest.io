@@ -379,7 +379,8 @@ function getPacks(report) {
 
 function weightedCategoryScore(categories) {
   const weighted = categories.reduce((acc, item) => {
-    const weight = severityWeight(item.severity);
+    const customWeight = Number(item.score_weight);
+    const weight = Number.isFinite(customWeight) && customWeight > 0 ? customWeight : severityWeight(item.severity);
     return {
       score: acc.score + (Number(item.score) || 0) * weight,
       weight: acc.weight + weight,
