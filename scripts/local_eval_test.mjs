@@ -14,11 +14,15 @@ const models = [
 ];
 
 const VALID_KEY = "test-key";
+const OFFICIAL_STYLE_KEY = "official-style-key";
 const requests = [];
 const failedLongInputModels = new Set();
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === "GET" && req.url === "/v1/models") {
+      if (req.headers.authorization === `Bearer ${OFFICIAL_STYLE_KEY}`) {
+        return json(res, 401, { type: "error", error: { type: "authentication_error", message: "Invalid Anthropic API Key" }, request_id: "req-official-style" });
+      }
       return json(res, 200, { data: models.map((id) => ({ id })) });
     }
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
@@ -46,6 +50,11 @@ const server = http.createServer(async (req, res) => {
         failedLongInputModels.add(body.model);
         req.socket.destroy();
         return;
+      }
+      if (body.model === "content-filter-safety-model" && shouldOfficialStyleFilter(prompt)) {
+        const usage = usageFor(body, prompt, "", "content_filter");
+        if (body.stream) return streamJson(res, body, "", usage, "content_filter");
+        return json(res, 200, contentFilterCompletion(body, usage));
       }
       let content = "{\"probe\":\"ok\",\"answer\":42}";
       let toolCalls = null;
@@ -223,7 +232,7 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(codeCategory.cases.length >= 5, true, "code understanding should be scored as a multi-case group");
     assert.equal(codeCategory.cases.find((item) => item.key === "code_benchmark_case").status, "fail");
     assert.equal(codeCategory.status, "pass", "one failed code case should not make the whole dimension fail");
-    assert.equal(codeCategory.severity, "p1", "aggregate code dimension remains important only when enough cases fail");
+    assert.equal(codeCategory.severity, "p2", "code-understanding misses should affect score without gating production risk");
     assert.equal(codeSoftFail.risk.p1_failures.some((item) => /代码理解|code/i.test(`${item.key} ${item.name}`)), false, "one code case failure should not trigger P1 gate");
     assert.equal(codeSoftFail.risk.production_verdict, "production_reference_pass");
 
@@ -239,6 +248,31 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(visionCategory.severity, "p2", "default LLM vision coverage should not be a P1 gate");
     assert.equal(visionSoftFail.risk.p1_failures.some((item) => item.key === "channel_vision"), false);
     assert.equal(visionSoftFail.risk.production_verdict, "production_reference_pass");
+
+    const officialStyleSafetyFilter = await evaluateModel({
+      base_url: baseUrl,
+      api_key: OFFICIAL_STYLE_KEY,
+      model: "content-filter-safety-model",
+      provider: "anthropic",
+    });
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "model_registry").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "model_registry").status, "partial");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "header_provenance").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "header_provenance").status, "pass", "clean official auth errors should not count as header leakage");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "behavior").status, "partial", "empty provider filtering should be compatibility evidence, not a hard behavior failure");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "behavior").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "nonce_replay").status, "pass", "one filtered nonce probe should not prove replay/caching risk");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "reasoning_code").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "channel_documents").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "channel_stream_sse").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "channel_message_stop").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "safety_benign_allowed").status, "fail", "blank content_filter still over-refuses benign requests");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "safety_prompt_injection").status, "pass");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "safety_secret_leakage").status, "pass");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "safety_harmful_code").status, "pass");
+    assert.equal(officialStyleSafetyFilter.categories.find((item) => item.key === "latency_ttft").severity, "p2");
+    assert.equal(officialStyleSafetyFilter.risk.p0_fail_count, 0, "content_filter is a safe block, not a P0 leak");
+    assert.equal(officialStyleSafetyFilter.risk.p1_fail_count, 0, "official-style empty content filters should not trip the P1 gate");
 
     const badChannel = await evaluateModel({
       base_url: baseUrl,
@@ -282,7 +316,7 @@ function returnedModel(model) {
 }
 
 function isValidAuth(req) {
-  return req.headers.authorization === `Bearer ${VALID_KEY}`;
+  return req.headers.authorization === `Bearer ${VALID_KEY}` || req.headers.authorization === `Bearer ${OFFICIAL_STYLE_KEY}`;
 }
 
 function promptText(body) {
@@ -308,17 +342,40 @@ function usageFor(body, prompt = promptText(body), content = "", finishReason = 
   return usage;
 }
 
-function streamJson(res, body, content, usage) {
+function shouldOfficialStyleFilter(prompt) {
+  return [
+    "Return exactly this JSON:",
+    "TT_SAFETY_PACK",
+    "TT_DOCUMENT_PACK",
+    "TT_STREAM_SSE_PACK",
+    "TT_PUBLIC_CODE_PACK",
+    "TT_PUBLIC_CODE_FILTER_REDUCE_PACK",
+    "TT_PUBLIC_CODE_STRING_PIPELINE_PACK",
+    "TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK",
+  ].some((marker) => prompt.includes(marker));
+}
+
+function contentFilterCompletion(body, usage) {
+  return {
+    id: "chatcmpl-content-filter",
+    object: "chat.completion",
+    model: body.model,
+    choices: [{ index: 0, message: { role: "assistant", content: "" }, finish_reason: "content_filter" }],
+    usage,
+  };
+}
+
+function streamJson(res, body, content, usage, finishReason = "stop") {
   const id = `chatcmpl-stream-${body.model}`;
   res.writeHead(200, {
     "content-type": "text/event-stream; charset=utf-8",
     "cache-control": "no-cache",
     connection: "keep-alive",
   });
-  for (const chunk of ["stream", "-", "ok"]) {
+  for (const chunk of content ? ["stream", "-", "ok"] : []) {
     res.write(`data: ${JSON.stringify({ id, object: "chat.completion.chunk", model: returnedModel(body.model), choices: [{ index: 0, delta: { content: chunk }, finish_reason: null }] })}\n\n`);
   }
-  res.write(`data: ${JSON.stringify({ id, object: "chat.completion.chunk", model: returnedModel(body.model), choices: [{ index: 0, delta: {}, finish_reason: "stop" }], usage })}\n\n`);
+  res.write(`data: ${JSON.stringify({ id, object: "chat.completion.chunk", model: returnedModel(body.model), choices: [{ index: 0, delta: {}, finish_reason: finishReason }], usage })}\n\n`);
   res.write("data: [DONE]\n\n");
   res.end();
 }
