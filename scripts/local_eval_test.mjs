@@ -52,6 +52,15 @@ const server = http.createServer(async (req, res) => {
         req.socket.destroy();
         return;
       }
+      if (body.model === "glm-endpoint-error-model" && shouldGlmEndpointUnavailable(prompt, body)) {
+        return json(res, 500, {
+          error: {
+            message: "分组 company-employees 下模型 glm-endpoint-error-model 的可用渠道不存在（retry）",
+            type: "new_api_error",
+            code: "get_channel_failed",
+          },
+        });
+      }
       if (body.model === "content-filter-safety-model" && shouldOfficialStyleFilter(prompt)) {
         const usage = usageFor(body, prompt, "", "content_filter");
         if (body.stream) return streamJson(res, body, "", usage, "content_filter");
@@ -131,9 +140,17 @@ const server = http.createServer(async (req, res) => {
       } else if (prompt.includes("TT_ADVANCED_COUNTERFACTUAL_PACK")) {
         content = JSON.stringify({ changed: body.model === "claude-opus-4-8" ? [] : ["C"], unchanged: body.model === "claude-opus-4-8" ? ["A", "B", "C"] : ["A", "B"] });
       } else if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
+        if (body.model === "glm-5-turbo") {
+          content = "{\n  \"first_bad_step\": 3,\n  \"corrected_total\":";
+          finishReason = "length";
+        } else {
         content = JSON.stringify({ first_bad_step: body.model === "claude-opus-4-8" ? 4 : 3, corrected_total: 42 });
+        }
       } else if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
-        content = Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
+        content = body.model === "glm-5-turbo"
+          ? ""
+          : Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
+        if (body.model === "glm-5-turbo") finishReason = "length";
       } else if (prompt.includes("TT_TOKEN_TRUNCATION_PACK")) {
         content = "1\n2\n3\n4\n";
         finishReason = "length";
@@ -183,7 +200,7 @@ const server = http.createServer(async (req, res) => {
         choices: [
           {
             index: 0,
-            message: { role: "assistant", content, ...(toolCalls ? { tool_calls: toolCalls } : {}) },
+            message: { role: "assistant", content, ...reasoningContentFor(body, prompt), ...(toolCalls ? { tool_calls: toolCalls } : {}) },
             finish_reason: finishReason,
           },
         ],
@@ -439,6 +456,31 @@ server.listen(0, "127.0.0.1", async () => {
     assert.equal(textualReasoning.categories.find((item) => item.key === "channel_web_search").severity, "p2", "web search is an optional channel weak reminder");
     assert.equal(textualReasoning.risk.p1_failures.some((item) => ["reasoning_logic", "reasoning_table", "reasoning_counterfactual", "channel_web_search"].includes(item.key)), false);
 
+    const glmReasoningVisibility = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "glm-5-turbo",
+      provider: "openai-compatible",
+    });
+    assert.equal(glmReasoningVisibility.categories.find((item) => item.key === "reasoning_proof_check").status, "partial", "GLM proof reasoning evidence should avoid a hard model-ability failure when visible JSON is truncated");
+    assert.equal(glmReasoningVisibility.categories.find((item) => item.key === "reasoning_proof_check").severity, "p2");
+    assert.equal(glmReasoningVisibility.categories.find((item) => item.key === "token_output_reasonableness").status, "partial", "GLM reasoning-only empty visible output should be endpoint visibility evidence");
+    assert.equal(glmReasoningVisibility.categories.find((item) => item.key === "token_output_reasonableness").severity, "p2");
+    assert.equal(glmReasoningVisibility.risk.p1_failures.some((item) => item.key === "reasoning_proof_check"), false);
+    assert.equal(glmReasoningVisibility.risk.p1_failures.some((item) => item.key === "token_output_reasonableness"), false);
+
+    const glmEndpointUnavailable = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "glm-endpoint-error-model",
+      provider: "openai-compatible",
+    });
+    assert.equal(glmEndpointUnavailable.risk.p0_fail_count, 0, "GLM endpoint errors should not be scored as unsafe model output");
+    assert.deepEqual(glmEndpointUnavailable.risk.p1_failures.map((item) => item.key), ["endpoint_generation_unavailable"], "GLM get_channel_failed probes should be counted once as endpoint availability risk");
+    for (const key of ["instruction_json", "reasoning_logic", "safety_prompt_injection", "safety_secret_leakage", "safety_harmful_code", "channel_tool_use", "token_output_reasonableness", "token_stop_limit"]) {
+      assert.equal(glmEndpointUnavailable.categories.find((item) => item.key === key)?.severity, "p2", `${key} should be downgraded when caused by GLM endpoint unavailability`);
+    }
+
     const badChannel = await evaluateModel({
       base_url: baseUrl,
       api_key: "test-key",
@@ -497,6 +539,9 @@ function usageFor(body, prompt = promptText(body), content = "", finishReason = 
     total_tokens: inputTokens + outputTokens,
     completion_tokens_details: { reasoning_tokens: 2 },
   };
+  if (body.model === "glm-5-turbo" && prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
+    usage.completion_tokens_details.reasoning_tokens = outputTokens;
+  }
   if (body.model?.includes("haiku")) usage.output_tokens = 0;
   if (prompt.includes("TT_TOKEN_CACHE_PACK") && prompt.includes("CACHE_CALL_1")) {
     usage.prompt_tokens_details = { cache_creation_tokens: 128 };
@@ -505,6 +550,21 @@ function usageFor(body, prompt = promptText(body), content = "", finishReason = 
     usage.prompt_tokens_details = { cached_tokens: 128 };
   }
   return usage;
+}
+
+function reasoningContentFor(body, prompt) {
+  if (body.model !== "glm-5-turbo") return {};
+  if (prompt.includes("TT_ADVANCED_PROOF_PACK")) {
+    return {
+      reasoning_content: "Step 1 is correct: 18 + 12 = 30. Step 2 is correct: 30 - 6 = 24. Step 3 is the first invalid step because 24 * 2 = 48, not 40. Applying step 4 after the corrected value gives 48 - 6 = 42. Therefore first_bad_step is 3 and corrected_total is 42.",
+    };
+  }
+  if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
+    return {
+      reasoning_content: "The model spent the full completion budget in reasoning and never emitted visible content.",
+    };
+  }
+  return {};
 }
 
 function shouldOfficialStyleFilter(prompt) {
@@ -537,6 +597,19 @@ function shouldSystemicTruncate(prompt) {
     "TT_ADVANCED_CONSTRAINT_PACK",
     "TT_ADVANCED_TABLE_PACK",
     "TT_SAFETY_PACK",
+  ].some((marker) => prompt.includes(marker));
+}
+
+function shouldGlmEndpointUnavailable(prompt, body) {
+  if (body.tools?.[0]?.function?.name === "tt_record_capability") return true;
+  return [
+    "TT_INSTRUCTION_PACK",
+    "TT_REASONING_PACK",
+    "TT_SAFETY_PACK",
+    "TT_TOKEN_OUTPUT_PACK",
+    "TT_TOKEN_TRUNCATION_PACK",
+    "TT_ADVANCED_CONSTRAINT_PACK",
+    "TT_ADVANCED_TABLE_PACK",
   ].some((marker) => prompt.includes(marker));
 }
 

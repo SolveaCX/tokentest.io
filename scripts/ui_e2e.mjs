@@ -163,6 +163,23 @@ try {
   const flatKeyText = await page.locator("a[href='https://flatkey.ai/']").innerText();
   assert.ok(/FlatKey/i.test(flatKeyText), "FlatKey CTA should keep the FlatKey link visible");
   assert.equal(await page.inputValue("#models"), "", "target model input should be empty by default");
+
+  const errorReport = {
+    v: 1,
+    ts: Date.now(),
+    rows: [
+      { model: "working-model", provider: "openai", verdict: "genuine", score: 80, raw_score: 80, risk: { production_verdict: "production_reference_pass" }, summary: "ok" },
+      { model: "timeout-model", provider: "openai", verdict: "error", score: 0, raw_score: null, error: "model_eval_timeout", summary: "timed out" },
+    ],
+  };
+  await page.goto(`${appUrl}/?error-report-test=1#report=${b64u(JSON.stringify(errorReport))}`);
+  await page.waitForFunction(() => document.querySelector("#resSum")?.textContent.includes("2/2"), undefined, { timeout: 10_000 });
+  const errorReportText = await page.locator(".results").innerText();
+  assert.ok(errorReportText.includes("avg 80"), `error rows should be excluded from average score: ${errorReportText}`);
+  assert.ok(errorReportText.includes("No score"), `error rows should show no score instead of zero: ${errorReportText}`);
+  assert.ok(!errorReportText.includes("avg 40"), `error score=0 should not pull down average: ${errorReportText}`);
+  await page.goto(appUrl);
+
   const firstScreen = await page.locator("header.hero").innerText();
   assert.ok(!firstScreen.includes("Three steps") && !firstScreen.includes("三步"), "three-step guidance should be removed from the first screen");
   assert.equal(await page.locator("#how").count(), 0, "three-step how section should be removed");
@@ -433,6 +450,10 @@ function signToken(id, exp) {
   const body = `${id}.${exp}`;
   const mac = crypto.createHmac("sha256", SECRET).update(body).digest("base64url");
   return `${body}.${mac}`;
+}
+
+function b64u(value) {
+  return Buffer.from(value, "utf8").toString("base64url");
 }
 
 async function waitForHealth(port, child) {

@@ -532,6 +532,7 @@ const CATEGORY_META = {
   latency_ttft: { probe: "channel_stream_sse", input: "一次 stream=true 请求，记录首个文本 chunk 到达耗时。", expected: "TTFT ≤ 3000ms 为通过；≤ 30000ms 为部分通过。" },
   latency_success_rate: { probe: "latency_sample_1", input: "统计 5 次延迟采样请求的成功比例。", expected: "5/5 成功为通过；至少 4/5 成功为部分通过。" },
   endpoint_generation_truncation: { probe: "multiple_generation_probes", input: "汇总 nonce、instruction、reasoning、safety 等探针的 finish_reason 与可见输出。", expected: "若多个 P1 共享 length 截断或不完整生成证据，应只计一个端点兼容性/截断 P1。" },
+  endpoint_generation_unavailable: { probe: "multiple_endpoint_error_probes", input: "汇总 GLM instruction、reasoning、safety、tool、token 等探针的 HTTP 错误。", expected: "若多个高风险失败共享 get_channel_failed 或 1210 兼容错误，应只计一个端点可用性 P1。" },
 };
 
 const DEFAULT_SEVERITY = {
@@ -576,6 +577,7 @@ const DEFAULT_SEVERITY = {
   latency_ttft: "p2",
   latency_success_rate: "p1",
   endpoint_generation_truncation: "p1",
+  endpoint_generation_unavailable: "p1",
 };
 
 async function main() {

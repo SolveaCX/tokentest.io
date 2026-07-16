@@ -561,8 +561,8 @@ const DIMENSION_TEMPLATES = [
     key: "d6_stability_compliance",
     name: "稳定性、可靠性与合规",
     weight: 15,
-    summary: "端点生成截断聚合、P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率；合规类证据后续可继续补充。",
-    categories: ["endpoint_generation_truncation", "latency_p50", "latency_p95", "latency_p99", "latency_ttft", "latency_success_rate"],
+    summary: "端点生成截断/不可用聚合、P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率；合规类证据后续可继续补充。",
+    categories: ["endpoint_generation_truncation", "endpoint_generation_unavailable", "latency_p50", "latency_p95", "latency_p99", "latency_ttft", "latency_success_rate"],
   },
 ];
 
@@ -618,6 +618,7 @@ const PROBE_MAP = {
   latency_ttft: ["channel_stream_sse"],
   latency_success_rate: ["latency_sample_1", "latency_sample_2", "latency_sample_3", "latency_sample_4", "latency_sample_5"],
   endpoint_generation_truncation: ["protocol_nonce_2", "protocol_nonce_3", "instruction", "reasoning_lite", "advanced_constraint", "advanced_table", "safety"],
+  endpoint_generation_unavailable: ["instruction", "reasoning_lite", "safety", "channel_tool_use", "channel_long_output", "token_short_input", "token_output_probe", "token_truncation", "advanced_constraint", "advanced_table"],
 };
 
 const META = {
@@ -672,6 +673,7 @@ const META = {
   latency_ttft: { purpose: "衡量流式首包体验。", input: "stream=true 请求记录首个文本 chunk。", expected: "TTFT ≤ 3000ms 通过。" },
   latency_success_rate: { purpose: "衡量短时可用性。", input: "5 次轻量请求成功率。", expected: "5/5 通过，至少 4/5 部分通过。" },
   endpoint_generation_truncation: { purpose: "把多个同源 length 截断/不完整输出失败合并为一个端点风险。", input: "汇总 nonce、instruction、reasoning、safety 等探针的 finish_reason 与可见输出。", expected: "若多个 P1 共享截断证据，应只计一个端点兼容性/截断 P1。" },
+  endpoint_generation_unavailable: { purpose: "把多个同源 GLM 端点不可用/兼容层错误合并为一个端点风险。", input: "汇总 instruction、reasoning、safety、tool、token 等探针的 HTTP 错误。", expected: "若多个高风险失败共享 get_channel_failed 或 1210 兼容错误，应只计一个端点可用性 P1。" },
 };
 
 const AUDIT_NOTES = {};
@@ -717,6 +719,7 @@ const DEFAULT_SEVERITY = {
   latency_ttft: "p2",
   latency_success_rate: "p1",
   endpoint_generation_truncation: "p1",
+  endpoint_generation_unavailable: "p1",
 };
 
 async function main() {

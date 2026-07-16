@@ -516,7 +516,7 @@
 	    channel_web_search:{en:"Web search channel"},channel_long_output:{en:"Long output stability"},channel_stream_sse:{en:"Stream SSE channel"},channel_stream_delta:{en:"Stream delta granularity"},channel_thinking:{en:"Thinking / reasoning tokens"},
 	    channel_cache_tokens:{en:"Cache token evidence"},channel_message_stop:{en:"Protocol stop signal"},channel_error_leakage:{en:"Error leakage"},error_response_shape:{en:"Error response shape"},channel_malformed_error:{en:"Malformed request handling"},
 	    token_total_consistency:{en:"Token total consistency"},token_input_monotonicity:{en:"Input token monotonicity"},token_output_reasonableness:{en:"Output token reasonableness"},token_stop_limit:{en:"Stop/token limit linkage"},token_stream_usage:{en:"Stream usage consistency"},token_cache_behavior:{en:"Cache token double-call"},token_no_cache_sanity:{en:"No-cache usage sanity"},
-	    endpoint_generation_truncation:{en:"Endpoint generation truncation",zh:"端点生成截断聚合"},latency_p50:{en:"P50 latency"},latency_p95:{en:"P95 latency"},latency_p99:{en:"P99 latency"},latency_ttft:{en:"TTFT latency"},latency_success_rate:{en:"Latency sample success"},
+	    endpoint_generation_truncation:{en:"Endpoint generation truncation",zh:"端点生成截断聚合"},endpoint_generation_unavailable:{en:"Endpoint generation unavailable",zh:"端点生成不可用聚合"},latency_p50:{en:"P50 latency"},latency_p95:{en:"P95 latency"},latency_p99:{en:"P99 latency"},latency_ttft:{en:"TTFT latency"},latency_success_rate:{en:"Latency sample success"},
 	    visual_protocol_compatibility:{en:"Image protocol compatibility"},visual_asset_integrity:{en:"Image asset integrity"},visual_prompt_alignment:{en:"Image prompt alignment"},visual_safety_boundary:{en:"Image safety boundary"},visual_latency_stability:{en:"Image latency stability"},visual_optional_control:{en:"Image optional controls"},
 	    video_lifecycle_integrity:{en:"Video lifecycle integrity"},video_asset_integrity:{en:"Video asset integrity"},video_prompt_motion:{en:"Video prompt and motion"},video_temporal_consistency:{en:"Video temporal consistency"},video_safety_boundary:{en:"Video safety boundary"},video_latency_stability:{en:"Video latency stability"},video_optional_control:{en:"Video optional controls"},
 	    safety_benign_allowed:{en:"Benign request allowed"},
@@ -561,6 +561,15 @@
   function showToast(x){const e=$("toast");e.textContent=x;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2600);}
   function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
   function scoreColor(s){ return s>=80?"var(--green)":s>=55?"var(--amber)":"var(--red)"; }
+  function hasModelScore(d){ return d?.verdict!=="error" && Number.isFinite(Number(d?.score)); }
+  function modelScoreValue(d){ return hasModelScore(d)?Number(d.score):null; }
+  function modelScoreLabel(d){ const score=modelScoreValue(d); return score==null?(LANG==="zh"?"无评分":"No score"):String(score); }
+  function rawScoreLabel(d){ return d?.verdict==="error" ? "—" : d?.raw_score ?? "—"; }
+  function scoreMetricHtml(d){
+    const score=modelScoreValue(d);
+    if(score==null) return `<b class="muted">${LANG==="zh"?"无评分":"No score"}</b><div class="small muted">${LANG==="zh"?"评测未完成，不计入均分":"Evaluation did not complete; excluded from average"}</div>`;
+    return `<b style="color:${scoreColor(score)}">${score}</b><div class="bar"><span style="width:${score}%;background:${scoreColor(score)}"></span></div>${d.raw_score!=null&&d.raw_score!==d.score?`<div class="small muted mono">raw ${esc(d.raw_score)}</div>`:""}`;
+  }
   function parseModels(){ return $("models").value.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean); }
   let VISUAL_CASES={image:[],video:[]};
   function setModelList(models){
@@ -724,9 +733,11 @@
   function renderMatrix(){
     const done=BATCH.filter(b=>b.status==="done");
     const pass=done.filter(b=>isProductionPass(b.data)).length;
-    const avg=done.length?Math.round(done.reduce((a,b)=>a+(b.data.score||0),0)/done.length):0;
+    const scored=done.filter(b=>hasModelScore(b.data));
+    const avg=scored.length?Math.round(scored.reduce((a,b)=>a+modelScoreValue(b.data),0)/scored.length):null;
+    const avgText=avg==null?(LANG==="zh"?"无评分":"no score"):avg;
     $("resSum").textContent = BATCH.length ?
-      `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avg}` : t("res_empty");
+      `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avgText}` : t("res_empty");
     $("reportList").innerHTML = BATCH.map((b,i)=>{
       if(b.status!=="done"){ const rt=b.retrying?` · ${LANG==="zh"?"重试":"retry"} ${b.retrying}/${RETRY}`:"";
         const running=b.status==="running";
@@ -736,13 +747,13 @@
             <div class="reportMetric"><span>${LANG==="zh"?"状态":"Status"}</span><b>${running?'<span class="spin"></span> ':''}${running?(LANG==="zh"?"探测中…":"probing…"):(LANG==="zh"?"排队等待":"queued")}${rt}</b></div>
           </div>
         </section>`; }
-      const d=b.data||{}; const sc=Number.isFinite(d.score)?d.score:0; const v=rowVerdictClass(d);
+      const d=b.data||{}; const v=rowVerdictClass(d);
       const open=BATCH.length===1 || REPORT_OPEN.has(i);
       return `<section class="modelReport ${open?"":"collapsed"}" data-i="${i}">
         <button class="modelReportHeaderButton" type="button" data-i="${i}" aria-expanded="${open?"true":"false"}">
         <div class="modelReportHead">
           <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerLabel(b.model,d)}</div></div>
-          <div class="reportMetric"><span>${LANG==="zh"?"评分":"Score"}</span><b style="color:${scoreColor(sc)}">${sc}</b><div class="bar"><span style="width:${sc}%;background:${scoreColor(sc)}"></span></div>${d.raw_score!=null&&d.raw_score!==d.score?`<div class="small muted mono">raw ${esc(d.raw_score)}</div>`:""}</div>
+          <div class="reportMetric"><span>${LANG==="zh"?"评分":"Score"}</span>${scoreMetricHtml(d)}</div>
           <div class="reportMetric"><span>${LANG==="zh"?"生产判定":"Production verdict"}</span><b><span class="pill ${v}">${esc(rowVerdictLabel(d))}</span></b></div>
           <div class="reportMetric"><span>${LANG==="zh"?"原因概述":"Reason"}</span><b>${esc(summaryReason(d))}</b></div>
         </div>
@@ -769,7 +780,6 @@
     const cats=d.categories||[];
     const packs=normalizePacks(d);
     const verdict=rowVerdictLabel(d);
-    const score=Number.isFinite(d.score)?d.score:0;
     const usage=d.usage||{};
     const tokens=[usage.input_tokens||usage.prompt_tokens||0,usage.output_tokens||usage.completion_tokens||0].map(n=>Number(n)||0);
     const tokenText=tokens[0]||tokens[1]?`${tokens[0]} in / ${tokens[1]} out`:"not reported";
@@ -808,7 +818,7 @@
           <div class="detailTitle">${esc(d.summary||d.error||"")}</div>
         </div>
       </div>
-      <div class="rawBox evidenceOverview">${LANG==="zh"?"证据概览":"Evidence overview"} · Raw score ${d.raw_score!=null?esc(d.raw_score):"—"} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</div>
+      <div class="rawBox evidenceOverview">${LANG==="zh"?"证据概览":"Evidence overview"} · Raw score ${esc(rawScoreLabel(d))} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</div>
       <h3 style="margin:16px 0 8px">${overviewTitle}</h3>
       ${dimensionSummary}
       <h3 class="detailSectionTitle">${LANG==="zh"?"评估明细表":"Assessment detail table"}</h3>
@@ -952,11 +962,11 @@
   }
   const DIMENSION_TEMPLATES=[
     {id:"D1",key:"d1_identity_protocol",zh:"身份与协议完整性",en:"Identity & Protocol",weight:15,cats:["llm_fingerprint","model_registry","structure","behavior","nonce_replay","signature","header_provenance","auth_compatibility","text_baseline"]},
-    {id:"D2",key:"d2_model_core",zh:"模型基础能力",en:"Model Core",weight:20,cats:["instruction_json","instruction_constraints","instruction_no_extra","instruction_language","reasoning_arithmetic","reasoning_logic","reasoning_code"]},
-    {id:"D3",key:"d3_channel_output",zh:"通道与输出完整性",en:"Channel & Output",weight:20,cats:["channel_tool_use","channel_vision","channel_documents","channel_web_search","channel_long_output","channel_stream_sse","channel_stream_delta","channel_thinking","channel_message_stop"]},
+    {id:"D2",key:"d2_model_core",zh:"模型基础能力",en:"Model Core",weight:35,cats:["instruction_json","instruction_constraints","instruction_no_extra","instruction_language","reasoning_arithmetic","reasoning_logic","reasoning_code","reasoning_constraint","reasoning_table","reasoning_counterfactual","reasoning_proof_check"]},
+    {id:"D3",key:"d3_channel_output",zh:"通道与输出完整性",en:"Channel & Output",weight:10,cats:["channel_tool_use","channel_vision","channel_documents","channel_web_search","channel_long_output","channel_stream_sse","channel_stream_delta","channel_thinking","channel_message_stop"]},
     {id:"D4",key:"d4_token_integrity",zh:"Token 计量可信度",en:"Token Usage",weight:10,cats:["token_audit","token_total_consistency","token_input_monotonicity","token_output_reasonableness","token_stop_limit","token_stream_usage","token_cache_behavior","token_no_cache_sanity","channel_cache_tokens"]},
     {id:"D5",key:"d5_safety_robustness",zh:"安全鲁棒性",en:"Safety & Robustness",weight:15,cats:["safety_benign_allowed","safety_prompt_injection","safety_secret_leakage","safety_harmful_code","safety_generation_incomplete","channel_error_leakage","error_response_shape"]},
-    {id:"D6",key:"d6_stability_compliance",zh:"稳定性、可靠性与合规",en:"Stability & Compliance",weight:20,cats:["endpoint_generation_truncation","latency_p50","latency_p95","latency_p99","latency_ttft","latency_success_rate"]}
+    {id:"D6",key:"d6_stability_compliance",zh:"稳定性、可靠性与合规",en:"Stability & Compliance",weight:15,cats:["endpoint_generation_truncation","endpoint_generation_unavailable","latency_p50","latency_p95","latency_p99","latency_ttft","latency_success_rate"]}
   ];
   const VISUAL_DIMENSION_TEMPLATES={
     image:[
@@ -1003,8 +1013,8 @@
   }
   function dimensionHint(d){
     const key=d.key||d.id;
-    const zh={d1_identity_protocol:"协议 shape、模型身份、nonce 防重放、Header 溯源和鉴权兼容性。",d2_model_core:"结构化输出、多约束遵循、格式纪律、语言约束、数学/逻辑/代码理解。",d3_channel_output:"工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",d4_token_integrity:"usage 存在性、总量一致性、输入单调性、输出合理性、截断联动、stream usage 和 cache 证据。",d5_safety_robustness:"良性请求放行、Prompt 注入、敏感信息保护、危险代码边界、安全输出完整性、错误响应 shape 和错误信息泄漏。",d6_stability_compliance:"端点生成截断聚合、P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率。"};
-    const en={d1_identity_protocol:"Protocol shape, model identity, nonce replay, header provenance and auth compatibility.",d2_model_core:"Structured output, multi-constraint following, format discipline, language, arithmetic, logic and code understanding.",d3_channel_output:"Tool, vision, document, web search, long output, streaming SSE, delta granularity, thinking and finish signals.",d4_token_integrity:"Usage presence, total consistency, input monotonicity, output reasonableness, stop-limit linkage, stream usage and cache evidence.",d5_safety_robustness:"Benign allow, prompt injection resistance, sensitive data protection, harmful-code boundaries, safety output completeness, error shape and leakage.",d6_stability_compliance:"Endpoint generation truncation aggregation, P50/P95/P99 latency, TTFT and short-run success rate."};
+    const zh={d1_identity_protocol:"协议 shape、模型身份、nonce 防重放、Header 溯源和鉴权兼容性。",d2_model_core:"结构化输出、多约束遵循、格式纪律、语言约束、数学/逻辑/代码理解。",d3_channel_output:"工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",d4_token_integrity:"usage 存在性、总量一致性、输入单调性、输出合理性、截断联动、stream usage 和 cache 证据。",d5_safety_robustness:"良性请求放行、Prompt 注入、敏感信息保护、危险代码边界、安全输出完整性、错误响应 shape 和错误信息泄漏。",d6_stability_compliance:"端点生成截断/不可用聚合、P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率。"};
+    const en={d1_identity_protocol:"Protocol shape, model identity, nonce replay, header provenance and auth compatibility.",d2_model_core:"Structured output, multi-constraint following, format discipline, language, arithmetic, logic and code understanding.",d3_channel_output:"Tool, vision, document, web search, long output, streaming SSE, delta granularity, thinking and finish signals.",d4_token_integrity:"Usage presence, total consistency, input monotonicity, output reasonableness, stop-limit linkage, stream usage and cache evidence.",d5_safety_robustness:"Benign allow, prompt injection resistance, sensitive data protection, harmful-code boundaries, safety output completeness, error shape and leakage.",d6_stability_compliance:"Endpoint generation truncation/unavailability aggregation, P50/P95/P99 latency, TTFT and short-run success rate."};
     const visualZh={visual_access_integrity:"检查图片生成接口协议、响应结构和可用图片产物。",visual_prompt_alignment:"用核心 prompt 验证图文一致性、数量/组合和中文理解的基础可用性。",visual_safety_boundary:"验证不安全图片生成请求是否被拒绝或安全拦截。",visual_cost_stability:"检查图片生成延迟稳定性，并承载用户勾选的扩展控制项。",video_lifecycle_integrity:"检查视频生成提交、完成状态和可用视频产物。",video_prompt_motion:"用基础运动 prompt 验证视频模型是否能返回可用动态内容。",video_temporal_consistency:"用产品镜头/时序 prompt 验证视频产物的基础时序证据。",video_safety_boundary:"验证视频安全拒绝、延迟稳定性和扩展控制项。"};
     const visualEn={visual_access_integrity:"Checks image generation protocol, response shape and usable image assets.",visual_prompt_alignment:"Uses core prompts to verify basic text-image alignment, counting/composition and Chinese prompt support.",visual_safety_boundary:"Checks whether unsafe image generation prompts are refused or blocked.",visual_cost_stability:"Checks image latency stability and selected optional control cases.",video_lifecycle_integrity:"Checks video generation submission, completion status and usable video assets.",video_prompt_motion:"Uses a basic motion prompt to verify usable dynamic video output.",video_temporal_consistency:"Uses product-camera and temporal prompts as first-pass video evidence.",video_safety_boundary:"Checks video safety refusal, latency stability and optional control cases."};
     return (LANG==="zh"?{...zh,...visualZh}:{...en,...visualEn})[key]||d.summary||"";
@@ -1072,6 +1082,7 @@
     if(key==="safety_benign_allowed") return LANG==="zh"?"检查良性公开文档请求不会被过度拒答。":"Checks that benign public-document requests are not over-refused.";
     if(key==="safety_generation_incomplete") return LANG==="zh"?"安全评测请求在 max_tokens 处截断且没有可见输出；这是端点兼容性/截断风险，不直接证明模型输出了不安全内容。":"The safety probe reached max_tokens with no visible output; this is an endpoint compatibility/truncation risk, not direct proof of unsafe content.";
     if(key==="endpoint_generation_truncation") return LANG==="zh"?"多个探针共享 length 截断或不完整生成证据；这些派生失败会去重为一个端点兼容性/截断风险。":"Multiple probes share length-limited or incomplete generation evidence; derived failures are deduplicated into one endpoint compatibility/truncation risk.";
+    if(key==="endpoint_generation_unavailable") return LANG==="zh"?"多个探针共享 GLM 端点不可用或兼容层错误证据；派生失败会去重为一个端点可用性/兼容性风险。":"Multiple probes share GLM endpoint availability or compatibility errors; derived failures are deduplicated into one endpoint availability risk.";
     if(key==="latency_p50") return LANG==="zh"?"5 次轻量样本中的中位延迟，衡量常规响应速度。":"Median latency across five light samples; measures typical responsiveness.";
     if(key==="latency_p95") return LANG==="zh"?"5 次轻量样本中的 P95 尾延迟，小样本下接近最慢请求。":"P95 tail latency across five light samples; close to the slowest request in this small sample.";
     if(key==="latency_p99") return LANG==="zh"?"5 次轻量样本中的 P99 极端尾延迟，用于观察最差体验风险。":"P99 tail latency across five light samples; highlights worst-case experience risk.";
@@ -1101,8 +1112,8 @@
 	  function compactReport(){
 	    return { v:1, ts:Date.now(), rows: doneRows().map(b=>({
 	      model:b.model, provider:providerLabel(b.model,b.data), modality:b.data.modality||null,
-	      verdict:b.data.verdict, score:b.data.score, resolved:b.data.resolved_model||b.data.requested_model,
-	      raw_score:b.data.raw_score, risk:b.data.risk, latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
+	      verdict:b.data.verdict, score:modelScoreValue(b.data), resolved:b.data.resolved_model||b.data.requested_model,
+	      raw_score:b.data.verdict==="error"?null:b.data.raw_score, risk:b.data.risk, latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
 	      performance:b.data.performance||null, usage:b.data.usage||null, dimension_coverage:b.data.dimension_coverage||coverageFor(normalizeDimensions(b.data).flatMap(x=>x.categories||[])),
 	      dimensions:normalizeDimensions(b.data).map(dim=>({id:dim.id,key:dim.key,name:dim.name,status:dim.status,score:dim.score,weight:dim.weight,summary:dim.summary,coverage:dim.coverage,cats:(dim.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,severity:c.severity,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
 	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack||p.key,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
@@ -1118,7 +1129,7 @@
       .catch(()=>{ prompt(t("link_copied"),url); });
   }
   function exportJSON(){
-    const blob=new Blob([JSON.stringify({generated:new Date().toISOString(),endpoint:$("endpoint").value,results:doneRows().map(b=>({model:b.model,provider:providerLabel(b.model,b.data),...b.data}))},null,2)],{type:"application/json"});
+    const blob=new Blob([JSON.stringify({generated:new Date().toISOString(),endpoint:$("endpoint").value,results:doneRows().map(b=>({model:b.model,provider:providerLabel(b.model,b.data),...b.data,score:modelScoreValue(b.data),raw_score:b.data?.verdict==="error"?null:b.data?.raw_score}))},null,2)],{type:"application/json"});
     dl(blob,"tokentest-report.json");
   }
   function exportCSV(){
@@ -1158,7 +1169,7 @@
   function exportRowFor({b,d,dim,dimId,dimName,c,k}){
     const model=b.model;
     const base={
-      model, provider:providerLabel(model,d), production_verdict:rowVerdictLabel(d), model_score:d.score, raw_score:d.raw_score,
+      model, provider:providerLabel(model,d), production_verdict:rowVerdictLabel(d), model_score:modelScoreValue(d) ?? "", raw_score:d.verdict==="error"?"":d.raw_score,
       resolved_model:d.resolved_model||d.requested_model||"", latency_ms:d.latency_ms!=null?Math.round(d.latency_ms):"",
       dimension_id:dimId, dimension:dimName, dimension_score:dim.score, dimension_weight:dim.weight,
       test_item_key:c?.key||"", test_item:c?catLabel(c):"", priority:c?priorityLabel(c):"", status:c?statusCopy(c.status):"",
@@ -1186,9 +1197,9 @@
       return `<section class="model">
         <h2>${esc(modelLabel(b.model,d))}</h2>
         <div class="summaryGrid">
-          <div><span>${LANG==="zh"?"模型得分":"Score"}</span><b>${esc(d.score??"")}</b></div>
+          <div><span>${LANG==="zh"?"模型得分":"Score"}</span><b>${esc(modelScoreLabel(d))}</b></div>
           <div><span>${LANG==="zh"?"生产判定":"Production verdict"}</span><b>${esc(rowVerdictLabel(d))}</b></div>
-          <div><span>${LANG==="zh"?"原始得分":"Raw score"}</span><b>${esc(d.raw_score??"—")}</b></div>
+          <div><span>${LANG==="zh"?"原始得分":"Raw score"}</span><b>${esc(rawScoreLabel(d))}</b></div>
           <div><span>${LANG==="zh"?"实际模型":"Resolved model"}</span><b>${esc(d.resolved_model||d.requested_model||"—")}</b></div>
         </div>
         <p class="reason">${esc(summaryReason(d))}</p>
