@@ -65,6 +65,37 @@ The MCP output uses the same report schema as the user-visible page:
 - `pack_results` and `categories`: backward-compatible detailed category data.
 - `evidence`: request/response probe evidence, with Authorization redacted for remote MCP.
 
+## Scoring and SLA Evidence
+
+TokenTest separates production SLA evidence from model-capability scoring.
+It does not guarantee the upstream model provider's or router operator's SLA.
+If a provider advertises an availability target such as 99.9%, treat the contract,
+status page, or service terms as the source of truth. TokenTest reports provide
+pre-production and spot-check evidence that can be attached to procurement,
+integration, and incident-review workflows.
+
+The current text-model D1-D6 weights are:
+
+| Dimension | Weight | Notes |
+| --- | ---: | --- |
+| D1 Identity & Protocol Integrity | 15 | Model identity, protocol shape, nonce replay, headers and auth compatibility. |
+| D2 Model Core Capabilities | 35 | Structured output, instruction following, local reasoning and advanced reasoning cases. |
+| D3 Channel & Output Integrity | 10 | Tool, vision, document, web search, long output, streaming and finish-signal coverage. |
+| D4 Token Usage Integrity | 10 | Usage presence, total consistency, input monotonicity, output ratio, stop-limit and cache evidence. |
+| D5 Safety & Robustness | 15 | Benign allow, prompt-injection resistance, secret protection, harmful-code boundary and error leakage. |
+| D6 Stability, Reliability & Compliance | 15 | Endpoint generation risks, latency distribution, TTFT and short-run success rate. |
+
+D6 includes SLA-adjacent evidence:
+
+- `endpoint_generation_truncation`: multiple high-risk failures share length-limited or incomplete-generation evidence and are counted once as endpoint compatibility/truncation risk.
+- `endpoint_generation_unavailable`: multiple GLM-compatible endpoint failures share availability or compatibility evidence, such as `get_channel_failed` or error code `1210`, and are counted once as endpoint availability risk.
+- `latency_p50`, `latency_p95`, `latency_p99`, `latency_ttft`, and `latency_success_rate`: short-run latency and success-rate samples for production-readiness review.
+
+If an evaluation row does not complete because of timeout, auth, network, or
+endpoint-level errors, user-facing exports may set `score` and `raw_score` to
+`null`. Treat this as "not scored" rather than a low model score. Batch averages
+exclude unscored rows.
+
 ## Smoke Test
 
 Private-token mode:

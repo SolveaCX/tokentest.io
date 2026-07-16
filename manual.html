@@ -17,7 +17,7 @@
 <body>
 <nav><div class="wrap navIn">
   <a class="brand" href="/"><span class="mark">TT</span>TokenTest<span class="muted">.io</span></a>
-  <div class="navLinks"><a href="/">返回首页</a><a href="#usage">如何使用</a><a href="#dimensions">测试维度</a><a href="#mcp">MCP usage</a><a class="btn" href="https://github.com/SolveaCX/tokentest.io" target="_blank" rel="noopener">GitHub</a></div>
+  <div class="navLinks"><a href="/">返回首页</a><a href="#usage">如何使用</a><a href="#dimensions">测试维度</a><a href="#sla">SLA</a><a href="#mcp">MCP usage</a><a class="btn" href="https://github.com/SolveaCX/tokentest.io" target="_blank" rel="noopener">GitHub</a></div>
 </div></nav>
 <header class="wrap">
   <div class="eyebrow">PRODUCT MANUAL</div>
@@ -31,9 +31,10 @@
     <a href="#dimensions">2. 6D evaluation dimensions</a>
     <a href="#cases">3. Cases and metrics</a>
     <a href="#scoring">4. Scoring and blocking</a>
-    <a href="#exports">5. Reports and exports</a>
-    <a href="#mcp">6. MCP usage</a>
-    <a href="#security">7. Security notes</a>
+    <a href="#sla">5. SLA and production use</a>
+    <a href="#exports">6. Reports and exports</a>
+    <a href="#mcp">7. MCP usage</a>
+    <a href="#security">8. Security notes</a>
   </aside>
   <div>
     <section class="section" id="usage">
@@ -49,14 +50,14 @@
     <section class="section" id="dimensions">
       <h2>2. 6D evaluation dimensions / 测试维度</h2>
       <table>
-        <thead><tr><th>维度</th><th>说明</th><th>典型指标</th></tr></thead>
+        <thead><tr><th>维度</th><th>权重</th><th>说明</th><th>典型指标</th></tr></thead>
         <tbody>
-          <tr><td><b>D1 身份与协议完整性</b></td><td>验证模型身份、响应协议 shape、nonce 防重放、模型列表一致性、header 溯源和鉴权兼容。</td><td>模型指纹、结构完整性、auth compatibility、signature、nonce replay。</td></tr>
-          <tr><td><b>D2 模型基础能力</b></td><td>验证结构化输出、多约束遵循、语言约束、数学/逻辑/代码理解。</td><td>JSON schema、多约束遵循、GSM8K-style、code benchmark-style cases。</td></tr>
-          <tr><td><b>D3 通道与输出完整性</b></td><td>验证工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 和结束信号。</td><td>tool calls、vision input、document input、stream usage、finish reason。</td></tr>
-          <tr><td><b>D4 Token 计量可信度</b></td><td>验证 usage 存在性、总量一致性、输入单调性、输出合理性、截断联动和 cache token 证据。</td><td>input/output tokens、total consistency、stop/token limit、cache tokens。</td></tr>
-          <tr><td><b>D5 安全鲁棒性</b></td><td>验证良性请求放行、Prompt 注入防护、敏感信息保护、危险代码边界和错误信息泄漏。</td><td>prompt injection、secret leakage、harmful-code boundary、error response shape。</td></tr>
-          <tr><td><b>D6 稳定性、可靠性与合规</b></td><td>验证短时延迟分布、TTFT 和成功率，为生产接入提供体验和可用性参考。</td><td>P50/P95/P99 latency、TTFT、latency sample success rate。</td></tr>
+          <tr><td><b>D1 身份与协议完整性</b></td><td>15%</td><td>验证模型身份、响应协议 shape、nonce 防重放、模型列表一致性、header 溯源和鉴权兼容。</td><td>模型指纹、结构完整性、auth compatibility、signature、nonce replay。</td></tr>
+          <tr><td><b>D2 模型基础能力</b></td><td>35%</td><td>验证结构化输出、多约束遵循、语言约束、数学/逻辑/代码理解，以及约束、表格、反事实和证明链校验等高阶推理。</td><td>JSON schema、多约束遵循、GSM8K-style、code benchmark-style、advanced reasoning cases。</td></tr>
+          <tr><td><b>D3 通道与输出完整性</b></td><td>10%</td><td>验证工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 和结束信号。</td><td>tool calls、vision input、document input、stream usage、finish reason。</td></tr>
+          <tr><td><b>D4 Token 计量可信度</b></td><td>10%</td><td>验证 usage 存在性、总量一致性、输入单调性、输出合理性、截断联动和 cache token 证据。</td><td>input/output tokens、total consistency、stop/token limit、cache tokens。</td></tr>
+          <tr><td><b>D5 安全鲁棒性</b></td><td>15%</td><td>验证良性请求放行、Prompt 注入防护、敏感信息保护、危险代码边界、安全输出完整性和错误信息泄漏。</td><td>prompt injection、secret leakage、harmful-code boundary、error response shape。</td></tr>
+          <tr><td><b>D6 稳定性、可靠性与合规</b></td><td>15%</td><td>验证端点生成截断/不可用聚合、短时延迟分布、TTFT 和成功率，为生产接入提供体验和可用性参考。</td><td>endpoint generation risk、P50/P95/P99 latency、TTFT、latency sample success rate。</td></tr>
         </tbody>
       </table>
     </section>
@@ -81,10 +82,22 @@
         <li><span class="pill">Needs review</span>：关键能力或证据存在不确定，需要人工复核。</li>
         <li><span class="pill">Blocked</span>：存在 P0 失败、协议不可用、身份异常或严重安全/计量问题。</li>
       </ul>
+      <p class="muted">如果某个模型评测因为端点超时、鉴权或网络错误没有完成，页面会显示“无评分”，该行不会计入批量均分；导出的 JSON/CSV 中对应 <code>score</code> 和 <code>raw_score</code> 为空，用于和低分模型区分。</p>
+    </section>
+
+    <section class="section" id="sla">
+      <h2>5. SLA and production use / SLA 与生产接入说明</h2>
+      <p>TokenTest 不替上游模型厂商或中转渠道承诺 SLA，也不会把一次短时评测等同于正式可用性担保。TokenTest 的 SLA 相关结果用于采购和上线前复核：把渠道自称的可用性、错误形态、延迟尾部和短时成功率放在同一份证据里，帮助判断是否需要灰度、降级或人工复核。</p>
+      <ul>
+        <li><b>供应商 SLA</b>：如果中转商或模型供应商承诺 99.9% 等可用性，应以合同、状态页或正式服务条款为准，并单独留档。</li>
+        <li><b>TokenTest 证据</b>：D6 会记录 P50/P95/P99、TTFT、短时成功率，以及端点生成截断或不可用聚合；这些是接入风险证据，不是长期 SLA 统计。</li>
+        <li><b>端点不可用聚合</b>：多个 GLM 兼容层或渠道错误（如 <code>get_channel_failed</code>、<code>1210</code>）会合并为一个 P1 端点可用性风险，避免把同源端点故障重复计为多个模型能力失败。</li>
+        <li><b>生产建议</b>：正式接入前应用业务流量做灰度压测，设置超时、重试、备用模型和告警；TokenTest 报告适合作为上线检查和供应商沟通材料。</li>
+      </ul>
     </section>
 
     <section class="section" id="exports">
-      <h2>5. Reports and exports / 报告导出</h2>
+      <h2>6. Reports and exports / 报告导出</h2>
       <p>页面报告支持折叠/展开模型详情，并提供三种导出：</p>
       <ul>
         <li><b>JSON</b>：完整机器可读结果，适合二次分析或留档。</li>
@@ -94,7 +107,7 @@
     </section>
 
     <section class="section" id="mcp">
-      <h2>6. MCP usage / MCP 使用说明</h2>
+      <h2>7. MCP usage / MCP 使用说明</h2>
       <p>TokenTest 提供本地 stdio MCP 和远程 HTTP MCP。工具包括 <code>discover_models</code>、<code>evaluate_model</code>、<code>evaluate_batch</code>。</p>
       <h3>Remote MCP tools/list</h3>
       <pre>curl -sS https://tokentest.io/mcp \
@@ -123,7 +136,7 @@
     </section>
 
     <section class="section" id="security">
-      <h2>7. Security notes / 安全与防滥用</h2>
+      <h2>8. Security notes / 安全与防滥用</h2>
       <ul>
         <li>公开 MCP 默认启用限流：按 IP、工具类型和 batch size 控制调用。</li>
         <li>远程 MCP 默认禁止 localhost / 私网地址，降低 SSRF 风险。</li>

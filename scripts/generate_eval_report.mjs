@@ -792,6 +792,7 @@ const DEFAULT_SEVERITY = {
   latency_ttft: "p2",
   latency_success_rate: "p1",
   endpoint_generation_truncation: "p1",
+  endpoint_generation_unavailable: "p1",
 };
 
 const CATEGORY_META = {
@@ -1054,6 +1055,11 @@ const CATEGORY_META = {
     probe: "multiple_generation_probes",
     input: "汇总 nonce、instruction、reasoning、safety 等探针的 finish_reason 与可见输出。",
     expected: "若多个 P1 共享 length 截断或不完整生成证据，应只计一个端点兼容性/截断 P1。",
+  },
+  endpoint_generation_unavailable: {
+    probe: "multiple_endpoint_error_probes",
+    input: "汇总 GLM instruction、reasoning、safety、tool、token 等探针的 HTTP 错误。",
+    expected: "若多个高风险失败共享 get_channel_failed 或 1210 兼容错误，应只计一个端点可用性 P1。",
   },
 };
 
