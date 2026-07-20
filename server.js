@@ -553,6 +553,7 @@ ${head}
   footer{border-top:1px solid var(--line2);padding:28px 0;color:var(--mut2);font-size:13px}
   @media(max-width:760px){.navLinks{display:none}.postGrid{grid-template-columns:1fr}.wrap{padding:0 18px}.navRight{gap:10px}h1{font-size:clamp(32px,10vw,44px)}.lead{font-size:15px}.content{font-size:16px}}
 </style>
+<script src="https://analytics.ahrefs.com/analytics.js" data-key="tX3MN+O10Nzcb0ClfeU9MQ" async></script>
 </head>
 <body>
 <nav><div class="wrap navIn">
