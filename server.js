@@ -32,6 +32,13 @@ const MCP_RATE_LIMIT_TOOL_WINDOW_MS = positiveInt(process.env.MCP_RATE_LIMIT_TOO
 const MCP_RATE_LIMIT_DISCOVER = positiveInt(process.env.MCP_RATE_LIMIT_DISCOVER, 60);
 const MCP_RATE_LIMIT_EVALUATE = positiveInt(process.env.MCP_RATE_LIMIT_EVALUATE, 20);
 const MCP_RATE_LIMIT_BATCH = positiveInt(process.env.MCP_RATE_LIMIT_BATCH, 4);
+const BLOGGER_API_URL = (process.env.BLOGGER_API_URL || "").replace(/\/+$/, "");
+const BLOGGER_ACCESS_KEY = process.env.BLOGGER_ACCESS_KEY || "";
+const BLOGGER_SITE_SLUG = process.env.BLOGGER_SITE_SLUG || "tokentest";
+const BLOG_LANGUAGES = [
+  { key: "en", label: "English", pathPrefix: "", htmlLang: "en" },
+  { key: "zh", label: "中文", pathPrefix: "/zh", htmlLang: "zh-CN" },
+];
 const mcpRateBuckets = new Map();
 
 // ---- puzzle geometry ----
@@ -445,7 +452,215 @@ function safeName(value) {
   return String(value || "model").replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "model";
 }
 
+function blogLanguageFromRequest(req) {
+  return req.path.startsWith("/zh/blog") ? BLOG_LANGUAGES[1] : BLOG_LANGUAGES[0];
+}
+
+function alternateBlogPath(language, slug = "") {
+  const base = `${language.pathPrefix}/blog`;
+  return slug ? `${base}/${slug}` : base;
+}
+
+async function bloggerFetch(endpoint) {
+  if (!BLOGGER_API_URL || !BLOGGER_ACCESS_KEY) {
+    const error = new Error("Blogger integration is not configured");
+    error.status = 503;
+    throw error;
+  }
+  const response = await fetch(`${BLOGGER_API_URL}${endpoint}`, {
+    headers: { "X-Access-Key": BLOGGER_ACCESS_KEY },
+  });
+  if (!response.ok) {
+    const error = new Error(`Blogger API ${response.status}`);
+    error.status = response.status;
+    error.detail = await response.text().catch(() => "");
+    throw error;
+  }
+  return response.json();
+}
+
+function blogPostsPath(language, params = {}) {
+  const query = new URLSearchParams({
+    limit: String(params.limit || 20),
+    offset: String(params.offset || 0),
+    language: language.key,
+  });
+  if (params.category) query.set("category_slug", params.category);
+  return `/api/integration/sites/${encodeURIComponent(BLOGGER_SITE_SLUG)}/posts?${query}`;
+}
+
+function blogPostPath(language, slug) {
+  const query = new URLSearchParams({ language: language.key });
+  return `/api/integration/sites/${encodeURIComponent(BLOGGER_SITE_SLUG)}/posts/${encodeURIComponent(slug)}?${query}`;
+}
+
+function formatDate(value, language) {
+  if (!value) return "";
+  try {
+    return new Intl.DateTimeFormat(language.key === "zh" ? "zh-CN" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    }).format(new Date(value));
+  } catch {
+    return "";
+  }
+}
+
+function displayAuthor(post) {
+  return post.author_display_name || post.author?.nickname || post.author?.email || "TokenTest";
+}
+
+function textEscape(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#039;",
+  }[char]));
+}
+
+function attrEscape(value) {
+  return textEscape(value).replace(/`/g, "&#096;");
+}
+
+function blogShell({ language, title, description, canonicalPath, body, head = "" }) {
+  const canonical = `https://tokentest.io${canonicalPath}`;
+  const alternateSlug = canonicalPath.match(/\/blog\/([^/]+)$/)?.[1] || "";
+  const alternateLinks = BLOG_LANGUAGES.map((item) =>
+    `<link rel="alternate" hreflang="${attrEscape(item.htmlLang)}" href="https://tokentest.io${alternateBlogPath(item, alternateSlug)}">`
+  ).join("\n");
+  return `<!doctype html>
+<html lang="${attrEscape(language.htmlLang)}">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${textEscape(title)}</title>
+<meta name="description" content="${attrEscape(description)}" />
+<link rel="canonical" href="${attrEscape(canonical)}" />
+${alternateLinks}
+${head}
+<style>
+  :root{--bg:#0a0a0a;--panel:#111113;--line:rgba(255,255,255,.10);--line2:rgba(255,255,255,.06);--txt:#fafafa;--mut:rgba(255,255,255,.62);--mut2:rgba(255,255,255,.42);--red:#fb2c36;--blue:#3080ff;--green:#00c758;--amber:#f99c00;--purple:#a855f7;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.6}a{color:inherit;text-decoration:none}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(620px 380px at 14% -10%,rgba(251,44,54,.16),transparent 70%),radial-gradient(560px 420px at 94% 0,rgba(48,128,255,.14),transparent 70%)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}nav{position:sticky;top:0;z-index:20;background:rgba(10,10,10,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--line2)}
+  .navIn{height:60px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:10px;font-weight:650}.mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--red),#b3121b);font-family:var(--mono);font-size:13px}.navLinks,.navRight{display:flex;align-items:center;gap:18px;font-size:14px;color:var(--mut)}.navLinks a:hover,.navRight a:hover{color:#fff}.active{color:#fff}.btn{border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:rgba(255,255,255,.04)}
+  header{padding:54px 0 26px}.eyebrow{font-family:var(--mono);font-size:12px;color:var(--red);margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em}h1{font-size:clamp(34px,5vw,58px);line-height:1.04;letter-spacing:-.02em;margin:0 0 14px}.lead{max-width:780px;color:var(--mut);font-size:17px}.langSwitch{display:flex;gap:8px;margin-top:18px}.langSwitch a{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:7px;padding:6px 10px;color:var(--mut)}.langSwitch a.active{color:#fff;border-color:rgba(251,44,54,.5);background:rgba(251,44,54,.10)}
+  .postGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:10px 0 42px}.postCard{border:1px solid var(--line);border-radius:8px;background:linear-gradient(180deg,var(--panel),#0c0c0d);overflow:hidden}.postCard a{display:block;height:100%}.cover{aspect-ratio:16/8;background:#090909;overflow:hidden;border-bottom:1px solid var(--line2)}.cover img{width:100%;height:100%;object-fit:cover;display:block}.postBody{padding:18px}.meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--mut2);font-family:var(--mono);font-size:11px;margin-bottom:9px}.cat{color:#8ab6ff}.postCard h2{font-size:20px;line-height:1.25;margin:0 0 8px}.excerpt{color:var(--mut);font-size:14px;margin:0}.empty,.error{border:1px dashed var(--line);border-radius:8px;padding:22px;color:var(--mut);background:rgba(255,255,255,.02);margin-bottom:42px}
+  article{max-width:820px;margin:0 auto 54px}.articleHead{padding:54px 0 24px}.articleMeta{display:flex;gap:10px;flex-wrap:wrap;color:var(--mut2);font-family:var(--mono);font-size:12px}.articleCover{margin:0 0 28px;border-radius:8px;overflow:hidden;border:1px solid var(--line2)}.articleCover img{width:100%;display:block}.content{color:rgba(255,255,255,.84);font-size:17px}.content h1,.content h2,.content h3{color:#fff;line-height:1.18;margin:30px 0 10px}.content h1{font-size:34px}.content h2{font-size:26px}.content h3{font-size:20px}.content p,.content ul,.content ol{margin:0 0 18px}.content a{color:#8ab6ff;text-decoration:underline}.content pre{overflow:auto;border:1px solid var(--line2);border-radius:8px;background:#080809;padding:14px}.content code{font-family:var(--mono);color:#d8e7ff}.content blockquote{margin:0 0 18px;border-left:3px solid var(--red);padding-left:14px;color:var(--mut)}
+  footer{border-top:1px solid var(--line2);padding:28px 0;color:var(--mut2);font-size:13px}
+  @media(max-width:760px){.navLinks{display:none}.postGrid{grid-template-columns:1fr}.wrap{padding:0 18px}.navRight{gap:10px}h1{font-size:clamp(32px,10vw,44px)}.lead{font-size:15px}.content{font-size:16px}}
+</style>
+</head>
+<body>
+<nav><div class="wrap navIn">
+  <a class="brand" href="/"><span class="mark">TT</span>TokenTest<span style="color:var(--mut)">.io</span></a>
+  <div class="navLinks"><a href="/#verify">${language.key === "zh" ? "开始检测" : "Evaluate"}</a><a class="active" href="${alternateBlogPath(language)}">Blog</a><a href="/manual.html">${language.key === "zh" ? "产品手册" : "Manual"}</a></div>
+  <div class="navRight"><a class="btn" href="/">${language.key === "zh" ? "返回首页" : "Home"}</a></div>
+</div></nav>
+${body}
+<footer class="wrap">© TokenTest.io · Blog · <a href="https://flatkey.ai/" target="_blank" rel="noopener">FlatKey</a></footer>
+</body>
+</html>`;
+}
+
+async function renderBlogIndex(req, res) {
+  const language = blogLanguageFromRequest(req);
+  try {
+    const posts = await bloggerFetch(blogPostsPath(language));
+    const title = language.key === "zh" ? "TokenTest 博客" : "TokenTest Blog";
+    const description = language.key === "zh"
+      ? "TokenTest 关于模型评测、AI 中间层采购、路由协议与生产接入风险的文章。"
+      : "Articles from TokenTest on model evaluation, AI middle-layer procurement, routing protocols and production-readiness risk.";
+    const cards = posts.map((post) => {
+      const href = alternateBlogPath(language, post.slug);
+      const cover = post.cover_image_url ? `<div class="cover"><img src="${attrEscape(post.cover_image_url)}" alt=""></div>` : "";
+      const category = post.category?.name ? `<span class="cat">${textEscape(post.category.name)}</span>` : "";
+      return `<section class="postCard"><a href="${attrEscape(href)}">${cover}<div class="postBody">
+        <div class="meta">${category}<span>${textEscape(formatDate(post.published_at || post.updated_at, language))}</span><span>${textEscape(displayAuthor(post))}</span></div>
+        <h2>${textEscape(post.title)}</h2>
+        <p class="excerpt">${textEscape(post.excerpt || post.meta_description || "")}</p>
+      </div></a></section>`;
+    }).join("");
+    const body = `<header class="wrap">
+      <div class="eyebrow">${language.key === "zh" ? "BLOG" : "BLOG"}</div>
+      <h1>${textEscape(title)}</h1>
+      <p class="lead">${textEscape(description)}</p>
+      <div class="langSwitch">${BLOG_LANGUAGES.map((item) => `<a class="${item.key === language.key ? "active" : ""}" href="${alternateBlogPath(item)}">${textEscape(item.label)}</a>`).join("")}</div>
+    </header>
+    <main class="wrap">${cards ? `<div class="postGrid">${cards}</div>` : `<div class="empty">${language.key === "zh" ? "当前语言还没有已发布文章。" : "No published posts yet for this language."}</div>`}</main>`;
+    res.send(blogShell({ language, title, description, canonicalPath: alternateBlogPath(language), body }));
+  } catch (error) {
+    renderBlogError(res, language, error);
+  }
+}
+
+async function renderBlogPost(req, res) {
+  const language = blogLanguageFromRequest(req);
+  try {
+    const post = await bloggerFetch(blogPostPath(language, req.params.slug));
+    const title = post.meta_title || post.title;
+    const description = post.meta_description || post.excerpt || "";
+    const canonicalPath = alternateBlogPath(language, post.slug);
+    const cover = post.cover_image_url ? `<figure class="articleCover"><img src="${attrEscape(post.cover_image_url)}" alt=""></figure>` : "";
+    const imageMeta = post.cover_image_url ? `<meta property="og:image" content="${attrEscape(post.cover_image_url)}" />` : "";
+    const body = `<article class="wrap">
+      <header class="articleHead">
+        <div class="eyebrow">${textEscape(post.category?.name || "TokenTest")}</div>
+        <h1>${textEscape(post.title)}</h1>
+        <div class="articleMeta"><span>${textEscape(formatDate(post.published_at || post.updated_at, language))}</span><span>${textEscape(displayAuthor(post))}</span></div>
+        <div class="langSwitch">${BLOG_LANGUAGES.map((item) => `<a class="${item.key === language.key ? "active" : ""}" href="${alternateBlogPath(item, post.slug)}">${textEscape(item.label)}</a>`).join("")}</div>
+      </header>
+      ${cover}
+      <div class="content">${post.html_content || ""}</div>
+    </article>`;
+    res.send(blogShell({
+      language,
+      title,
+      description,
+      canonicalPath,
+      body,
+      head: `<meta property="og:title" content="${attrEscape(title)}" />
+<meta property="og:description" content="${attrEscape(description)}" />
+<meta property="article:published_time" content="${attrEscape(post.published_at || "")}" />
+<meta property="article:modified_time" content="${attrEscape(post.updated_at || "")}" />
+${imageMeta}`,
+    }));
+  } catch (error) {
+    if (error.status === 404) {
+      res.status(404).send(blogShell({
+        language,
+        title: language.key === "zh" ? "文章未找到" : "Post not found",
+        description: "",
+        canonicalPath: alternateBlogPath(language, req.params.slug),
+        body: `<main class="wrap"><header><div class="eyebrow">404</div><h1>${language.key === "zh" ? "文章未找到" : "Post not found"}</h1><p class="lead">${language.key === "zh" ? "这篇文章不存在，或当前语言版本还没有发布。" : "This post does not exist, or this language version has not been published yet."}</p></header></main>`,
+      }));
+      return;
+    }
+    renderBlogError(res, language, error);
+  }
+}
+
+function renderBlogError(res, language, error) {
+  const status = error.status || 502;
+  const title = language.key === "zh" ? "博客暂不可用" : "Blog unavailable";
+  const description = language.key === "zh"
+    ? "Blogger 数据源暂时不可用，或部署环境尚未配置。"
+    : "The Blogger data source is unavailable or the deployment is not configured yet.";
+  res.status(status).send(blogShell({
+    language,
+    title,
+    description,
+    canonicalPath: alternateBlogPath(language),
+    body: `<main class="wrap"><header><div class="eyebrow">${textEscape(status)}</div><h1>${textEscape(title)}</h1><p class="lead">${textEscape(description)}</p></header><div class="error">${textEscape(error.message)}</div></main>`,
+  }));
+}
+
 // ---- static (cleanUrls so /blockrun resolves to blockrun.html) ----
+app.get(["/blog", "/zh/blog"], renderBlogIndex);
+app.get(["/blog/:slug", "/zh/blog/:slug"], renderBlogPost);
 app.use(express.static(__dirname, { extensions: ["html"] }));
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
