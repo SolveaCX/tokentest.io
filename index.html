@@ -103,8 +103,12 @@
   .visualCase input{width:14px;height:14px;margin:2px 0 0;accent-color:var(--red)}
   .visualCase b{display:block;color:var(--txt);font-size:12px;font-weight:600;line-height:1.35}
   .visualCase span{display:block;color:var(--mut2);font-size:11px;line-height:1.45;margin-top:2px}
-  .run{width:100%;margin-top:4px;background:var(--red);color:#fff;border:0;border-radius:11px;font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:.15s;box-shadow:0 8px 28px -10px rgba(251,44,54,.7)}
+  .runActions{display:grid;gap:8px;margin-top:4px}
+  .run{width:100%;background:var(--red);color:#fff;border:0;border-radius:11px;font-size:15px;font-weight:600;padding:14px;cursor:pointer;transition:.15s;box-shadow:0 8px 28px -10px rgba(251,44,54,.7)}
   .run:hover{filter:brightness(1.07)} .run:disabled{opacity:.6;cursor:default}
+  .stopRun{background:#242427;border:1px solid var(--line);box-shadow:none;color:var(--txt)}
+  .stopRun:hover{border-color:var(--red);filter:none}
+  .stopRun.hidden{display:none}
   .runNote{text-align:center;font-size:12px;color:var(--mut2);margin-top:10px;font-family:var(--mono)}
 
   .checks{list-style:none;margin:0;padding:0;text-align:left;display:grid;grid-template-rows:repeat(5,1fr);width:100%;min-height:0}
@@ -364,7 +368,10 @@
             <div class="visualCore" id="visualCoreText"></div>
             <div class="visualCaseList" id="visualCaseList"></div>
           </div>
-          <button class="run" id="runProbe" data-i18n="run_btn">Start verification</button>
+          <div class="runActions">
+            <button class="run" id="runProbe" data-i18n="run_btn">Start verification</button>
+            <button class="run stopRun hidden" id="stopProbe" type="button" data-i18n="stop_btn">Stop evaluation</button>
+          </div>
           <div class="runNote" id="runNote" data-i18n="run_note">Sends ~30 probes per model · est. $0.01–$0.30 each</div>
           <details class="advanced">
             <summary data-i18n="adv">Advanced · protocol &amp; offline analyze</summary>
@@ -453,7 +460,7 @@
       visual_case_count:"{core} core + {optional} optional selected",
       card_title:"Evaluation Run",card_tag:"black-box · key not stored",mode_quick:"Quick",mode_truth:"Truth",mode_cost:"Cost",
       l_endpoint:"API endpoint",l_key:"API key",l_models:"Target model(s)",discover:"↻ discover models",
-      run_btn:"Start evaluation",run_note:"Sends ~30 probes per model · est. $0.01–$0.30 each",
+      run_btn:"Start evaluation",run_note:"Sends ~30 probes per model · est. $0.01–$0.30 each",stop_btn:"Stop evaluation",
       adv:"Advanced · protocol & offline analyze",l_protocol:"Protocol",load_sample:"Load sample",analyze_json:"Analyze JSON",
       what:"What we verify",c_model:"Model identity",c_model_d:"Actual model returned vs the model you requested",
       c_usage:"Usage integrity",c_usage_d:"input / output / cache token evidence is present & plausible",
@@ -480,7 +487,7 @@
       visual_case_count:"{core} 个核心 + 已选 {optional} 个扩展",
       card_title:"评测运行",card_tag:"黑盒 · 不存储 Key",mode_quick:"快速",mode_truth:"深度",mode_cost:"成本",
       l_endpoint:"API 接口地址",l_key:"API Key",l_models:"目标模型（可多个）",discover:"↻ 自动发现模型",
-      run_btn:"开始检测",run_note:"每个模型约 30 次探测 · 单个约 $0.01–$0.30",
+      run_btn:"开始检测",run_note:"每个模型约 30 次探测 · 单个约 $0.01–$0.30",stop_btn:"停止评测",
       adv:"高级 · 协议与离线分析",l_protocol:"协议",load_sample:"载入示例",analyze_json:"分析 JSON",
       what:"我们检测什么",c_model:"模型身份",c_model_d:"实际返回的模型 vs 你请求的模型",
       c_usage:"用量完整性",c_usage_d:"input / output / cache token 证据存在且合理",
@@ -527,8 +534,22 @@
   const t = (k) => (I18N[LANG][k] ?? I18N.en[k] ?? k);
   function verdictLabel(v){ const m=VERDICT[v]; return m?(m[LANG]||m.en):(v||"—"); }
   function productionVerdictLabel(v){ const m=PRODUCTION_VERDICT[v]; return m?(m[LANG]||m.en):(v||"—"); }
-  function rowVerdictLabel(d){ return d?.risk?.production_verdict ? productionVerdictLabel(d.risk.production_verdict) : verdictLabel(d?.verdict||""); }
+  function authenticityLabel(v){
+    const m={high_confidence:{en:"High confidence",zh:"高置信验真"},needs_review:{en:"Needs review",zh:"需复核"},suspicious:{en:"Suspicious",zh:"可疑"}};
+    return m[v]?(m[v][LANG]||m[v].en):(v||"—");
+  }
+  function rowVerdictLabel(d){ return d?.authenticity?.verdict ? authenticityLabel(d.authenticity.verdict) : verdictLabel(d?.verdict||""); }
+  function productionLineLabel(d){
+    const verdict=d?.compatibility?.verdict||d?.risk?.production_verdict;
+    const score=d?.compatibility?.score ?? modelScoreValue(d);
+    const label=verdict ? productionVerdictLabel(verdict) : verdictLabel(d?.verdict||"");
+    return score==null ? label : `${label} · ${score}`;
+  }
   function rowVerdictClass(d){
+    const av=d?.authenticity?.verdict;
+    if(av==="high_confidence") return "genuine";
+    if(av==="needs_review") return "suspicious";
+    if(av==="suspicious") return "likely_fake_or_degraded";
     const rv=d?.risk?.production_verdict;
     if(rv==="production_reference_pass") return "genuine";
     if(rv==="needs_review"||rv==="risky") return "suspicious";
@@ -652,16 +673,41 @@
   function ensureToken(cb){ const tk=getToken(); if(tk) return cb(tk); openCaptcha(()=>cb(getToken())); }
 
   // ---------------- batch run ----------------
-  let BATCH = []; // [{model, status:"pending"|done, data, retrying}]
+  let BATCH = []; // [{model, status:"queued"|"running"|"done", data, retrying}]
   const REPORT_OPEN = new Set();
+  let ACTIVE_RUN = null;
   const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
   const RETRY=2; // extra attempts on transient upstream errors
-  const MODEL_TIMEOUT_MS={quick:240000,truth:420000,cost:300000};
+  const MODEL_TIMEOUT_MS={quick:600000,truth:900000,cost:600000};
   const MODEL_CONCURRENCY={quick:2,truth:1,cost:2};
   function interruptedResult(model,error,summary){
     return {verdict:"error",score:0,error,summary,requested_model:model,resolved_model:"",categories:[]};
   }
-  async function checkModel(token, model, onStatus){
+  function stoppedResult(model){
+    const summary=LANG==="zh"?"用户已停止本轮评测。":"Evaluation stopped by user.";
+    return interruptedResult(model,"evaluation_stopped",summary);
+  }
+  function setRunControls(active){
+    $("runProbe").disabled=active; $("runTop").disabled=active;
+    $("stopProbe").classList.toggle("hidden",!active);
+    $("stopProbe").disabled=!active;
+  }
+  function stopEvaluation(){
+    const run=ACTIVE_RUN;
+    if(!run||run.stopped) return;
+    run.stopped=true;
+    run.interrupted=true;
+    run.controllers.forEach(controller=>controller.abort());
+    BATCH.forEach((item)=>{
+      if(item.status!=="done"){
+        item.status="done"; item.retrying=0; item.data=stoppedResult(item.model);
+      }
+    });
+    setRunControls(false);
+    renderMatrix();
+    showToast(LANG==="zh"?"评测已停止":"Evaluation stopped");
+  }
+  async function checkModel(token, model, onStatus, runState){
     const body=isVisualTarget()
       ? { token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(), model, modality:state.target, selected_case_ids:selectedVisualCaseIds() }
       : { token, base_url:$("endpoint").value.replace(/\/$/,""), api_key:$("apiKey").value.trim(),
@@ -669,18 +715,21 @@
     const path=isVisualTarget()?"/api/check-visual":"/api/check";
     for(let attempt=0;attempt<=RETRY;attempt++){
       const controller=new AbortController();
+      runState?.controllers?.add(controller);
       const timer=setTimeout(()=>controller.abort(),MODEL_TIMEOUT_MS[state.mode]||MODEL_TIMEOUT_MS.quick);
       try{ const r=await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body),signal:controller.signal});
         if(r.status===401){ sessionStorage.removeItem("tt_cap"); throw new Error("captcha"); }
         const d=await r.json();
+        if(runState?.stopped) return stoppedResult(model);
         const transient = d.verdict==="error" && /50[023]|429|upstream|connect|unreach|timeout|temporar/i.test(String(d.error||d.summary||""));
         if(transient && attempt<RETRY){ if(onStatus)onStatus(attempt+1); await sleep(1300+attempt*900); continue; }
         return d;
       }catch(e){ if(e.message==="captcha") throw e;
+        if(e.name==="AbortError"&&runState?.stopped) return stoppedResult(model);
         if(e.name==="AbortError") return {verdict:"error",score:0,error:"model_eval_timeout",summary:LANG==="zh"?"该模型评测超过单模型时间上限，已停止等待并继续后续模型。":"This model exceeded the per-model evaluation timeout, so TokenTest stopped waiting and continued the batch."};
         if(attempt<RETRY){ if(onStatus)onStatus(attempt+1); await sleep(1100); continue; }
         return {verdict:"error",score:0,error:String(e),summary:t("res_empty")}; }
-      finally{ clearTimeout(timer); }
+      finally{ clearTimeout(timer); runState?.controllers?.delete(controller); }
     }
   }
   function requestRun(){
@@ -692,11 +741,13 @@
       if(!token){ showToast(LANG==="zh"?"需要先通过人机验证":"Human check required"); return; }
       REPORT_OPEN.clear();
       BATCH = models.map(m=>({model:m,status:"queued",data:null})); renderMatrix();
-      $("runProbe").disabled=true; $("runTop").disabled=true;
-      let nextIndex=0, interrupted=false;
+      const runState={stopped:false,interrupted:false,controllers:new Set()};
+      ACTIVE_RUN=runState;
+      setRunControls(true);
+      let nextIndex=0;
       const interruptBatch=(error)=>{
-        if(interrupted) return;
-        interrupted=true;
+        if(runState.interrupted) return;
+        runState.interrupted=true;
         const summary=LANG==="zh"?"人机验证已过期，本轮批量评测已中断，请重新验证后再运行。":"Human verification expired, so this batch was interrupted. Verify again and rerun.";
         BATCH.forEach((item)=>{
           if(item.status!=="done"){
@@ -707,13 +758,13 @@
         renderMatrix();
       };
       const worker=async()=>{
-        while(!interrupted){
+        while(!runState.interrupted){
           const i=nextIndex++;
           if(i>=BATCH.length) return;
         BATCH[i].status="running"; BATCH[i].retrying=0; renderMatrix();
           try{
-            const data=await checkModel(token,BATCH[i].model,(n)=>{ BATCH[i].retrying=n; renderMatrix(); });
-            if(interrupted) return;
+            const data=await checkModel(token,BATCH[i].model,(n)=>{ BATCH[i].retrying=n; renderMatrix(); },runState);
+            if(runState.interrupted) return;
             BATCH[i].data=data;
             BATCH[i].status="done"; BATCH[i].retrying=0;
           }
@@ -727,8 +778,9 @@
       };
       const concurrency=Math.max(1,Math.min(BATCH.length,MODEL_CONCURRENCY[state.mode]||2));
       await Promise.all(Array.from({length:concurrency},()=>worker()));
-      $("runProbe").disabled=false; $("runTop").disabled=false;
-      if(!interrupted) showToast(LANG==="zh"?"检测完成":"Verification complete");
+      if(ACTIVE_RUN===runState) ACTIVE_RUN=null;
+      setRunControls(false);
+      if(!runState.interrupted) showToast(LANG==="zh"?"检测完成":"Verification complete");
     });
   }
 
@@ -736,10 +788,11 @@
     const done=BATCH.filter(b=>b.status==="done");
     const pass=done.filter(b=>isProductionPass(b.data)).length;
     const scored=done.filter(b=>hasModelScore(b.data));
+    const stopped=done.filter(b=>b.data?.error==="evaluation_stopped").length;
     const avg=scored.length?Math.round(scored.reduce((a,b)=>a+modelScoreValue(b.data),0)/scored.length):null;
     const avgText=avg==null?(LANG==="zh"?"无评分":"no score"):avg;
     $("resSum").textContent = BATCH.length ?
-      `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avgText}` : t("res_empty");
+      `${done.length}/${BATCH.length} ${LANG==="zh"?"完成":"done"} · ${pass} ${LANG==="zh"?"生产通过":"production pass"} · ${LANG==="zh"?"均分":"avg"} ${avgText}${stopped?` · ${stopped} ${LANG==="zh"?"已停止":"stopped"}`:""}` : t("res_empty");
     $("reportList").innerHTML = BATCH.map((b,i)=>{
       if(b.status!=="done"){ const rt=b.retrying?` · ${LANG==="zh"?"重试":"retry"} ${b.retrying}/${RETRY}`:"";
         const running=b.status==="running";
@@ -756,7 +809,7 @@
         <div class="modelReportHead">
           <div class="reportMetric"><span>${LANG==="zh"?"模型":"Model"}</span><b>${esc(b.model)}</b><div class="small muted mono">${providerLabel(b.model,d)}</div></div>
           <div class="reportMetric"><span>${LANG==="zh"?"评分":"Score"}</span>${scoreMetricHtml(d)}</div>
-          <div class="reportMetric"><span>${LANG==="zh"?"生产判定":"Production verdict"}</span><b><span class="pill ${v}">${esc(rowVerdictLabel(d))}</span></b></div>
+          <div class="reportMetric"><span>${LANG==="zh"?"验真判定":"Authenticity"}</span><b><span class="pill ${v}">${esc(rowVerdictLabel(d))}</span></b><div class="small muted">${esc(productionLineLabel(d))}</div></div>
           <div class="reportMetric"><span>${LANG==="zh"?"原因概述":"Reason"}</span><b>${esc(summaryReason(d))}</b></div>
         </div>
         </button>
@@ -789,6 +842,10 @@
     const risk=d.risk||{};
     const riskReason=risk.gate_reason||"";
     const riskText=risk.production_verdict?`${productionVerdictLabel(risk.production_verdict)}${riskReason?": "+riskReason:""}`:"not reported";
+    const auth=d.authenticity||{};
+    const authText=auth.verdict?`${authenticityLabel(auth.verdict)} · ${auth.score ?? "—"}`:"not reported";
+    const compat=d.compatibility||{};
+    const compatText=(compat.verdict||risk.production_verdict)?`${productionVerdictLabel(compat.verdict||risk.production_verdict)} · ${compat.score ?? modelScoreValue(d) ?? "—"}`:"not reported";
     const dimensions=normalizeDimensions(d);
     const dimensionSummary=dimensions.length?`<div class="packGrid">${dimensions.map(p=>`<div class="packTile">
       <b>${esc(dimensionLabel(p))}<span class="pill ${esc(p.status||statusForScore(p.score))}">${esc(p.score)}</span></b>
@@ -820,7 +877,7 @@
           <div class="detailTitle">${esc(d.summary||d.error||"")}</div>
         </div>
       </div>
-      <div class="rawBox evidenceOverview">${LANG==="zh"?"证据概览":"Evidence overview"} · Raw score ${esc(rawScoreLabel(d))} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</div>
+      <div class="rawBox evidenceOverview">${LANG==="zh"?"证据概览":"Evidence overview"} · ${LANG==="zh"?"验真":"Authenticity"} ${esc(authText)} · ${LANG==="zh"?"生产可用性":"Production compatibility"} ${esc(compatText)} · Raw score ${esc(rawScoreLabel(d))} · Risk gate ${esc(riskText)} · ${LANG==="zh"?"Token 证据":"Token evidence"} ${esc(tokenText)}</div>
       <h3 style="margin:16px 0 8px">${overviewTitle}</h3>
       ${dimensionSummary}
       <h3 class="detailSectionTitle">${LANG==="zh"?"评估明细表":"Assessment detail table"}</h3>
@@ -963,12 +1020,12 @@
     return Object.entries(grouped).map(([key,items])=>({key,name:packLabel(key),score:Math.round(items.reduce((a,c)=>a+(c.score||0),0)/items.length),status:statusForScore(Math.round(items.reduce((a,c)=>a+(c.score||0),0)/items.length)),summary:packHint(key),categories:items}));
   }
   const DIMENSION_TEMPLATES=[
-    {id:"D1",key:"d1_identity_protocol",zh:"身份与协议完整性",en:"Identity & Protocol",weight:15,cats:["llm_fingerprint","model_registry","structure","behavior","nonce_replay","signature","header_provenance","auth_compatibility","text_baseline"]},
-    {id:"D2",key:"d2_model_core",zh:"模型基础能力",en:"Model Core",weight:35,cats:["instruction_json","instruction_constraints","instruction_no_extra","instruction_language","reasoning_arithmetic","reasoning_logic","reasoning_code","reasoning_constraint","reasoning_table","reasoning_counterfactual","reasoning_proof_check"]},
-    {id:"D3",key:"d3_channel_output",zh:"通道与输出完整性",en:"Channel & Output",weight:10,cats:["channel_tool_use","channel_vision","channel_documents","channel_web_search","channel_long_output","channel_stream_sse","channel_stream_delta","channel_thinking","channel_message_stop"]},
-    {id:"D4",key:"d4_token_integrity",zh:"Token 计量可信度",en:"Token Usage",weight:10,cats:["token_audit","token_total_consistency","token_input_monotonicity","token_output_reasonableness","token_stop_limit","token_stream_usage","token_cache_behavior","token_no_cache_sanity","channel_cache_tokens"]},
-    {id:"D5",key:"d5_safety_robustness",zh:"安全鲁棒性",en:"Safety & Robustness",weight:15,cats:["safety_benign_allowed","safety_prompt_injection","safety_secret_leakage","safety_harmful_code","safety_generation_incomplete","channel_error_leakage","error_response_shape"]},
-    {id:"D6",key:"d6_stability_compliance",zh:"稳定性、可靠性与合规",en:"Stability & Compliance",weight:15,cats:["endpoint_generation_truncation","endpoint_generation_unavailable","latency_p50","latency_p95","latency_p99","latency_ttft","latency_success_rate"]}
+    {id:"D1",key:"d1_identity_protocol",zh:"身份与协议完整性",en:"Identity & Protocol",weight:30,cats:["llm_fingerprint","model_registry","structure","behavior","nonce_replay","signature","header_provenance","auth_compatibility","text_baseline"]},
+    {id:"D2",key:"d2_model_core",zh:"输出纪律与确定性任务",en:"Output Discipline",weight:30,cats:["instruction_json","instruction_constraints","instruction_no_extra","instruction_language","reasoning_arithmetic","reasoning_logic","reasoning_code","reasoning_constraint","reasoning_table","reasoning_counterfactual","reasoning_proof_check"]},
+    {id:"D3",key:"d3_channel_output",zh:"通道与输出完整性",en:"Channel & Output",weight:5,cats:["channel_tool_use","channel_vision","channel_documents","channel_web_search","channel_long_output","channel_stream_sse","channel_stream_delta","channel_thinking","channel_message_stop"]},
+    {id:"D4",key:"d4_token_integrity",zh:"Token 计量可信度",en:"Token Usage",weight:15,cats:["token_audit","token_total_consistency","token_input_monotonicity","token_output_reasonableness","token_stop_limit","token_stream_usage","token_cache_behavior","token_no_cache_sanity","channel_cache_tokens"]},
+    {id:"D5",key:"d5_safety_robustness",zh:"安全鲁棒性",en:"Safety & Robustness",weight:10,cats:["safety_benign_allowed","safety_prompt_injection","safety_secret_leakage","safety_harmful_code","safety_generation_incomplete","channel_error_leakage","error_response_shape"]},
+    {id:"D6",key:"d6_stability_compliance",zh:"稳定性、可靠性与合规",en:"Stability & Compliance",weight:10,cats:["endpoint_generation_truncation","endpoint_generation_unavailable","latency_p50","latency_p95","latency_p99","latency_ttft","latency_success_rate"]}
   ];
   const VISUAL_DIMENSION_TEMPLATES={
     image:[
@@ -1015,8 +1072,8 @@
   }
   function dimensionHint(d){
     const key=d.key||d.id;
-    const zh={d1_identity_protocol:"协议 shape、模型身份、nonce 防重放、Header 溯源和鉴权兼容性。",d2_model_core:"结构化输出、多约束遵循、格式纪律、语言约束、数学/逻辑/代码理解。",d3_channel_output:"工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",d4_token_integrity:"usage 存在性、总量一致性、输入单调性、输出合理性、截断联动、stream usage 和 cache 证据。",d5_safety_robustness:"良性请求放行、Prompt 注入、敏感信息保护、危险代码边界、安全输出完整性、错误响应 shape 和错误信息泄漏。",d6_stability_compliance:"端点生成截断/不可用聚合、P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率。"};
-    const en={d1_identity_protocol:"Protocol shape, model identity, nonce replay, header provenance and auth compatibility.",d2_model_core:"Structured output, multi-constraint following, format discipline, language, arithmetic, logic and code understanding.",d3_channel_output:"Tool, vision, document, web search, long output, streaming SSE, delta granularity, thinking and finish signals.",d4_token_integrity:"Usage presence, total consistency, input monotonicity, output reasonableness, stop-limit linkage, stream usage and cache evidence.",d5_safety_robustness:"Benign allow, prompt injection resistance, sensitive data protection, harmful-code boundaries, safety output completeness, error shape and leakage.",d6_stability_compliance:"Endpoint generation truncation/unavailability aggregation, P50/P95/P99 latency, TTFT and short-run success rate."};
+    const zh={d1_identity_protocol:"协议 shape、模型身份、nonce 防重放、Header 溯源和鉴权兼容性。",d2_model_core:"严格 JSON、约束遵循、语言格式、基础推理和确定性任务的可见答案稳定性。",d3_channel_output:"工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 与结束信号。",d4_token_integrity:"usage 存在性、总量一致性、输入单调性、输出合理性、截断联动、stream usage 和 cache 证据。",d5_safety_robustness:"良性请求放行、Prompt 注入、敏感信息保护、危险代码边界、安全输出完整性、错误响应 shape 和错误信息泄漏。",d6_stability_compliance:"端点生成截断/不可用聚合、P50/P95/P99 延迟、TTFT 首包延迟和短时请求成功率。"};
+    const en={d1_identity_protocol:"Protocol shape, model identity, nonce replay, header provenance and auth compatibility.",d2_model_core:"Visible-answer reliability for strict JSON, constraints, language format, arithmetic, logic and code tasks.",d3_channel_output:"Tool, vision, document, web search, long output, streaming SSE, delta granularity, thinking and finish signals.",d4_token_integrity:"Usage presence, total consistency, input monotonicity, output reasonableness, stop-limit linkage, stream usage and cache evidence.",d5_safety_robustness:"Benign allow, prompt injection resistance, sensitive data protection, harmful-code boundaries, safety output completeness, error shape and leakage.",d6_stability_compliance:"Endpoint generation truncation/unavailability aggregation, P50/P95/P99 latency, TTFT and short-run success rate."};
     const visualZh={visual_access_integrity:"检查图片生成接口协议、响应结构和可用图片产物。",visual_prompt_alignment:"用核心 prompt 验证图文一致性、数量/组合和中文理解的基础可用性。",visual_safety_boundary:"验证不安全图片生成请求是否被拒绝或安全拦截。",visual_cost_stability:"检查图片生成延迟稳定性，并承载用户勾选的扩展控制项。",video_lifecycle_integrity:"检查视频生成提交、完成状态和可用视频产物。",video_prompt_motion:"用基础运动 prompt 验证视频模型是否能返回可用动态内容。",video_temporal_consistency:"用产品镜头/时序 prompt 验证视频产物的基础时序证据。",video_safety_boundary:"验证视频安全拒绝、延迟稳定性和扩展控制项。"};
     const visualEn={visual_access_integrity:"Checks image generation protocol, response shape and usable image assets.",visual_prompt_alignment:"Uses core prompts to verify basic text-image alignment, counting/composition and Chinese prompt support.",visual_safety_boundary:"Checks whether unsafe image generation prompts are refused or blocked.",visual_cost_stability:"Checks image latency stability and selected optional control cases.",video_lifecycle_integrity:"Checks video generation submission, completion status and usable video assets.",video_prompt_motion:"Uses a basic motion prompt to verify usable dynamic video output.",video_temporal_consistency:"Uses product-camera and temporal prompts as first-pass video evidence.",video_safety_boundary:"Checks video safety refusal, latency stability and optional control cases."};
     return (LANG==="zh"?{...zh,...visualZh}:{...en,...visualEn})[key]||d.summary||"";
@@ -1028,7 +1085,7 @@
   }
   function coverageText(c){ return `tested ${c.tested||0} · pass ${c.pass||0} · fail ${c.fail||0} · skipped ${Number(c.skipped_scope||0)+Number(c.skipped_infra||0)+Number(c.not_tested||0)}`; }
   function weightedScore(items){
-    const sum=(items||[]).reduce((a,c)=>{ const w=c.severity==="p0"?3:c.severity==="p1"?2:1; return {s:a.s+(Number(c.score)||0)*w,w:a.w+w}; },{s:0,w:0});
+    const sum=(items||[]).reduce((a,c)=>{ const custom=Number(c.score_weight); const w=Number.isFinite(custom)&&custom>0?custom:c.severity==="p0"?3:c.severity==="p1"?2:1; return {s:a.s+(Number(c.score)||0)*w,w:a.w+w}; },{s:0,w:0});
     return sum.w?Math.round(sum.s/sum.w):0;
   }
   function statusForScore(s){ return s>=80?"pass":s>=55?"partial":"fail"; }
@@ -1115,11 +1172,11 @@
 	    return { v:1, ts:Date.now(), rows: doneRows().map(b=>({
 	      model:b.model, provider:providerLabel(b.model,b.data), modality:b.data.modality||null,
 	      verdict:b.data.verdict, score:modelScoreValue(b.data), resolved:b.data.resolved_model||b.data.requested_model,
-	      raw_score:b.data.verdict==="error"?null:b.data.raw_score, risk:b.data.risk, latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
-	      performance:b.data.performance||null, usage:b.data.usage||null, dimension_coverage:b.data.dimension_coverage||coverageFor(normalizeDimensions(b.data).flatMap(x=>x.categories||[])),
-	      dimensions:normalizeDimensions(b.data).map(dim=>({id:dim.id,key:dim.key,name:dim.name,status:dim.status,score:dim.score,weight:dim.weight,summary:dim.summary,coverage:dim.coverage,cats:(dim.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,severity:c.severity,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
-	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack||p.key,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
-	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]})),
+	      raw_score:b.data.verdict==="error"?null:b.data.raw_score, risk:b.data.risk, compatibility:b.data.compatibility||null, latency:b.data.latency_ms, summary:b.data.summary||b.data.error||"",
+	      performance:b.data.performance||null, usage:b.data.usage||null, authenticity:b.data.authenticity||null, dimension_coverage:b.data.dimension_coverage||coverageFor(normalizeDimensions(b.data).flatMap(x=>x.categories||[])),
+	      dimensions:normalizeDimensions(b.data).map(dim=>({id:dim.id,key:dim.key,name:dim.name,status:dim.status,score:dim.score,weight:dim.weight,summary:dim.summary,coverage:dim.coverage,cats:(dim.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,severity:c.severity,score_weight:c.score_weight,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
+	      packs:(b.data.pack_results||[]).map(p=>({key:p.key,name:p.name,status:p.status,score:p.score,summary:p.summary,cats:(p.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,score_weight:c.score_weight,pack:c.pack||p.key,detail:c.detail,from:c.from,cases:c.cases||[]}))})),
+	      cats:(b.data.categories||[]).map(c=>({key:c.key,name:c.name,status:c.status,score:c.score,max:c.max,score_weight:c.score_weight,pack:c.pack,detail:c.detail,from:c.from,cases:c.cases||[]})),
 	      assets:b.data.assets||[] })) };
 	  }
   window.compactReport = compactReport;
@@ -1248,7 +1305,7 @@
       const rep=JSON.parse(unb64u(enc));
 	      REPORT_OPEN.clear();
 	      BATCH = (rep.rows||[]).map(r=>({ model:r.model, status:"done", data:{
-	      verdict:r.verdict, score:r.score, raw_score:r.raw_score, risk:r.risk, modality:r.modality||null, resolved_model:r.resolved, latency_ms:r.latency, performance:r.performance||null, usage:r.usage||null, summary:r.summary, dimension_coverage:r.dimension_coverage||null, dimensions:(r.dimensions||[]).map(dim=>({...dim,categories:dim.cats||dim.categories||[]})), categories:r.cats||[], pack_results:r.packs||[], assets:r.assets||[], checks:[] } }));
+	      verdict:r.verdict, score:r.score, raw_score:r.raw_score, risk:r.risk, compatibility:r.compatibility||null, authenticity:r.authenticity||null, modality:r.modality||null, resolved_model:r.resolved, latency_ms:r.latency, performance:r.performance||null, usage:r.usage||null, summary:r.summary, dimension_coverage:r.dimension_coverage||null, dimensions:(r.dimensions||[]).map(dim=>({...dim,categories:dim.cats||dim.categories||[]})), categories:r.cats||[], pack_results:r.packs||[], assets:r.assets||[], checks:[] } }));
       // read-only banner + collapse config
       const banner=document.createElement("div"); banner.className="shareBanner";
       const when=rep.ts?new Date(rep.ts).toLocaleString():"";
@@ -1381,6 +1438,7 @@
   }));
   $("runProbe").addEventListener("click",requestRun);
   $("runTop").addEventListener("click",requestRun);
+  $("stopProbe").addEventListener("click",stopEvaluation);
   $("discoverBtn").addEventListener("click",discover);
   $("models").addEventListener("input",updateModelChips);
   $("loadSample").addEventListener("click",()=>{ $("responseJson").value=JSON.stringify(sample,null,2);analyzeLocal(sample);showToast(LANG==="zh"?"已载入示例":"Sample loaded"); });

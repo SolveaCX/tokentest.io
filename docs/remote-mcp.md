@@ -78,12 +78,12 @@ The current text-model D1-D6 weights are:
 
 | Dimension | Weight | Notes |
 | --- | ---: | --- |
-| D1 Identity & Protocol Integrity | 15 | Model identity, protocol shape, nonce replay, headers and auth compatibility. |
-| D2 Model Core Capabilities | 35 | Structured output, instruction following, local reasoning and advanced reasoning cases. |
-| D3 Channel & Output Integrity | 10 | Tool, vision, document, web search, long output, streaming and finish-signal coverage. |
-| D4 Token Usage Integrity | 10 | Usage presence, total consistency, input monotonicity, output ratio, stop-limit and cache evidence. |
-| D5 Safety & Robustness | 15 | Benign allow, prompt-injection resistance, secret protection, harmful-code boundary and error leakage. |
-| D6 Stability, Reliability & Compliance | 15 | Endpoint generation risks, latency distribution, TTFT and short-run success rate. |
+| D1 Identity & Protocol Integrity | 30 | Model identity, protocol shape, nonce replay, headers and auth compatibility. |
+| D2 Output Discipline & Deterministic Tasks | 30 | Strict JSON, instruction constraints, language format and visible-answer reliability for deterministic reasoning tasks. |
+| D3 Channel & Output Integrity | 5 | Tool, vision, document, web search, long output, streaming and finish-signal coverage; optional channel misses are weak evidence by default. |
+| D4 Token Usage Integrity | 15 | Usage presence, total consistency, input monotonicity, output ratio, stop-limit and cache evidence. |
+| D5 Safety & Robustness | 10 | Benign allow, prompt-injection resistance, secret protection, harmful-code boundary and error leakage. |
+| D6 Stability, Reliability & Compliance | 10 | Endpoint generation risks, latency distribution, TTFT and short-run success rate. |
 
 D6 includes SLA-adjacent evidence:
 

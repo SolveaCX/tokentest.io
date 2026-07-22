@@ -5,6 +5,8 @@ npm-debug.log*
 test/
 data/
 docs/superpowers/
+tmp/
+research/mcp-runs/
 report*.html
 llm-eval-upgrade-plan*.html
 research/*case-trace*.html
