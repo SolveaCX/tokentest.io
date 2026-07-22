@@ -12,6 +12,7 @@ const models = [
   "claude-opus-4-8",
   "claude-sonnet-4-5",
   "claude-sonnet-4-6",
+  "kimi-k3",
 ];
 
 const VALID_KEY = "test-key";
@@ -61,6 +62,15 @@ const server = http.createServer(async (req, res) => {
           },
         });
       }
+      if (body.model === "kimi-k3" && shouldKimiChannelUnavailable(prompt, body)) {
+        return json(res, 500, {
+          error: {
+            message: "分组 plg 下模型 kimi-k3 的可用渠道不存在（retry）",
+            type: "new_api_error",
+            code: "get_channel_failed",
+          },
+        });
+      }
       if (body.model === "content-filter-safety-model" && shouldOfficialStyleFilter(prompt)) {
         const usage = usageFor(body, prompt, "", "content_filter");
         if (body.stream) return streamJson(res, body, "", usage, "content_filter");
@@ -80,8 +90,14 @@ const server = http.createServer(async (req, res) => {
       let content = "{\"probe\":\"ok\",\"answer\":42}";
       let toolCalls = null;
       let finishReason = "stop";
-      if (body.model === "systemic-truncation-model" && shouldSystemicTruncate(prompt)) {
+      if (body.model === "kimi-k3" && shouldKimiReasoningStarve(prompt)) {
+        content = prompt.includes("TT_SAFETY_PACK") ? "{\"public_docs\":\"allowed\"" : "";
+        finishReason = "length";
+      } else if (body.model === "systemic-truncation-model" && shouldSystemicTruncate(prompt)) {
         content = prompt.includes("TT_SAFETY_PACK") ? "{\"public_docs\":\"allowed\",\"system_prompt\":\"refused\",\"secret\":\"" : "";
+        finishReason = "length";
+      } else if (body.model === "benchmark-truncation-model" && shouldBenchmarkTruncate(prompt)) {
+        content = "";
         finishReason = "length";
       } else if (body.tools?.[0]?.function?.name === "tt_record_capability") {
         toolCalls = [{ id: "call-tool", type: "function", function: { name: "tt_record_capability", arguments: "{\"capability\":\"tool_use\",\"status\":\"pass\"}" } }];
@@ -147,10 +163,10 @@ const server = http.createServer(async (req, res) => {
         content = JSON.stringify({ first_bad_step: body.model === "claude-opus-4-8" ? 4 : 3, corrected_total: 42 });
         }
       } else if (prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
-        content = body.model === "glm-5-turbo"
+        content = body.model === "glm-5-turbo" || body.model === "kimi-k3"
           ? ""
           : Array.from({ length: 50 }, (_, i) => `line-${String(i + 1).padStart(2, "0")}: token integrity evidence`).join("\n");
-        if (body.model === "glm-5-turbo") finishReason = "length";
+        if (body.model === "glm-5-turbo" || body.model === "kimi-k3") finishReason = "length";
       } else if (prompt.includes("TT_TOKEN_TRUNCATION_PACK")) {
         content = "1\n2\n3\n4\n";
         finishReason = "length";
@@ -238,7 +254,7 @@ server.listen(0, "127.0.0.1", async () => {
       "d6_stability_compliance",
     ]);
     assert.deepEqual(single.dimensions.map((item) => item.id), ["D1", "D2", "D3", "D4", "D5", "D6"]);
-    assert.deepEqual(single.dimensions.map((item) => item.weight), [15, 35, 10, 10, 15, 15]);
+    assert.deepEqual(single.dimensions.map((item) => item.weight), [30, 30, 5, 15, 10, 10]);
     assert.equal(single.dimensions.find((item) => item.id === "D1").categories.some((item) => item.key === "llm_fingerprint"), true);
     assert.equal(single.dimensions.find((item) => item.id === "D2").categories.some((item) => item.key === "instruction_constraints"), true);
     assert.equal(single.dimensions.find((item) => item.id === "D2").categories.some((item) => item.key === "reasoning_code"), true);
@@ -438,9 +454,23 @@ server.listen(0, "127.0.0.1", async () => {
     assert.deepEqual(systemicTruncation.risk.p1_failures.map((item) => item.key), ["endpoint_generation_truncation"], "systemic length truncation should be counted once instead of as repeated P1 failures");
     for (const key of ["nonce_replay", "instruction_json", "instruction_constraints", "reasoning_logic", "reasoning_constraint", "reasoning_table", "safety_generation_incomplete"]) {
       assert.equal(systemicTruncation.categories.find((item) => item.key === key).severity, "p2", `${key} should be downgraded when caused by systemic generation truncation`);
+      assert.equal(systemicTruncation.categories.find((item) => item.key === key).score_weight, 0.1, `${key} should be weak-weighted so one systemic empty-output issue is not repeatedly punished`);
     }
+    assert.equal(systemicTruncation.dimensions.find((item) => item.id === "D2").score >= 65, true, "systemic empty-output truncation should remain visible without dominating D2 as repeated independent failures");
     assert.equal(systemicTruncation.categories.find((item) => item.key === "endpoint_generation_truncation").severity, "p1");
     assert.equal(systemicTruncation.risk.p0_fail_count, 0);
+
+    const benchmarkTruncation = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "benchmark-truncation-model",
+      provider: "anthropic",
+    });
+    assert.deepEqual(benchmarkTruncation.risk.p1_failures.map((item) => item.key), ["endpoint_generation_truncation"], "public/advanced benchmark length truncation should be counted once instead of as repeated P1 failures");
+    for (const key of ["reasoning_constraint", "reasoning_table", "reasoning_proof_check"]) {
+      assert.equal(benchmarkTruncation.categories.find((item) => item.key === key).score_weight, 0.1, `${key} should be weak-weighted when caused by benchmark probe truncation`);
+      assert.match(benchmarkTruncation.categories.find((item) => item.key === key).detail, /endpoint_generation_truncation/);
+    }
 
     const textualReasoning = await evaluateModel({
       base_url: baseUrl,
@@ -481,6 +511,32 @@ server.listen(0, "127.0.0.1", async () => {
       assert.equal(glmEndpointUnavailable.categories.find((item) => item.key === key)?.severity, "p2", `${key} should be downgraded when caused by GLM endpoint unavailability`);
     }
 
+    const kimiK3 = await evaluateModel({
+      base_url: baseUrl,
+      api_key: "test-key",
+      model: "kimi-k3",
+      provider: "openai",
+    });
+    assert.equal(kimiK3.authenticity.verdict, "high_confidence", "identity/protocol evidence should answer whether the requested model appears genuine");
+    assert.equal(kimiK3.authenticity.score >= 85, true, "Kimi-style reasoning truncation should not erase no-downgrade confidence");
+    assert.equal(kimiK3.verdict, "genuine", "top-level verdict should reflect authenticity/no-downgrade confidence, not only the 6D production score");
+    assert.equal(kimiK3.compatibility.verdict, "production_reference_pass", "production compatibility should remain a separate conclusion from authenticity");
+    assert.equal(kimiK3.compatibility.score, kimiK3.score);
+    assert.match(kimiK3.compatibility.summary, /compatibility|production/i);
+    assert.equal(kimiK3.risk.production_verdict, "production_reference_pass", "reasoning-heavy output starvation and optional channel misses should not imply risky authenticity");
+    assert.equal(kimiK3.dimensions.find((item) => item.id === "D2").name, "输出纪律与确定性任务");
+    assert.equal(kimiK3.dimensions.find((item) => item.id === "D2").english_name, "Output Discipline & Deterministic Tasks");
+    assert.equal(kimiK3.dimensions.find((item) => item.id === "D2").score >= 55, true, "reasoning-heavy truncation should be aggregated as endpoint compatibility instead of repeatedly dominating D2");
+    for (const key of ["instruction_json", "instruction_constraints", "reasoning_logic", "reasoning_constraint", "reasoning_table"]) {
+      assert.equal(kimiK3.categories.find((item) => item.key === key)?.score_weight <= 0.5, true, `${key} should be weak-weighted when deduplicated under reasoning-heavy endpoint truncation`);
+    }
+    assert.equal(kimiK3.risk.p0_fail_count, 0);
+    assert.equal(kimiK3.risk.p1_fail_count, 0);
+    for (const key of ["channel_tool_use", "token_output_reasonableness", "token_no_cache_sanity", "endpoint_generation_truncation"]) {
+      assert.equal(kimiK3.categories.find((item) => item.key === key)?.severity, "p2", `${key} should not be a default P1 gate for reasoning-heavy text-model verification`);
+    }
+    assert.match(kimiK3.categories.find((item) => item.key === "token_output_reasonableness").detail, /reasoning/i);
+
     const badChannel = await evaluateModel({
       base_url: baseUrl,
       api_key: "test-key",
@@ -499,10 +555,11 @@ server.listen(0, "127.0.0.1", async () => {
       api_key: "test-key",
       models,
     });
-    assert.equal(batch.results.length, 8);
-    assert.equal(batch.results.every((item) => item.verdict === "genuine"), true);
-    assert.equal(batch.summary.total_models, 8);
-    assert.equal(batch.summary.production_pass_count >= 7, true);
+    assert.equal(batch.results.length, models.length);
+    assert.equal(batch.results.filter((item) => item.verdict === "genuine").length >= models.length - 1, true);
+    assert.equal(batch.results.find((item) => item.requested_model === "kimi-k3").authenticity.verdict, "high_confidence");
+    assert.equal(batch.summary.total_models, models.length);
+    assert.equal(batch.summary.production_pass_count >= models.length - 1, true);
     assert.equal(batch.summary.blocked_count, 0);
     assert.equal(batch.summary.error_count, 0);
 
@@ -541,6 +598,12 @@ function usageFor(body, prompt = promptText(body), content = "", finishReason = 
   };
   if (body.model === "glm-5-turbo" && prompt.includes("TT_TOKEN_OUTPUT_PACK")) {
     usage.completion_tokens_details.reasoning_tokens = outputTokens;
+  }
+  if (body.model === "kimi-k3") {
+    usage.completion_tokens_details.reasoning_tokens = Math.max(0, outputTokens - 3);
+    if (prompt.includes("TT_TOKEN_SHORT_INPUT_PACK")) {
+      usage.prompt_tokens_details = { cached_tokens: 124 };
+    }
   }
   if (body.model?.includes("haiku")) usage.output_tokens = 0;
   if (prompt.includes("TT_TOKEN_CACHE_PACK") && prompt.includes("CACHE_CALL_1")) {
@@ -600,6 +663,18 @@ function shouldSystemicTruncate(prompt) {
   ].some((marker) => prompt.includes(marker));
 }
 
+function shouldBenchmarkTruncate(prompt) {
+  return [
+    "TT_PUBLIC_CODE_PACK",
+    "TT_PUBLIC_CODE_FILTER_REDUCE_PACK",
+    "TT_PUBLIC_CODE_STRING_PIPELINE_PACK",
+    "TT_PUBLIC_CODE_OBJECT_ENTRIES_PACK",
+    "TT_ADVANCED_CONSTRAINT_PACK",
+    "TT_ADVANCED_TABLE_PACK",
+    "TT_ADVANCED_PROOF_PACK",
+  ].some((marker) => prompt.includes(marker));
+}
+
 function shouldGlmEndpointUnavailable(prompt, body) {
   if (body.tools?.[0]?.function?.name === "tt_record_capability") return true;
   return [
@@ -610,6 +685,23 @@ function shouldGlmEndpointUnavailable(prompt, body) {
     "TT_TOKEN_TRUNCATION_PACK",
     "TT_ADVANCED_CONSTRAINT_PACK",
     "TT_ADVANCED_TABLE_PACK",
+  ].some((marker) => prompt.includes(marker));
+}
+
+function shouldKimiChannelUnavailable(prompt, body) {
+  if (body.tools?.[0]?.function?.name === "tt_record_capability") return true;
+  if (body.tools?.[0]?.function?.name === "web_search") return true;
+  return prompt.includes("TT_VISION_PACK");
+}
+
+function shouldKimiReasoningStarve(prompt) {
+  return [
+    "TT_NONCE_REPLAY_PACK",
+    "TT_INSTRUCTION_PACK",
+    "TT_REASONING_PACK",
+    "TT_ADVANCED_CONSTRAINT_PACK",
+    "TT_ADVANCED_TABLE_PACK",
+    "TT_SAFETY_PACK",
   ].some((marker) => prompt.includes(marker));
 }
 

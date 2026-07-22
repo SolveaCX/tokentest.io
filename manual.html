@@ -53,12 +53,12 @@
       <table>
         <thead><tr><th>维度</th><th>权重</th><th>说明</th><th>典型指标</th></tr></thead>
         <tbody>
-          <tr><td><b>D1 身份与协议完整性</b></td><td>15%</td><td>验证模型身份、响应协议 shape、nonce 防重放、模型列表一致性、header 溯源和鉴权兼容。</td><td>模型指纹、结构完整性、auth compatibility、signature、nonce replay。</td></tr>
-          <tr><td><b>D2 模型基础能力</b></td><td>35%</td><td>验证结构化输出、多约束遵循、语言约束、数学/逻辑/代码理解，以及约束、表格、反事实和证明链校验等高阶推理。</td><td>JSON schema、多约束遵循、GSM8K-style、code benchmark-style、advanced reasoning cases。</td></tr>
-          <tr><td><b>D3 通道与输出完整性</b></td><td>10%</td><td>验证工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 和结束信号。</td><td>tool calls、vision input、document input、stream usage、finish reason。</td></tr>
-          <tr><td><b>D4 Token 计量可信度</b></td><td>10%</td><td>验证 usage 存在性、总量一致性、输入单调性、输出合理性、截断联动和 cache token 证据。</td><td>input/output tokens、total consistency、stop/token limit、cache tokens。</td></tr>
-          <tr><td><b>D5 安全鲁棒性</b></td><td>15%</td><td>验证良性请求放行、Prompt 注入防护、敏感信息保护、危险代码边界、安全输出完整性和错误信息泄漏。</td><td>prompt injection、secret leakage、harmful-code boundary、error response shape。</td></tr>
-          <tr><td><b>D6 稳定性、可靠性与合规</b></td><td>15%</td><td>验证端点生成截断/不可用聚合、短时延迟分布、TTFT 和成功率，为生产接入提供体验和可用性参考。</td><td>endpoint generation risk、P50/P95/P99 latency、TTFT、latency sample success rate。</td></tr>
+          <tr><td><b>D1 身份与协议完整性</b></td><td>30%</td><td>验证模型身份、响应协议 shape、nonce 防重放、模型列表一致性、header 溯源和鉴权兼容，是默认验真结论的核心依据。</td><td>模型指纹、结构完整性、auth compatibility、signature、nonce replay。</td></tr>
+          <tr><td><b>D2 输出纪律与确定性任务</b></td><td>30%</td><td>验证严格 JSON、多约束遵循、语言格式、数学/逻辑/代码理解等可见答案稳定性；reasoning-heavy 截断会聚合为端点兼容性风险，避免重复证明“模型掺水”。</td><td>JSON schema、多约束遵循、GSM8K-style、code benchmark-style、visible answer stability。</td></tr>
+          <tr><td><b>D3 通道与输出完整性</b></td><td>5%</td><td>验证工具、视觉、文档、Web Search、长输出、流式 SSE、delta 粒度、thinking 和结束信号；默认作为可选通道证据，不直接证明掺水。</td><td>tool calls、vision input、document input、stream usage、finish reason。</td></tr>
+          <tr><td><b>D4 Token 计量可信度</b></td><td>15%</td><td>验证 usage 存在性、总量一致性、输入单调性、输出合理性、截断联动和 cache token 证据。</td><td>input/output tokens、total consistency、stop/token limit、cache tokens。</td></tr>
+          <tr><td><b>D5 安全鲁棒性</b></td><td>10%</td><td>验证良性请求放行、Prompt 注入防护、敏感信息保护、危险代码边界、安全输出完整性和错误信息泄漏。</td><td>prompt injection、secret leakage、harmful-code boundary、error response shape。</td></tr>
+          <tr><td><b>D6 稳定性、可靠性与合规</b></td><td>10%</td><td>验证端点生成截断/不可用聚合、短时延迟分布、TTFT 和成功率，为生产接入提供体验和可用性参考。</td><td>endpoint generation risk、P50/P95/P99 latency、TTFT、latency sample success rate。</td></tr>
         </tbody>
       </table>
     </section>
@@ -77,7 +77,7 @@
 
     <section class="section" id="scoring">
       <h2>4. Scoring and blocking / 得分与阻断</h2>
-      <p>总分由 D1-D6 多维度加权和风险门控共同决定。P0 项代表生产阻断级风险，P1 项代表重要风险，P2 项代表补充观察项。</p>
+      <p>报告会单独给出验真置信度，用于回答“是否疑似降级/掺水”；总分由 D1-D6 多维度加权和风险门控共同决定。P0 项代表生产阻断级风险，P1 项代表重要风险，P2 项代表补充观察项。</p>
       <ul>
         <li><span class="pill">Production reference pass</span>：适合作为生产接入参考，但仍建议结合业务流量灰度。</li>
         <li><span class="pill">Needs review</span>：关键能力或证据存在不确定，需要人工复核。</li>

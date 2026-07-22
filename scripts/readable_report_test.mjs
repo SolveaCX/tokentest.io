@@ -95,7 +95,7 @@ assert.match(html, /综合评分与最终判定/);
 assert.match(html, /覆盖审计/);
 assert.match(html, /6D 维度概览/);
 assert.match(html, /D1 身份与协议完整性/);
-assert.match(html, /D2 模型基础能力/);
+assert.match(html, /D2 输出纪律与确定性任务/);
 assert.match(html, /D3 通道与输出完整性/);
 assert.match(html, /D4 Token 计量可信度/);
 assert.match(html, /D5 安全鲁棒性/);

@@ -211,6 +211,8 @@ try {
   assert.ok(report.every((item) => item && typeof item.score === "number"), "each report row should have a score");
   assert.ok(report.every((item) => item && typeof item.raw_score === "number"), "each report row should have a raw score");
   assert.ok(report.every((item) => item?.risk?.production_verdict), "each report row should have a production risk verdict");
+  assert.ok(report.every((item) => item?.authenticity?.verdict), "each report row should include authenticity/no-downgrade confidence");
+  assert.ok(report.every((item) => item?.compatibility?.verdict), "each report row should include separate production compatibility evidence");
   assert.ok(report.every((item) => Array.isArray(item.dimensions) && item.dimensions.length === 6), "each report row should expose six user-visible dimensions");
   assert.ok(report.every((item) => item.dimensions.map((dimension) => dimension.id).join(",") === "D1,D2,D3,D4,D5,D6"), "six dimensions should be ordered D1-D6");
   assert.ok(report.every((item) => item?.dimension_coverage?.tested > 0), "each report row should include 6D coverage audit");
@@ -246,7 +248,7 @@ try {
   const firstDetail = page.locator("#reportList .modelReport").first();
   const detailText = await firstDetail.innerText();
   const normalizedDetail = detailText.toLowerCase();
-  for (const label of ["Production verdict", "Raw score", "Risk gate", "6D dimension overview", "Assessment detail table", "Test item", "Priority", "Status", "Score", "Test method", "Scoring standard", "Case evidence", "D1 Identity & Protocol", "D2 Model Core", "D3 Channel & Output", "D4 Token Usage", "D5 Safety & Robustness", "D6 Stability & Compliance", "P50 latency", "P95 latency", "P99 latency", "TTFT", "LLM fingerprint", "Auth compatibility", "Token usage audit", "Input token monotonicity", "Stream SSE channel", "Tool channel", "GSM8K-style case"]) {
+  for (const label of ["Authenticity", "Production compatibility", "Raw score", "Risk gate", "6D dimension overview", "Assessment detail table", "Test item", "Priority", "Status", "Score", "Test method", "Scoring standard", "Case evidence", "D1 Identity & Protocol", "D2 Output Discipline", "D3 Channel & Output", "D4 Token Usage", "D5 Safety & Robustness", "D6 Stability & Compliance", "P50 latency", "P95 latency", "P99 latency", "TTFT", "LLM fingerprint", "Auth compatibility", "Token usage audit", "Input token monotonicity", "Stream SSE channel", "Tool channel", "GSM8K-style case"]) {
     assert.ok(normalizedDetail.includes(label.toLowerCase()), `detail should include ${label}`);
   }
   assert.ok(!normalizedDetail.includes("coverage audit"), "detail should not render the coverage audit block");
@@ -273,7 +275,8 @@ try {
   assert.ok(desktopLayout.cardDelta <= 2, `run configuration and report cards should align in width: ${JSON.stringify(desktopLayout)}`);
   assert.ok(desktopLayout.dimSummaryLeftDelta <= 24, `collapsed dimension summaries should stay left aligned: ${JSON.stringify(desktopLayout)}`);
   assert.ok(desktopLayout.reportHeadText.includes("score"), "model summary should show score");
-  assert.ok(desktopLayout.reportHeadText.includes("production verdict"), "model summary should show production verdict");
+  assert.ok(desktopLayout.reportHeadText.includes("authenticity"), "model summary should show authenticity verdict");
+  assert.ok(desktopLayout.reportHeadText.includes("production reference pass"), "model summary should show production compatibility line");
   assert.ok(desktopLayout.reportHeadText.includes("reason"), "model summary should show reason overview");
   assert.ok(!desktopLayout.reportHeadText.includes("resolved"), "model summary should not repeat resolved model");
   assert.ok(!desktopLayout.reportHeadText.includes("latency"), "model summary should not repeat latency");
@@ -358,7 +361,7 @@ try {
   assert.ok(mobileTableLayout.pageWidth <= mobileTableLayout.viewportWidth + 2, `mobile detail should not create page-level horizontal overflow: ${JSON.stringify(mobileTableLayout)}`);
   assert.ok(mobileTableLayout.tables.some((item) => item.tableWidth > item.wrapWidth + 2), `mobile detail tables should be horizontally scrollable inside their own wrapper: ${JSON.stringify(mobileTableLayout)}`);
   assert.ok(mobileTableLayout.tables.every((item) => item.maxRowHeight <= 360), `mobile detail rows should not leave large blank space: ${JSON.stringify(mobileTableLayout)}`);
-  assert.ok(!normalizedDetail.includes("authenticity"), "detail should not use legacy pack names as the primary report structure");
+  assert.ok(normalizedDetail.includes("authenticity"), "detail should include the authenticity confidence line");
   assert.ok(!normalizedDetail.includes("public lite"), "detail should not show Public Lite as a top-level pack");
   assert.ok(!normalizedDetail.includes("public_gsm8k"), "detail should not expose public probe keys as dimensions");
 
