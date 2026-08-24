@@ -422,6 +422,17 @@
         <div class="reportEmpty"><span data-i18n="res_hint">Enter a router, list one or more models, pass the human check, and compare production-readiness evidence side by side.</span><br><a href="#" onclick="window.__loadSampleReport();return false" style="color:var(--blue)" data-i18n="view_sample">view a sample report</a></div>
       </div>
     </div>
+
+    <div class="card" id="historyCard" style="margin-top:16px">
+      <div class="resHead">
+        <h3 data-i18n="hist_title">Run history</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="actBtn" id="historyExport">JSON</button>
+          <button class="actBtn" id="historyClear" data-i18n="hist_clear">clear history</button>
+        </div>
+      </div>
+      <div class="reportList" id="historyList"><div class="reportEmpty" data-i18n="hist_empty">No past runs yet.</div></div>
+    </div>
   </section>
 </header>
 
@@ -780,7 +791,13 @@
       await Promise.all(Array.from({length:concurrency},()=>worker()));
       if(ACTIVE_RUN===runState) ACTIVE_RUN=null;
       setRunControls(false);
-      if(!runState.interrupted) showToast(LANG==="zh"?"检测完成":"Verification complete");
+      if(!runState.interrupted){
+        window.__saveTokenTestHistory?.({ generated_at:new Date().toISOString(), total:BATCH.length,
+          passed_count:BATCH.filter(item=>isProductionPass(item.data)).length,
+          passed:BATCH.length>0&&BATCH.every(item=>isProductionPass(item.data)),
+          models:BATCH.map(item=>({model:item.model,status:item.status,result:item.data})) });
+        showToast(LANG==="zh"?"检测完成":"Verification complete");
+      }
     });
   }
 
@@ -1335,6 +1352,12 @@
     document.querySelector(".results").scrollIntoView({block:"start"});
   }
   window.__loadSampleReport=loadSampleReport;
+  window.__openTokenTestHistory=(entry)=>{
+    REPORT_OPEN.clear();
+    BATCH=(entry.models||[]).map(item=>({model:item.model,status:"done",data:item.result||{}}));
+    renderMatrix(); updateActions();
+    document.querySelector(".results").scrollIntoView({block:"start"});
+  };
 
   // ---------------- model autodiscovery ----------------
   function discover(){
@@ -1471,6 +1494,32 @@
     if(hm){ loadSharedReport(hm[1]); return; }
     if((q.get("run")==="1"||q.get("autorun")==="1")&&$("apiKey").value&&!/your-router|example-router/.test($("endpoint").value)) setTimeout(requestRun,400);
   })();
+</script>
+<script type="module">
+  import { clearHistory, exportHistory, listHistory, removeHistory, saveHistory } from "/lib/local-history.js";
+  const storage = window.localStorage;
+  const $history = (id) => document.getElementById(id);
+  const historyLabel = (item) => {
+    const when = item.generated_at ? new Date(item.generated_at).toLocaleString() : "";
+    const models = (item.models || []).map((model) => model.model).join(", ");
+    return `${when} · ${models || "—"} · ${item.passed ? "PASS" : "REVIEW"}`;
+  };
+  function renderHistory(){
+    const list = listHistory(storage);
+    const target = $history("historyList");
+    if(!list.length){ target.innerHTML = `<div class="reportEmpty">${document.documentElement.lang === "zh" ? "暂无历史运行。" : "No past runs yet."}</div>`; return; }
+    target.innerHTML = list.map(item=>`<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line2)"><button class="modelReportHeaderButton" data-history-open="${item.id}">${historyLabel(item)}</button><button class="actBtn" data-history-remove="${item.id}">×</button></div>`).join("");
+    target.querySelectorAll("[data-history-open]").forEach(button=>button.addEventListener("click",()=>{
+      const item=list.find(entry=>entry.id===button.dataset.historyOpen); if(item) window.__openTokenTestHistory?.(item);
+    }));
+    target.querySelectorAll("[data-history-remove]").forEach(button=>button.addEventListener("click",()=>{ removeHistory(button.dataset.historyRemove,storage); renderHistory(); }));
+  }
+  window.__saveTokenTestHistory=(report)=>{ saveHistory(report,storage); renderHistory(); };
+  $history("historyClear").addEventListener("click",()=>{ clearHistory(storage); renderHistory(); });
+  $history("historyExport").addEventListener("click",async()=>{
+    const blob=await exportHistory(storage); const url=URL.createObjectURL(blob); const link=document.createElement("a"); link.href=url; link.download="tokentest-history.json"; link.click(); URL.revokeObjectURL(url);
+  });
+  renderHistory();
 </script>
 </body>
 </html>
