@@ -1,9 +1,12 @@
 {
-  "name": "tokentest-io",
+  "name": "tokentest",
   "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "server.js",
+  "bin": {
+    "tokentest": "bin/tokentest.js"
+  },
   "engines": {
     "node": ">=20"
   },
