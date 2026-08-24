@@ -47,7 +47,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env, de
 const invokedPath = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (invokedPath) {
   const result = await runCli();
-  if (result.output && !result.error && !process.argv.includes("--output")) process.stdout.write(result.output);
+  if (result.output && !result.error && !process.argv.some((arg) => arg === "--output" || arg.startsWith("--output="))) process.stdout.write(result.output);
   if (result.error) process.stderr.write(`TokenTest: ${result.error}\n`);
   process.exitCode = result.exitCode;
 }
