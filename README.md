@@ -211,7 +211,7 @@ TokenTest is compatible with gateways and relays that expose these behaviors. It
 ```mermaid
 flowchart LR
   A[Web Console] --> B[TokenTest HTTP API]
-  C[\`npx tokentest\`] --> D[Evaluator Core]
+  C["npx tokentest CLI"] --> D[Evaluator Core]
   E[MCP stdio / HTTP] --> D
   B --> D
   D --> F[Configured Router]
