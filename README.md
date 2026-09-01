@@ -1,5 +1,9 @@
 <div align="center">
 
+<p align="right">
+   <strong>English</strong> | <a href="./.github/README.cn.md">中文</a> | <a href="./.github/README.jp.md">日本語</a>
+</p>
+
 # TokenTest
 
 ### Prove the model, route, usage, and safety before production.
