@@ -12,6 +12,10 @@ Black-box model verification for AI routers, procurement teams, and CI pipelines
 ![MCP](https://img.shields.io/badge/MCP-supported-6e56cf)
 ![License](https://img.shields.io/badge/license-source--available-lightgrey)
 
+<br>
+
+🚀 **[Run TokenTest online →](https://tokentest.io)**
+
 </div>
 
 TokenTest is the production-reference evaluation layer for AI middle-layer buyers. It tests an OpenAI-compatible or Anthropic-style router from the outside, compares the model you requested with the model you actually received, audits token usage, probes safety and channel behavior, and turns the evidence into a production admission decision.
