@@ -20,6 +20,7 @@ Optional environment variables:
 
 - `MCP_ALLOW_PRIVATE_BASE_URLS=1`: allows remote MCP tools to evaluate private or localhost router URLs. Keep this off in production unless the deployment is private.
 - `MCP_PUBLIC_MODE=1`: allows remote MCP clients to call `/mcp` without a TokenTest access token. This should be paired with the public rate-limit variables below.
+- `API_ALLOW_PRIVATE_BASE_URLS=1`: explicitly allows the browser HTTP API (`/api/models`, `/api/check`, and `/api/check-visual`) to target private or localhost routers. Production deployments block private destinations by default; only enable this for a private/self-hosted deployment.
 - `MCP_PUBLIC_MAX_BATCH_MODELS`: max models per public `evaluate_batch` call. Default: `5`.
 - `MCP_RATE_LIMIT_WINDOW_MS`: public request window. Default: `600000` (10 minutes).
 - `MCP_RATE_LIMIT_MAX_REQUESTS`: max public MCP requests per IP per request window. Default: `120`.

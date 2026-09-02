@@ -15,6 +15,7 @@
     "test:evaluator": "node scripts/local_eval_test.mjs",
     "test:visual": "node scripts/visual_eval_test.mjs",
     "test:server": "node scripts/server_route_test.mjs",
+    "test:server-ssrf": "node scripts/server_ssrf_test.mjs",
     "test:mcp": "node scripts/mcp_server_test.mjs",
     "test:http-mcp": "node scripts/http_mcp_test.mjs",
     "test:e2e": "node scripts/ui_e2e.mjs",

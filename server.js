@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { discoverModels, evaluateModel } from "./lib/evaluator.js";
 import { evaluateVisualModel, visualCaseCatalog } from "./lib/visual-evaluator.js";
-import { createSdkMcpServer } from "./lib/mcp-tools.js";
+import { assertRemoteBaseUrlAllowed, createSdkMcpServer } from "./lib/mcp-tools.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -25,6 +25,9 @@ const MCP_ACCESS_TOKEN = process.env.MCP_ACCESS_TOKEN || "";
 const MCP_REQUIRES_ACCESS_TOKEN = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === "production");
 const MCP_ALLOWED_ORIGINS = splitCsv(process.env.MCP_ALLOWED_ORIGINS || "https://tokentest.io,https://www.tokentest.io");
 const MCP_PUBLIC_MODE = boolEnv(process.env.MCP_PUBLIC_MODE);
+// Local development may target a localhost router; production blocks private
+// destinations unless an operator explicitly opts in.
+const API_ALLOW_PRIVATE_BASE_URLS = !MCP_REQUIRES_ACCESS_TOKEN || boolEnv(process.env.API_ALLOW_PRIVATE_BASE_URLS);
 const MCP_PUBLIC_MAX_BATCH_MODELS = positiveInt(process.env.MCP_PUBLIC_MAX_BATCH_MODELS, 5);
 const MCP_RATE_LIMIT_WINDOW_MS = positiveInt(process.env.MCP_RATE_LIMIT_WINDOW_MS, 10 * 60 * 1000);
 const MCP_RATE_LIMIT_MAX_REQUESTS = positiveInt(process.env.MCP_RATE_LIMIT_MAX_REQUESTS, 120);
@@ -194,6 +197,7 @@ app.post("/api/check", async (req, res) => {
   const { token, base_url, api_key, model, provider, deep } = req.body || {};
   if (!tokenValid(token)) return res.status(401).json({ verdict: "error", score: 0, error: "captcha_required", summary: "Human verification required." });
   if (!base_url || !api_key || !model) return res.status(400).json({ verdict: "error", score: 0, error: "missing_fields" });
+  if (await unsafeApiBaseUrl(base_url, res, { verdict: "error", score: 0 })) return;
   try {
     const result = await evaluateModel({ base_url, api_key, model, provider, deep: !!deep, trace_raw: EVAL_TRACE_RAW });
     try {
@@ -215,6 +219,7 @@ app.post("/api/check-visual", async (req, res) => {
   const { token, base_url, api_key, model, modality, selected_case_ids } = req.body || {};
   if (!tokenValid(token)) return res.status(401).json({ verdict: "error", score: 0, error: "captcha_required", summary: "Human verification required." });
   if (!base_url || !api_key || !model || !modality) return res.status(400).json({ verdict: "error", score: 0, error: "missing_fields" });
+  if (await unsafeApiBaseUrl(base_url, res, { verdict: "error", score: 0 })) return;
   try {
     const result = await evaluateVisualModel({ base_url, api_key, model, modality, selected_case_ids, trace_raw: EVAL_TRACE_RAW });
     try {
@@ -233,6 +238,7 @@ app.post("/api/models", async (req, res) => {
   const { token, base_url, api_key } = req.body || {};
   if (!tokenValid(token)) return res.status(401).json({ models: [], error: "captcha_required" });
   if (!base_url) return res.json({ models: [], error: "missing_base_url" });
+  if (await unsafeApiBaseUrl(base_url, res, { models: [] })) return;
   try {
     res.json(await discoverModels({ base_url, api_key }));
   } catch (e) {
@@ -287,6 +293,16 @@ function boolEnv(value) {
 
 function splitCsv(value) {
   return String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+async function unsafeApiBaseUrl(baseUrl, res, payload) {
+  try {
+    await assertRemoteBaseUrlAllowed(baseUrl, { allowPrivate: API_ALLOW_PRIVATE_BASE_URLS, respectEnv: false });
+    return false;
+  } catch {
+    res.status(400).json({ ...payload, error: "private_base_url_forbidden" });
+    return true;
+  }
 }
 
 function setMcpCorsHeaders(req, res) {
