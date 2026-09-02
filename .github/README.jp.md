@@ -14,7 +14,7 @@ AI ルーター、調達チーム、CI パイプライン向けのブラック�
 
 ![Node.js](https://img.shields.io/badge/node-%3E%3D20-339933?logo=nodedotjs&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-supported-6e56cf)
-![License](https://img.shields.io/badge/license-source--available-lightgrey)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 <br>
 
@@ -138,4 +138,4 @@ npm run test:visual
 
 スコアリングを変更する場合は、決定性のある fixture を追加し、真正性・本番互換性・任意チャネル証拠のどれに影響するかを説明してください。実際の API Key や認証ヘッダーを issue、レポート、スクリーンショット、fixture に含めないでください。
 
-このリポジトリは現在 source-available です。公開 npm パッケージの前に、正式なライセンスファイルと貢献ポリシーを追加します。
+本プロジェクトは [Apache License 2.0](../LICENSE) の下で提供されます。TokenTest の名称とロゴは SolveaCX の商標であり、本ライセンスは製品識別子としての使用権を付与しません。

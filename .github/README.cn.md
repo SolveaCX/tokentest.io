@@ -14,7 +14,7 @@
 
 ![Node.js](https://img.shields.io/badge/node-%3E%3D20-339933?logo=nodedotjs&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-supported-6e56cf)
-![License](https://img.shields.io/badge/license-source--available-lightgrey)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 <br>
 
@@ -138,4 +138,4 @@ npm run test:visual
 
 修改评分逻辑时，请同步添加确定性 fixture，并说明变化影响的是验真、生产兼容性还是可选通道证据。不要在 issue、报告、截图或测试 fixture 中提交真实 API Key 和原始鉴权头。
 
-当前仓库为 source-available；正式公开 npm 包前会补充许可证文件与贡献政策。
+本项目采用 [Apache License 2.0](../LICENSE) 授权。TokenTest 名称和 Logo 是 SolveaCX 的商标；除合理描述项目来源外，本许可证不授予其产品标识使用权。

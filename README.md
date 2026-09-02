@@ -14,7 +14,7 @@ Black-box model verification for AI routers, procurement teams, and CI pipelines
 
 ![Node.js](https://img.shields.io/badge/node-%3E%3D20-339933?logo=nodedotjs&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-supported-6e56cf)
-![License](https://img.shields.io/badge/license-source--available-lightgrey)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
 <br>
 
@@ -274,4 +274,4 @@ Before opening a pull request, run the relevant evaluator, server, MCP, CLI, and
 
 ## License
 
-This repository is currently source-available. A formal license file and contribution policy will be added before publishing a public package release.
+This project is licensed under the [Apache License 2.0](./LICENSE). The TokenTest name and logo are trademarks of SolveaCX and are not licensed for use as a product identity under this license.
