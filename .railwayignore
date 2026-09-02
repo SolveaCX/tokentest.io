@@ -4,10 +4,8 @@ npm-debug.log*
 .DS_Store
 test/
 data/
+research/
 docs/superpowers/
 tmp/
-research/mcp-runs/
 report*.html
 llm-eval-upgrade-plan*.html
-research/*case-trace*.html
-research/archive/*case-trace*.html

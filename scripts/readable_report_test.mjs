@@ -111,7 +111,7 @@ assert.match(html, /得分解释/);
 assert.match(html, /证据摘要/);
 assert.match(html, /Request 原文/);
 assert.match(html, /Response 原文/);
-assert.match(html, /Bearer <redacted-test-token>/);
+assert.match(html, /Bearer &lt;redacted-test-token&gt;/);
 assert.match(html, /视觉输入通道/);
 
 console.log("readable report test passed");

@@ -6,6 +6,7 @@ npm-debug.log*
 .worktrees/
 test/
 data/
+research/
 report*.html
 llm-eval-upgrade-plan*.html
 research/*case-trace*.html

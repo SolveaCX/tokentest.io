@@ -659,10 +659,36 @@ function renderBlogError(res, language, error) {
   }));
 }
 
-// ---- static (cleanUrls so /blockrun resolves to blockrun.html) ----
+// ---- public pages and assets ----
+// Keep the public surface explicit. Serving the repository root would expose
+// research reports, source files, deployment config, and any future secrets.
 app.get(["/blog", "/zh/blog"], renderBlogIndex);
 app.get(["/blog/:slug", "/zh/blog/:slug"], renderBlogPost);
-app.use(express.static(__dirname, { extensions: ["html"] }));
-app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
+
+const PUBLIC_HTML = new Map([
+  ["/", "index.html"],
+  ["/index.html", "index.html"],
+  ["/manual", "manual.html"],
+  ["/manual.html", "manual.html"],
+  ["/blockrun", "blockrun.html"],
+  ["/blockrun.html", "blockrun.html"],
+  ["/blockrun-mini", "blockrun-mini.html"],
+  ["/blockrun-mini.html", "blockrun-mini.html"],
+  ["/blockrun-opus", "blockrun-opus.html"],
+  ["/blockrun-opus.html", "blockrun-opus.html"],
+  ["/blockrun-opus-47", "blockrun-opus-47.html"],
+  ["/blockrun-opus-47.html", "blockrun-opus-47.html"],
+  ["/blockrun-sonnet", "blockrun-sonnet.html"],
+  ["/blockrun-sonnet.html", "blockrun-sonnet.html"],
+  ["/blockrun-sol", "blockrun-sol.html"],
+  ["/blockrun-sol.html", "blockrun-sol.html"],
+  ["/blockrun-sol-oai", "blockrun-sol-oai.html"],
+  ["/blockrun-sol-oai.html", "blockrun-sol-oai.html"],
+]);
+for (const [route, file] of PUBLIC_HTML) {
+  app.get(route, (_req, res) => res.sendFile(path.join(__dirname, file)));
+}
+app.get("/lib/local-history.js", (_req, res) => res.sendFile(path.join(__dirname, "lib", "local-history.js")));
+app.use("/assets", express.static(path.join(__dirname, "assets"), { dotfiles: "deny", index: false }));
 
 app.listen(PORT, () => console.log(`TokenTest.io listening on :${PORT}`));

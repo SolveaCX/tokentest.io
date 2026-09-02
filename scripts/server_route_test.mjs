@@ -167,6 +167,14 @@ try {
   await waitForHealth(port, child);
   const token = signToken("route-test", Date.now() + 60_000);
 
+  const restrictedPaths = ["/research/latest-eval-report.md", "/server.js", "/package.json"];
+  for (const restrictedPath of restrictedPaths) {
+    const response = await fetch(`http://127.0.0.1:${port}${restrictedPath}`);
+    assert.equal(response.status, 404, `${restrictedPath} must not be publicly readable`);
+  }
+  const localHistoryResponse = await fetch(`http://127.0.0.1:${port}/lib/local-history.js`);
+  assert.equal(localHistoryResponse.status, 200);
+
   const found = await postJson(port, "/api/models", { token, base_url: routerBase, api_key: "test-key" });
   assert.deepEqual(found.models, models);
 

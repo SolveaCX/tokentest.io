@@ -1471,17 +1471,11 @@
   $("btnCsv").addEventListener("click",exportCSV);
   $("btnHtml").addEventListener("click",exportHTML);
 
-  // deep-link presets
+  // Deep links may provide a user-supplied endpoint/model/provider/key via the
+  // query string. No provider URLs or API keys are bundled in the client.
   (function init(){
     const q=new URLSearchParams(location.search);const p=location.pathname.replace(/\/+$/,"")||"/";
-    const CR="http://<internal-host-redacted>:8402";
-    const P={"/blockrun":{provider:"openai",model:"gpt-4o",endpoint:CR,key:"<redacted-preset-key>"},
-      "/blockrun-mini":{provider:"openai",model:"gpt-4o-mini",endpoint:CR,key:"<redacted-preset-key>"},
-      "/blockrun-opus":{provider:"openai",model:"claude-opus-4.8",endpoint:CR,key:"<redacted-preset-key>"},
-      "/blockrun-opus-47":{provider:"openai",model:"claude-opus-4.7",endpoint:CR,key:"<redacted-preset-key>"},
-      "/blockrun-sonnet":{provider:"openai",model:"claude-sonnet-4.6",endpoint:CR,key:"<redacted-preset-key>"},
-      "/blockrun-sol":{provider:"anthropic",model:"claude-sonnet-4-6",endpoint:"http://<private-ip-redacted>:8413",key:"<redacted-preset-key>"},
-      "/blockrun-sol-oai":{provider:"openai",model:"claude-sonnet-4-6",endpoint:"http://<private-ip-redacted>:8403/v1",key:"<redacted-preset-key>"}};
+    const P={};
     const pr=P[p]||P["/"+(q.get("preset")||"")]||{};
     const ep=q.get("endpoint")||pr.endpoint,model=q.get("model")||pr.model,
       provider=(q.get("provider")||pr.provider||"").toLowerCase(),key=q.get("key")||pr.key;

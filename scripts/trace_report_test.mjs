@@ -60,7 +60,7 @@ await execFileAsync("node", [
 
 const html = await fs.readFile(output, "utf8");
 assert.match(html, /claude-opus-test/);
-assert.match(html, /Bearer <redacted-test-token>/);
+assert.match(html, /Bearer &lt;redacted-test-token&gt;/);
 assert.match(html, /raw_response_saved/);
 assert.match(html, /true/);
 assert.doesNotMatch(html, /API key 已省略/);
